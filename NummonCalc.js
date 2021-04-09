@@ -548,7 +548,7 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
     },
     
     getTradeAmountAvg: function() {
-        var tRatio = 1 + this.game.diplomacy.getTradeRatio() + this.game.diplomacy.calculateTradeBonusFromPolicies("leviathans", this.game);
+        var tRatio = 1 + this.game.diplomacy.getTradeRatio() + this.game.diplomacy.calculateTradeBonusFromPolicies("leviathans", this.game) + this.game.challenges.getChallenge("pacifism").getTradeBonusEffect(this.game);
         var cal = this.game.calendar;
         var ticksPerYear = cal.ticksPerDay * cal.daysPerSeason * cal.seasonsPerYear;
         var leviathansModel = this.game.diplomacy.get("leviathans");
@@ -579,11 +579,13 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         var result = calendar * timeC;
         var cost = this.getButtonPrice(game.timeTab.cfPanel.children[0].children, "ressourceRetrieval", "timeCrystal");
         var number = this.game.time.getCFU("ressourceRetrieval").val;
-        if (timeC > 0 && number > 0 && number < 100) {
-            TCBack = Math.ceil(cost * number / result)
-            return TCBack;
-        } else {
+        if (number == 100) {
             return this.i18n("best.none");
+        }else if (timeC <= 0){
+            return this.i18n("$time.cfu.ressourceRetrieval.label");
+        }else {
+            var TCBack = Math.ceil(cost * number / result)
+            return TCBack;
         }
     },
     // OTHERS : 
