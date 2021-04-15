@@ -89,6 +89,7 @@ var run = function() {
             'ui.trigger': 'trigger',
             'ui.trigger.set': 'Enter a new trigger value for {0}. Should be in the range of 0 to 1.',
             'ui.limit': 'Limited',
+            'ui.trigger.missions.set': 'Enter a new trigger value for missions. Should be in the range of 0 to 13. Corresponds to each planet sort',
             'ui.trigger.crypto.set': 'Enter a new trigger value for {0}. Corresponds to the amount of Relics needed before the exchange is made.',
             'ui.engine':'Enable Scientists',
             'ui.build': 'Bonfire',
@@ -291,6 +292,7 @@ var run = function() {
             'ui.trigger': '触发条件',
             'ui.trigger.set': '输入新的 {0} 触发值，取值范围为 0 到 1 的小数。',
             'ui.limit': '限制',
+            'ui.trigger.missions.set': '输入一个新的 探索星球 触发值,取值范围为 0 到 13 的整数。\n分别对应13颗星球。',
             'ui.trigger.crypto.set': '输入一个新的 {0} 触发值,\n遗物数量达到触发值时会进行黑笔交易。',
             'ui.engine':'启用小猫珂学家',
             'ui.build': '营火',
@@ -789,7 +791,7 @@ var run = function() {
                     upgrades:  {enabled: true},
                     techs:     {enabled: true},
                     races:     {enabled: true},
-                    missions:  {enabled: true},
+                    missions:  {enabled: true, subTrigger: 12},
                     buildings: {enabled: true}
                 }
             },
@@ -984,7 +986,7 @@ var run = function() {
         reset: async function () {
 
             // check challenge
-            if (game.challenges.currentChallenge)
+            if (game.challenges.anyChallengeActive())
                 return;
 
             var checkedList = [];
@@ -1212,7 +1214,7 @@ var run = function() {
             var optionVals = options.auto.timeCtrl.items;
 
             // Tempus Fugit
-            if (optionVals.accelerateTime.enabled && !game.time.isAccelerated) {
+            if (optionVals.accelerateTime.enabled && !game.time.isAccelerated && game.science.get("calendar").researched) {
                 var tf = game.resPool.get('temporalFlux')
                 if (tf.value >= tf.maxValue * optionVals.accelerateTime.subTrigger) {
                     game.time.isAccelerated = true;
@@ -1580,6 +1582,7 @@ var run = function() {
 
             if (upgrades.upgrades.enabled && gamePage.tabs[3].visible) {
                 var work = game.workshop.upgrades;
+                var noup = ["factoryOptimization","factoryRobotics","spaceEngineers","aiEngineers","chronoEngineers","steelPlants","amFission","biofuel","gmo","factoryAutomation","invisibleBlackHand"];
                 workLoop:
                 for (var upg in work) {
                     if (work[upg].researched || !work[upg].unlocked) {continue;}
@@ -1588,6 +1591,9 @@ var run = function() {
                     prices = game.village.getEffectLeader("scientist", prices);
                     for (var resource in prices) {
                         if (craftManager.getValueAvailable(prices[resource].name, true) < prices[resource].val) {continue workLoop;}
+                    }
+                    for (var name in noup) {
+                        if (work[upg].name == noup[name]) {continue workLoop;}
                     }
                     upgradeManager.build(work[upg], 'workshop');
                 }
@@ -1609,9 +1615,10 @@ var run = function() {
             }
 
             if (upgrades.missions.enabled && gamePage.tabs[6].visible) {
+                var missionsLength = Math.min(game.space.meta[0].meta.length, upgrades.missions.subTrigger);
                 var missions = game.space.meta[0].meta;
                 missionLoop:
-                for (var i = 0; i < missions.length; i++) {
+                for (var i = 0; i < missionsLength ; i++) {
                     if (!(missions[i].unlocked && missions[i].val < 1)) {continue;}
 
                     var model = this.spaceManager.manager.tab.GCPanel.children[i];
@@ -1744,7 +1751,7 @@ var run = function() {
                 if (libraryMeta.stage === 0) {
                     if (libraryMeta.stages[1].stageUnlocked) {
                         var enCon = (game.workshop.get('cryocomputing').researched) ? 1 : 2;
-                        if (game.challenges.currentChallenge == 'energy') {enCon *= 2;}
+                        if (game.challenges.isActive('energy')) {enCon *= 2 * (1 + game.getEffect("energyConsumptionIncrease"));}
                         var libToDat = 3;
                         if (game.workshop.get('uplink').researched) {
                             libToDat *= (1 + game.bld.get('biolab').val * game.getEffect('uplinkDCRatio'));
@@ -1910,10 +1917,8 @@ var run = function() {
         },
         hunt: function () {
             var manpower = this.craftManager.getResource('manpower');
-            if(!game.villageTab.huntBtn.model.visible) {
-                return;
-            }
-            if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue && manpower.value >= 100) {
+
+            if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue && game.ui.fastHuntContainer.style.visibility == "visible") {
                 // No way to send only some hunters. Thus, we hunt with everything
                 var huntCount = Math.floor(manpower.value/100);
                 storeForSummary('hunt', huntCount);
@@ -2719,34 +2724,33 @@ var run = function() {
             var fieldProd = game.getEffect('catnipPerTickBase');
             if (worstWeather) {
                 fieldProd *= 0.1;
-            } else {
-                fieldProd *= game.calendar.getWeatherMod() + game.calendar.getCurSeason().modifiers['catnip'];
+                fieldProd *= 1 + game.getLimitedDR(game.getEffect("coldHarshness"),1);
+
+                if (game.science.getPolicy("communism").researched) {fieldProd = 0;}
+
+             } else {
+                fieldProd *= game.calendar.getCurSeason().modifiers['catnip'];	
             }
             var vilProd = (game.village.getResProduction().catnip) ? game.village.getResProduction().catnip * (1 + game.getEffect('catnipJobRatio')) : 0;
             var baseProd = fieldProd + vilProd;
+            baseProd *= 1 + game.getEffect("catnipRatio");
 
-            var hydroponics = game.space.getBuilding('hydroponics').val;
-            if (game.prestige.meta[0].meta[21].researched) {
-                if (game.calendar.cycle === 2) {hydroponics *= 2;}
-                if (game.calendar.cycle === 7) {hydroponics *= 0.5;}
-            }
-            baseProd *= 1 + 0.03 * aqueducts + 0.025 * hydroponics;
-
-            var paragonBonus = (game.challenges.currentChallenge == "winterIsComing") ? 0 : game.prestige.getParagonProductionRatio();
+            var paragonBonus = game.challenges.isActive("winterIsComing") ? 0 : game.prestige.getParagonProductionRatio();
             baseProd *= 1 + paragonBonus;
 
             baseProd *= 1 + game.religion.getSolarRevolutionRatio();
+            
+            //if (!game.opts.disableCMBR) {baseProd *= (1 + game.getCMBRBonus());}
 
-            if (!game.opts.disableCMBR) {baseProd *= (1 + game.getCMBRBonus());}
+            baseProd *= 1 + (game.getEffect("blsProductionBonus") * game.resPool.get("sorrow").value);
 
             baseProd = game.calendar.cycleEffectsFestival({catnip: baseProd})['catnip'];
 
             var baseDemand = game.village.getResConsumption()['catnip'];
-            var uniPastures = game.bld.getBuildingExt('unicornPasture').meta.val;
-            baseDemand *= 1 + (game.getLimitedDR(pastures * -0.005 + uniPastures * -0.0015, 1.0));
+            baseDemand *= 1 + game.getEffect("catnipDemandRatio");
             if (game.village.sim.kittens.length > 0 && game.village.happiness > 1) {
                 var happyCon = game.village.happiness - 1;
-                if (game.challenges.currentChallenge == "anarchy") {
+                if (game.challenges.isActive("anarchy")) {
                     baseDemand *= 1 + happyCon * (1 + game.getEffect("catnipDemandWorkerRatioGlobal"));
                 } else {
                     baseDemand *= 1 + happyCon * (1 + game.getEffect("catnipDemandWorkerRatioGlobal")) * (1 - game.village.getFreeKittens() / game.village.sim.kittens.length);
@@ -4237,6 +4241,34 @@ var run = function() {
 
         if (option.enabled) {
             input.prop('checked', true);
+        }
+
+        if (option.subTrigger !== undefined) {
+            var triggerButton = $('<div/>', {
+                id: 'set-' + name +'-subTrigger',
+                text: i18n('ui.trigger'),
+                title: option.subTrigger,
+                css: {cursor: 'pointer',
+                    display: 'inline-block',
+                    float: 'right',
+                    paddingRight: '5px',
+                    textShadow: '3px 3px 4px gray'}
+            }).data('option', option);
+
+            triggerButton.on('click', function () {
+                var value;
+                if (name == 'missions'){value = window.prompt(i18n('ui.trigger.missions.set'), option.subTrigger);}
+                else{value = window.prompt(i18n('ui.trigger.set'), option.subTrigger);}
+
+                if (value !== null) {
+                    option.subTrigger = parseFloat(value);
+                    kittenStorage.items[triggerButton.attr('id')] = option.subTrigger;
+                    saveToKittenStorage();
+                    triggerButton[0].title = option.subTrigger;
+                }
+            });
+
+            element.append(triggerButton);
         }
 
         input.on('change', function () {
