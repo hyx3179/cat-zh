@@ -70,6 +70,8 @@ var run = function() {
             'upgrade.building.library': 'Upgraded libraries to data centers!',
             'upgrade.building.amphitheatre': 'Upgraded amphitheatres to broadcast towers!',
             'upgrade.upgrade': 'Kittens have bought the upgrade {0}',
+            'upgrade.limited': 'Optimize {0}',
+            'upgrade.unlimited': 'All {0}',
             'upgrade.tech': 'Kittens have bought the tech {0}',
 
             'festival.hold': 'Kittens begin holding a festival',
@@ -273,6 +275,8 @@ var run = function() {
             'upgrade.building.library': '图书馆 升级为 数据中心!',
             'upgrade.building.amphitheatre': '剧场 升级为 广播塔!',
             'upgrade.upgrade': '小猫发明了 {0}',
+            'upgrade.limited': '优化 {0}',
+            'upgrade.unlimited': '全部 {0}',
             'upgrade.tech': '小猫掌握了 {0}',
 
             'festival.hold': '小猫开始举办节日',
@@ -788,7 +792,7 @@ var run = function() {
                 //Should KS automatically upgrade?
                 enabled: false,
                 items: {
-                    upgrades:  {enabled: true},
+                    upgrades:  {enabled: true, limited: true},
                     techs:     {enabled: true},
                     races:     {enabled: true},
                     missions:  {enabled: true, subTrigger: 12},
@@ -971,7 +975,7 @@ var run = function() {
             if (options.auto.build.enabled)                                                 {this.build()};
             if (options.auto.space.enabled)                                                 {this.space()};
             if (options.auto.craft.enabled)                                                 {this.craft()};
-            if (subOptions.enabled && subOptions.items.hunt.enabled)                        {this.hunt()};
+            if (subOptions.enabled && subOptions.items.hunt.enabled)                        {this.setHunt()};
             if (options.auto.trade.enabled)                                                 {this.trade()};
             if (options.auto.faith.enabled)                                                 {this.worship()};
             if (options.auto.time.enabled)                                                  {this.chrono()};
@@ -982,6 +986,16 @@ var run = function() {
             if (options.auto.timeCtrl.enabled)                                              {this.timeCtrl()};
             if (subOptions.enabled)                                                         {this.miscOptions()};
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset()};
+        },
+        halfInterval: async function() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    this.hunt();
+                    }, Math.floor(options.interval / 2))
+                })
+            },
+        setHunt: async function() {
+            await this.halfInterval();
         },
         reset: async function () {
 
@@ -1592,8 +1606,10 @@ var run = function() {
                     for (var resource in prices) {
                         if (craftManager.getValueAvailable(prices[resource].name, true) < prices[resource].val) {continue workLoop;}
                     }
-                    for (var name in noup) {
-                        if (work[upg].name == noup[name]) {continue workLoop;}
+                    if (upgrades.upgrades.limited){
+                        for (var name in noup) {
+                            if (work[upg].name == noup[name]) {continue workLoop;}
+                        }
                     }
                     upgradeManager.build(work[upg], 'workshop');
                 }
@@ -4243,7 +4259,7 @@ var run = function() {
             input.prop('checked', true);
         }
 
-        if (option.subTrigger !== undefined) {
+        if (option.subTrigger !== undefined && name == 'missions') {
             var triggerButton = $('<div/>', {
                 id: 'set-' + name +'-subTrigger',
                 text: i18n('ui.trigger'),
@@ -4296,6 +4312,36 @@ var run = function() {
         });
 
         element.append(input, label);
+
+        if (name == 'upgrades') {
+            var LimitedLabel = $('<label/>', {
+                'for': 'toggle-limited-' + name,
+                text: i18n('ui.limit')
+            });
+            
+            var LimitedInput = $('<input/>', {
+                id: 'toggle-limited-' + name,
+                type: 'checkbox'
+            }).data('option', option);
+
+            if (option.limited) {
+                input.prop('checked', true);
+            }
+            
+            LimitedInput.on('change', function () {
+                if (LimitedInput.is(':checked') && option.limited == false) {
+                    option.limited = true;
+                    imessage('upgrade.limited', [iname]);
+                } else if ((!LimitedInput.is(':checked')) && option.limited == true) {
+                    option.limited = false;
+                    imessage('upgrade.unlimited', [iname]);
+                }
+                kittenStorage.items[LimitedInput.attr('id')] = option.limited;
+                saveToKittenStorage();
+            });
+
+            element.append(LimitedInput, LimitedLabel);
+        }
 
         return element;
     };
