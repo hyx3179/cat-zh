@@ -975,7 +975,7 @@ var run = function() {
             if (options.auto.build.enabled)                                                 {this.build()};
             if (options.auto.space.enabled)                                                 {this.space()};
             if (options.auto.craft.enabled)                                                 {this.craft()};
-            if (subOptions.enabled && subOptions.items.hunt.enabled)                        {this.hunt()};
+            if (subOptions.enabled && subOptions.items.hunt.enabled)                        {this.setHunt()};
             if (options.auto.trade.enabled)                                                 {this.trade()};
             if (options.auto.faith.enabled)                                                 {this.worship()};
             if (options.auto.time.enabled)                                                  {this.chrono()};
@@ -986,6 +986,16 @@ var run = function() {
             if (options.auto.timeCtrl.enabled)                                              {this.timeCtrl()};
             if (subOptions.enabled)                                                         {this.miscOptions()};
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset()};
+        },
+        halfInterval: async function() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    this.hunt();
+                    }, Math.floor(options.interval / 2))
+                })
+            },
+        setHunt: async function() {
+            await this.halfInterval();
         },
         reset: async function () {
 
