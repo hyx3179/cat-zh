@@ -159,7 +159,11 @@ var run = function() {
 
             'distribute.limited': 'Distribute to {0}: stop when reach max',
             'distribute.unlimited': 'Distribute to {0}: unlimited',
+            'distribute.leaderJob': 'Distribute a leader to {0} ',
+            'distribute.leaderTrait': 'make {0} leader',
+            'distribute.makeLeader': 'Make Leader',
             'act.distribute': 'Distribute a kitten to {0}',
+            'act.distributeLeader': 'Make a {0} kitten leader',
             'ui.max.set': 'Maximum for {0}',
             'summary.distribute': 'Help {0} kittens to find job',
             'filter.distribute': 'Distribute',
@@ -367,8 +371,12 @@ var run = function() {
             'craft.unlimited': '制作 {0} 不受限制',
 
             'distribute.limited': '分配 {0} 受限于最大值',
+            'distribute.leaderJob': '分配领袖工作为 {0} ',
+            'distribute.leaderTrait': '分配领袖的特质为 {0} ',
             'distribute.unlimited': '分配 {0} 不受限',
+            'distribute.makeLeader': '分配领袖',
             'act.distribute': '分配一只猫猫成为 {0}',
+            'act.distributeLeader': '分配一只 {0} 猫猫的领袖',
             'ui.max.set': '设置 {0} 的最大值',
             'summary.distribute': '帮助 {0} 只猫猫找到工作',
             'filter.distribute': '猫口分配',
@@ -841,6 +849,7 @@ var run = function() {
                     priest:     {enabled: true, max: 1, limited: false},
                     geologist:  {enabled: true, max: 1, limited: false},
                     engineer:   {enabled: true, max: 1, limited: false},
+                    leader:     {enabled: true, leaderTrait:1, leaderJob:1},
                 }
 
             },
@@ -1255,8 +1264,9 @@ var run = function() {
                 if (game.calendar.day < 0)
                     break TimeSkip;
 
+                var shatter = game.timeTab.cfPanel.children[0].children[0]; // check?
                 var timeCrystal = game.resPool.get('timeCrystal');
-                if (timeCrystal.value < optionVals.timeSkip.subTrigger)
+                if (timeCrystal.value < optionVals.timeSkip.subTrigger && !shatter.controller.hasResources(shatter.model))
                     break TimeSkip;
 
                 var season = game.calendar.season;
@@ -1293,7 +1303,6 @@ var run = function() {
                         willSkip += canSkip;
                 }
                 if (willSkip > 0) {
-                    var shatter = game.timeTab.cfPanel.children[0].children[0]; // check?
                     iactivity('act.time.skip', [willSkip], 'ks-timeSkip');
                     shatter.controller.doShatterAmt(shatter.model, willSkip);
                     storeForSummary('time.skip', willSkip);
@@ -1318,6 +1327,32 @@ var run = function() {
             }
         },
         distribute: function () {
+            var distributeItem = options.auto.distribute.items;
+            var leaderVals = distributeItem.leader;
+            if (leaderVals.enabled && game.science.get('civil').researched && !game.challenges.isActive("anarchy")) {
+                var leaderJobName = game.village.jobs[leaderVals.leaderJob].name;
+                var traitName = com.nuclearunicorn.game.village.Kitten().traits[leaderVals.leaderTrait].name;
+                if (!options.policies.findIndex(obj => obj == 'theocracy') || game.science.getPolicy('theocracy').researched) {leaderJobName = "priest";}
+                if (game.village.leader == null || !(game.village.leader.job === leaderJobName && game.village.leader.trait === traitName)) {
+                    var traitKittens = game.village.sim.kittens.filter(kitten => kitten.trait.name == traitName);
+                    if (traitKittens.length != 0) {
+                        if (game.village.getJob(leaderJobName).unlocked && game.village.getJob(leaderJobName).value < game.village.getJobLimit(leaderJobName)) {
+                            var correctLeaderKitten = traitKittens.sort(function(a, b) {return b.rank - a.rank;})[0];
+                            if (game.village.getJob(leaderJobName).value < distributeItem[leaderJobName].max || !distributeItem[leaderJobName].limited) {
+                                game.village.unassignJob(correctLeaderKitten);
+                            } else {
+                                game.village.sim.removeJob(leaderJobName, 1);
+                            }
+                            game.villageTab.censusPanel.census.makeLeader(correctLeaderKitten);
+                            correctLeaderKitten.job = leaderJobName;
+                            game.village.getJob(leaderJobName).value += 1;
+                            iactivity('act.distribute', [i18n('$village.trait.' + traitName)], 'ks-distribute');
+                            this.villageManager.render();
+                        }
+                    }
+                }
+            }
+
             var freeKittens = game.village.getFreeKittens();
             if (!freeKittens)
                 return;
@@ -1370,6 +1405,7 @@ var run = function() {
             var coinPrice = game.calendar.cryptoPrice;
             var previousRelic = game.resPool.get('relic').value;
             var previousCoin = game.resPool.get('blackcoin').value;
+            if(!(game.science.get("blackchain").researched || previousCoin > 0) && !game.diplomacy.get("leviathans").unlocked) {return;}
             var exchangedCoin = 0.0;
             var exchangedRelic = 0.0;
             var waitForBestPrice = false;
@@ -1401,7 +1437,7 @@ var run = function() {
                 if (typeof game.diplomacy.sellEcoin === 'function') {
                   game.diplomacy.sellEcoin();
                 } else {
-		  game.diplomacy.sellBcoin();
+                  game.diplomacy.sellBcoin();
                 }
 
                 currentRelic = game.resPool.get('relic').value;
@@ -1647,12 +1683,12 @@ var run = function() {
                     (function (){
                         var policies = game.science.policies;
                         var lastIndex = 0;
-                        var length = policies.length
+                        var length = policies.length;
                         var toResearch = [];
 
                         // A **little** more efficient than game.science.getPolicy if options.policies is right order
                         for (var i in options.policies) {
-                            targetName = options.policies[i]
+                            targetName = options.policies[i];
                             for (var j in policies) {
                                 j = parseInt(j); // fuck js
                                 policy = policies[(j+lastIndex) % length];
@@ -1981,9 +2017,10 @@ var run = function() {
             }
         },
         hunt: function () {
+            if(game.ui.fastHuntContainer.style.visibility == "visible") {return;}
             var manpower = this.craftManager.getResource('manpower');
 
-            if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue && game.ui.fastHuntContainer.style.visibility == "visible") {
+            if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue) {
                 // No way to send only some hunters. Thus, we hunt with everything
                 var huntCount = Math.floor(manpower.value/100);
                 storeForSummary('hunt', huntCount);
@@ -2187,8 +2224,8 @@ var run = function() {
             if (optionVals.fixCry.enabled && game.time.getVSU("usedCryochambers").val > 0) {
                 var fixed = 0;
                 var btn = this.timeManager.manager.tab.vsPanel.children[0].children[0]; //check?
-                // doFixCryochamber will check resources
-                while (btn.controller.doFixCryochamber(btn.model)) 
+                // buyItem will check resources
+                while (btn.controller.buyItem(btn.model, {shiftKey: 1}, function() {})) 
                     fixed += 1;
                 if (fixed > 0) {
                     iactivity('act.fix.cry', [fixed], 'ks-fixCry');
@@ -2797,9 +2834,9 @@ var run = function() {
 
                 if (game.science.getPolicy("communism").researched) {fieldProd = 0;}
 
-             } else {
-                fieldProd *= game.calendar.getCurSeason().modifiers['catnip'];
-            }
+                } else {
+                    fieldProd *= game.calendar.getWeatherMod({name: "catnip"});
+                }
             var vilProd = (game.village.getResProduction().catnip) ? game.village.getResProduction().catnip * (1 + game.getEffect('catnipJobRatio')) : 0;
             var baseProd = fieldProd + vilProd;
             baseProd *= 1 + game.getEffect("catnipRatio");
@@ -3464,7 +3501,7 @@ var run = function() {
                 karmaTotal: 0
             };
         }
-        
+
         if (saved.version == 2) {
             saved.version = 3;
             saved.policies = [];
@@ -3500,6 +3537,10 @@ var run = function() {
                         el.text(i18n('ui.max', [value]));
                     } else if (name[name.length -1] == 'min') {
                         el.text(i18n('ui.min', [value]));
+                    } else if (name[name.length -1] == 'leaderJob') {
+                        $('input[name=leaderJob][value="' + value + '"]').prop("checked", true);
+                    } else if (name[name.length -1] == 'leaderTrait') {
+                        $('input[name=leaderTrait][value="' + value + '"]').prop("checked", true);
                     }
                 } else {
                     el.prop('checked', value);
@@ -4470,13 +4511,8 @@ var run = function() {
                 type: 'checkbox'
             }).data('option', option);
 
-            var input = $('<input/>', {
-                id: 'toggle-' + name,
-                type: 'checkbox'
-            }).data('option', option);
-
             if (option.limited) {
-                input.prop('checked', true);
+                LimitedInput.prop('checked', true);
             }
             
             LimitedInput.on('change', function () {
@@ -4919,6 +4955,7 @@ var run = function() {
     };
 
     var getDistributeOption = function (name, option) {
+        if (name == "leader") {return getLeader(name, option);}
         var iname = ucfirst(i18n('$village.job.' + name));
 
         var element = getOption(name, option, iname);
@@ -4980,6 +5017,136 @@ var run = function() {
         })(iname);
 
         element.append(maxButton);
+
+        return element;
+    };
+
+    var getLeader = function (name, option) {
+        var iname = ucfirst(i18n('distribute.makeLeader'));
+        var element = getOption(name, option, iname);
+        element.css('borderBottom', '1px solid rgba(185, 185, 185, 0.7)');
+        
+        var traitList = $('<ul/>', {
+            id: 'items-list-traits',
+            css: {display: 'none', paddingLeft: '20px'}
+        });
+        
+        var traitShowButton = $('<div/>', {
+            id: 'set-leader-leaderTrait',
+            text: i18n('$village.trait.filter.all'),
+            css: {
+                cursor:'pointer',
+                display:'inline-block',
+                float:'right',
+                paddingRight:'5px',
+                textShadow:'3px 3px 4px gray'}
+        }).data('option', option);
+             
+        for (var i in com.nuclearunicorn.game.village.Kitten().traits){
+            traitList.append(getLeaderTrait(i, option));
+        }
+        
+        traitShowButton.on('click', function () {
+            jobList.toggle(false);
+            traitList.toggle();
+        });
+        
+        var jobList = $('<ul/>', {
+            id: 'items-list-jobs',
+            css: {display: 'none', paddingLeft: '20px'}
+        });
+        
+        var jobShowButton = $('<div/>', {
+            id: 'set-leader-leaderJob',
+            text: i18n('$village.panel.job'),
+            css: {
+                cursor:'pointer',
+                display:'inline-block',
+                float:'right',
+                paddingRight:'5px',
+                textShadow:'3px 3px 4px gray'}
+        }).data('option', option);
+        
+        for (var i in game.village.jobs){
+            jobList.append(getLeaderJob(i, option));
+        }
+        
+        jobShowButton.on('click', function () {
+            traitList.toggle(false);
+            jobList.toggle();
+        });
+        
+        element.append(traitShowButton, jobShowButton, traitList, jobList);
+
+        return element;
+    };
+
+    var getLeaderJob = function (index, option) {
+        var jobModel = game.village.jobs[index];
+        var element = $('<li/>');
+
+        var label = ($('<label/>', {
+            'for': 'toggle-leaderJob-' + index,
+            text: jobModel.title,
+            css: {cursor: 'pointer',
+                textShadow: '3px 3px 4px gray'}
+        }));
+        
+        var input = $('<input/>', {
+           id: 'toggle-leaderJob-' + index,
+           name: 'leaderJob',
+           value: index,
+           type: 'radio'
+        });
+
+         if (input.prop("value") == option.leaderJob) {
+            if (!input.prop("checked")){
+                    input.prop("checked", "checked")
+            }
+        }
+
+        input.on('change', function () {
+            imessage('distribute.leaderJob', [i18n('$village.job.' + jobModel.name)]);
+            option.leaderJob = parseInt($("input[name='leaderJob']:checked").val());
+            kittenStorage.items['set-leader-leaderJob']= option.leaderJob;
+            saveToKittenStorage();
+        });
+        element.append(input, label);
+
+        return element;
+    };
+
+    var getLeaderTrait = function (index, option) {
+        var traitModel = com.nuclearunicorn.game.village.Kitten().traits[index];
+        var element = $('<li/>');
+
+        var label = ($('<label/>', {
+            'for': 'toggle-leaderTrait-' + index,
+            text: traitModel.title,
+            css: {cursor: 'pointer',
+                textShadow: '3px 3px 4px gray'}
+        }));
+        
+        var input = $('<input/>', {
+           id: 'toggle-leaderTrait-' + index,
+           name: 'leaderTrait',
+           value: index,
+           type: 'radio'
+        });
+
+        if (input.prop("value") == option.leaderTrait) {
+            if (!input.prop("checked")){
+                    input.prop("checked", "checked")
+            }
+        }
+
+        input.on('change', function () {
+            imessage('distribute.leaderTrait', [traitModel.title]);
+            option.leaderTrait =  parseInt($("input[name='leaderTrait']:checked").val());
+            kittenStorage.items['set-leader-leaderTrait']= option.leaderTrait;
+            saveToKittenStorage();
+        });
+        element.append(input, label);
 
         return element;
     };
