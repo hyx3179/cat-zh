@@ -376,7 +376,7 @@ var run = function() {
             'distribute.unlimited': '分配 {0} 不受限',
             'distribute.makeLeader': '分配领袖',
             'act.distribute': '分配一只猫猫成为 {0}',
-            'act.distributeLeader': '分配一只 {0} 猫猫的领袖',
+            'act.distributeLeader': '分配一只 {0} 猫猫领袖',
             'ui.max.set': '设置 {0} 的最大值',
             'summary.distribute': '帮助 {0} 只猫猫找到工作',
             'filter.distribute': '猫口分配',
@@ -1333,7 +1333,7 @@ var run = function() {
                 var leaderJobName = game.village.jobs[leaderVals.leaderJob].name;
                 var traitName = com.nuclearunicorn.game.village.Kitten().traits[leaderVals.leaderTrait].name;
                 if (!options.policies.findIndex(obj => obj == 'theocracy') || game.science.getPolicy('theocracy').researched) {leaderJobName = "priest";}
-                if (game.village.leader == null || !(game.village.leader.job === leaderJobName && game.village.leader.trait === traitName)) {
+                if (game.village.leader == null || !(game.village.leader.job == leaderJobName && game.village.leader.trait.name == traitName)) {
                     var traitKittens = game.village.sim.kittens.filter(kitten => kitten.trait.name == traitName);
                     if (traitKittens.length != 0) {
                         if (game.village.getJob(leaderJobName).unlocked && game.village.getJob(leaderJobName).value < game.village.getJobLimit(leaderJobName)) {
@@ -1346,8 +1346,8 @@ var run = function() {
                             game.villageTab.censusPanel.census.makeLeader(correctLeaderKitten);
                             correctLeaderKitten.job = leaderJobName;
                             game.village.getJob(leaderJobName).value += 1;
-                            iactivity('act.distribute', [i18n('$village.trait.' + traitName)], 'ks-distribute');
-                            this.villageManager.render();
+                            iactivity('act.distributeLeader', [i18n('$village.trait.' + traitName)], 'ks-distribute');
+                            game.villageTab.censusPanel.census.update();
                         }
                     }
                 }
