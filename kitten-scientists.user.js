@@ -2017,7 +2017,7 @@ var run = function() {
             }
         },
         hunt: function () {
-            if(!game.ui.fastHuntContainer.style.visibility == "visible") {return;}
+            if(game.ui.fastHuntContainer.style.visibility != "visible") {return;}
             var manpower = this.craftManager.getResource('manpower');
 
             if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue) {
