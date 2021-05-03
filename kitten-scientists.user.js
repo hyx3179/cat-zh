@@ -159,8 +159,8 @@ var run = function() {
 
             'distribute.limited': 'Distribute to {0}: stop when reach max',
             'distribute.unlimited': 'Distribute to {0}: unlimited',
-            'distribute.leaderJob': 'Distribute a leader to {0} ',
-            'distribute.leaderTrait': 'make {0} leader',
+            'distribute.leaderJob': 'Leader job is {0} ',
+            'distribute.leaderTrait': 'Choose {0} leader',
             'distribute.makeLeader': 'Make Leader',
             'act.distribute': 'Distribute a kitten to {0}',
             'act.distributeLeader': 'Make a {0} kitten leader',
@@ -371,8 +371,8 @@ var run = function() {
             'craft.unlimited': '制作 {0} 不受限制',
 
             'distribute.limited': '分配 {0} 受限于最大值',
-            'distribute.leaderJob': '分配领袖工作为 {0} ',
-            'distribute.leaderTrait': '分配领袖的特质为 {0} ',
+            'distribute.leaderJob': '领袖工作为 {0} ',
+            'distribute.leaderTrait': '领袖的特质为 {0} ',
             'distribute.unlimited': '分配 {0} 不受限',
             'distribute.makeLeader': '分配领袖',
             'act.distribute': '分配一只猫猫成为 {0}',
@@ -2822,6 +2822,12 @@ var run = function() {
                 var consume = res && res.enabled && (res.consume != undefined) ? res.consume : options.consume;
 
                 value -= Math.min(this.getResource(name).maxValue * trigger, value) * (1 - consume);
+
+                if ('unobtainium' === name) {
+                    if (value < 1000 && this.getResource(name).value == this.getResource(name).maxValue && this.getResource(name).value>= 1000) {
+                        value = this.getResource(name).value;// fix unobtainium carfting to eludium
+                    }
+                }
             }
 
             return value;
@@ -2839,7 +2845,9 @@ var run = function() {
                 }
             var vilProd = (game.village.getResProduction().catnip) ? game.village.getResProduction().catnip * (1 + game.getEffect('catnipJobRatio')) : 0;
             var baseProd = fieldProd + vilProd;
-            baseProd *= 1 + game.getEffect("catnipRatio");
+            var hydroponics = game.space.getBuilding('hydroponics');
+            var hydroponicsEffect = hydroponics.effects['catnipRatio'];
+            baseProd *= 1 + game.bld.getBuildingExt('aqueduct').meta.stages[0].effects['catnipRatio'] * aqueducts + hydroponicsEffect * hydroponics.val;
 
             var paragonBonus = game.challenges.isActive("winterIsComing") ? 0 : game.prestige.getParagonProductionRatio();
             baseProd *= 1 + paragonBonus;
@@ -2848,12 +2856,13 @@ var run = function() {
             
             //if (!game.opts.disableCMBR) {baseProd *= (1 + game.getCMBRBonus());}
 
-            baseProd *= 1 + (game.getEffect("blsProductionBonus") * game.resPool.get("sorrow").value);
+            baseProd *= 1 + (game.getEffect('blsProductionBonus') * game.resPool.get('sorrow').value);
 
             baseProd = game.calendar.cycleEffectsFestival({catnip: baseProd})['catnip'];
 
             var baseDemand = game.village.getResConsumption()['catnip'];
-            baseDemand *= 1 + game.getEffect("catnipDemandRatio");
+            var uniPastures = game.bld.getBuildingExt('unicornPasture').meta.val;
+            baseDemand *= 1 + (game.getLimitedDR(pastures * -0.005 + uniPastures * -0.0015, 1.0));
             if (game.village.sim.kittens.length > 0 && game.village.happiness > 1) {
                 var happyCon = game.village.happiness - 1;
                 if (game.challenges.isActive("anarchy")) {
