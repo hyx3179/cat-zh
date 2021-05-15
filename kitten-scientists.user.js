@@ -94,7 +94,7 @@ var run = function() {
             'ui.limit': 'Limited',
             'ui.trigger.missions.set': 'Enter a new trigger value for missions. Should be in the range of 0 to 13. Corresponds to each planet sort',
             'ui.trigger.crypto.set': 'Enter a new trigger value for {0}. Corresponds to the amount of Relics needed before the exchange is made.',
-            'ui.engine':'Enable Scientists',
+            'ui.engine': 'Enable Scientists',
             'ui.build': 'Bonfire',
             'ui.space': 'Space',
             'ui.craft': 'Crafting',
@@ -307,7 +307,7 @@ var run = function() {
             'ui.limit': '限制',
             'ui.trigger.missions.set': '输入一个新的 探索星球 触发值,取值范围为 0 到 13 的整数。\n分别对应13颗星球。',
             'ui.trigger.crypto.set': '输入一个新的 {0} 触发值,\n遗物数量达到触发值时会进行黑笔交易。',
-            'ui.engine':'启用小猫珂学家',
+            'ui.engine': '启用小猫珂学家',
             'ui.build': '营火',
             'ui.space': '太空',
             'ui.craft': '工艺',
@@ -1860,25 +1860,27 @@ var run = function() {
                         if (game.workshop.get('machineLearning').researched) {
                             libToDat *= (1 + game.bld.get('aiCore').on * game.getEffect('dataCenterAIRatio'));
                         }
-                        if (game.resPool.energyProd >= game.resPool.energyCons + enCon*libraryMeta.val/libToDat) {
-                            var prices = libraryMeta.stages[1].prices;
-                            var priceRatio = bulkManager.getPriceRatio(libraryMeta, true);
-                            if (bulkManager.singleBuildPossible(libraryMeta, prices, 1)) {
-                                var button = buildManager.getBuildButton('library', 0);
-                                button.controller.sellInternal(button.model, 0);
-                                libraryMeta.on = 0
-                                libraryMeta.val = 0
-                                libraryMeta.stage = 1
-                                libraryMeta.calculateEffects(libraryMeta, game)
-                                iactivity('upgrade.building.library', [], 'ks-upgrade');
-                                game.ui.render();
-                                buildManager.build('library', 1, 1);
-                                game.ui.render();
-                                return;
+                        var scienceBldMax = game.bld.getEffect("scienceMax");
+                        if (game.resPool.get('compedium').value > scienceBldMax) {
+                            if (game.resPool.energyProd >= game.resPool.energyCons + enCon * libraryMeta.val / libToDat) {
+                                var prices = libraryMeta.stages[1].prices;
+                                var priceRatio = bulkManager.getPriceRatio(libraryMeta, true);
+                                if (bulkManager.singleBuildPossible(libraryMeta, prices, 1)) {
+                                    var button = buildManager.getBuildButton('library', 0);
+                                    button.controller.sellInternal(button.model, 0);
+                                    libraryMeta.on = 0
+                                    libraryMeta.val = 0
+                                    libraryMeta.stage = 1
+                                    libraryMeta.calculateEffects(libraryMeta, game)
+                                    iactivity('upgrade.building.library', [], 'ks-upgrade');
+                                    game.ui.render();
+                                    buildManager.build('library', 1, 1);
+                                    game.ui.render();
+                                    return;
+                                }
                             }
                         }
                     }
-
                 }
 
                 var amphitheatreMeta = game.bld.getBuildingExt('amphitheatre').meta;
@@ -1886,17 +1888,19 @@ var run = function() {
                     if (amphitheatreMeta.stages[1].stageUnlocked) {
                         var prices = amphitheatreMeta.stages[1].prices;
                         var priceRatio = bulkManager.getPriceRatio(amphitheatreMeta, true);
-                        if (bulkManager.singleBuildPossible(amphitheatreMeta, prices, 1)) {
-                            var button = buildManager.getBuildButton('amphitheatre', 0);
-                            button.controller.sellInternal(button.model, 0);
-                            amphitheatreMeta.on = 0
-                            amphitheatreMeta.val = 0
-                            amphitheatreMeta.stage = 1
-                            iactivity('upgrade.building.amphitheatre', [], 'ks-upgrade');
-                            game.ui.render();
-                            buildManager.build('amphitheatre', 1, 1);
-                            game.ui.render();
-                            return;
+                        if (game.getResourcePerTick('titianium', true) > 0) {
+                            if (bulkManager.singleBuildPossible(amphitheatreMeta, prices, 1)) {
+                                var button = buildManager.getBuildButton('amphitheatre', 0);
+                                button.controller.sellInternal(button.model, 0);
+                                amphitheatreMeta.on = 0
+                                amphitheatreMeta.val = 0
+                                amphitheatreMeta.stage = 1
+                                iactivity('upgrade.building.amphitheatre', [], 'ks-upgrade');
+                                game.ui.render();
+                                buildManager.build('amphitheatre', 1, 1);
+                                game.ui.render();
+                                return;
+                            }
                         }
                     }
                 }
@@ -3353,6 +3357,7 @@ var run = function() {
         + 'padding: 1%;'
         + 'margin: 0;'
         + 'overflow-y: auto;'
+        + 'font-size: 16px;'
         + '}');
 
     addRule(defaultSelector + ' #leftColumn {'
