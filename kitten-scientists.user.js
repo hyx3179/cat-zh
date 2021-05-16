@@ -3357,7 +3357,6 @@ var run = function() {
         + 'padding: 1%;'
         + 'margin: 0;'
         + 'overflow-y: auto;'
-        + 'font-size: 16px;'
         + '}');
 
     addRule(defaultSelector + ' #leftColumn {'
