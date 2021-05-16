@@ -1337,7 +1337,7 @@ var run = function() {
                     var traitKittens = game.village.sim.kittens.filter(kitten => kitten.trait.name == traitName);
                     if (traitKittens.length != 0) {
                         if (game.village.getJob(leaderJobName).unlocked && game.village.getJob(leaderJobName).value < game.village.getJobLimit(leaderJobName)) {
-                            var correctLeaderKitten = traitKittens.sort(function(a, b) {return b.rank - a.rank;})[0];
+                            var correctLeaderKitten = traitKittens.sort(function(a, b) {return b.rank - a.rank != 0 ? b.rank - a.rank : b.exp - a.exp;})[0];
                             if (game.village.getJob(leaderJobName).value < distributeItem[leaderJobName].max || !distributeItem[leaderJobName].limited) {
                                 game.village.unassignJob(correctLeaderKitten);
                             } else {
