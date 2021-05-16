@@ -1888,7 +1888,7 @@ var run = function() {
                     if (amphitheatreMeta.stages[1].stageUnlocked) {
                         var prices = amphitheatreMeta.stages[1].prices;
                         var priceRatio = bulkManager.getPriceRatio(amphitheatreMeta, true);
-                        if (game.getResourcePerTick('titianium', true) > 0) {
+                        if (game.getResourcePerTick('titanium', true) > 0) {
                             if (bulkManager.singleBuildPossible(amphitheatreMeta, prices, 1)) {
                                 var button = buildManager.getBuildButton('amphitheatre', 0);
                                 button.controller.sellInternal(button.model, 0);
