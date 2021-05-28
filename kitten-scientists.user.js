@@ -3336,8 +3336,8 @@ var run = function() {
     var defaultSelector = 'body[data-ks-style]:not(.scheme_sleek)';
 
     addRule('body {' // low priority. make sure it can be covered by the theme
-        + 'font-family: monospace;'
-        + 'font-size: 12px;'
+        + 'font-family: inherit;'
+        + 'font-size: inherit;'
         + '}');
         
     addRule(defaultSelector + ' #game {'
@@ -3375,6 +3375,7 @@ var run = function() {
         + 'overflow-y: auto;'
         + 'height: 92%;'
         + 'width: 19%;'
+        + 'font-size: 12px;'
         + '}');
 
     addRule('body #gamePageContainer #game #rightColumn {'
