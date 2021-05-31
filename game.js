@@ -167,7 +167,7 @@ dojo.declare("classes.game.Server", null, {
 		var isLocalhost = window.location.protocol == "file:" || host == "localhost" || host == "127.0.0.1";
         if (isLocalhost){
             //if you are running chilar locally you should know what you are doing
-            return "http://104.21.92.192:7780";
+            return "http://localhost:7780";
         }
         return "";
     },
