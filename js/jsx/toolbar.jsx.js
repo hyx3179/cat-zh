@@ -489,7 +489,7 @@ WLogin = React.createClass({
                 [
                     $r("span", {
                         className: "status-indicator-" + (game.server.userProfile ? "online" : "offline")
-                    }, "* " + (game.server.userProfile ? "在线" : "离线")),
+                    }, "* " + (game.server.userProfile ? "" : "离线")),
                     this.state.isExpanded && $r("div", {
                         className: "login-popup button_tooltip tooltip-block"
                     },
