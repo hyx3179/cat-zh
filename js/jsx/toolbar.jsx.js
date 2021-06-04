@@ -413,7 +413,7 @@ WCloudSaves = React.createClass({
                 $r("div", {className:"save-record-cell"}, "游戏时间"),
                 $r("div", {className:"save-record-cell"}, "上次更新"),
                 $r("div", {className:"save-record-cell"}, "大小"),
-                $r("div", {className:"save-record-cell"}, "操作")
+                $r("div", {className:"save-record-cell"}, "存档操作按钮")
             ]),
             //body
             //TODO: externalize save record as component?
@@ -447,7 +447,7 @@ WCloudSaves = React.createClass({
                             onClick: function(e){
                             e.stopPropagation();
                             game.server.loadSave(save.guid);
-                        }}, "读取"),
+                        }}, "下载并加载"),
                 ])
             })),
 
