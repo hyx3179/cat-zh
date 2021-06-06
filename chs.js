@@ -20,7 +20,7 @@ var cnItems = {
     'Nummon': '概览',
     'Error: The email address is badly formatted.': '邮箱地址格式错误',
     'Error: The email address is already in use by another account.': '该邮箱地址已经被注册',
-    '': '',
+    'CO2': '二氧化碳',
     '': '',
     '': '',
     '': '',
