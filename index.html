@@ -139,6 +139,7 @@
 					"js/jsx/mid.jsx",
 					"js/jsx/toolbar.jsx",
 					"js/jsx/chiral.jsx",
+                    "js/jsx/map.jsx",
 
 					//required for defining IReactAware, will be relied upon by js/space
 					"js/ui",
@@ -829,7 +830,7 @@
 					}, 2000);
 				} else {
 					// NummonInit();
-					document.body.appendChild(document.createElement('script')).src = 'NummonCalc.js?v=6';
+					document.body.appendChild(document.createElement('script')).src = 'NummonCalc.js?v=5';
 					if (game.isWebWorkerSupported() && !game.useWorkers) {
 						game.useWorkers = true;
 					}
