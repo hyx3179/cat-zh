@@ -12,7 +12,6 @@ var cnItems = {
     _OTHER_: [],
 
     //未分类：
-    'Deutsch': '德文',
     'Apply changes': '保存更改',
     'Android': '安卓',
     'autosaving...': '自动保存...',
@@ -20,7 +19,6 @@ var cnItems = {
     'Nummon': '概览',
     'Error: The email address is badly formatted.': '邮箱地址格式错误',
     'Error: The email address is already in use by another account.': '该邮箱地址已经被注册',
-    'CO2:': '二氧化碳',
     '': '',
     '': '',
     '': '',
@@ -29,9 +27,9 @@ var cnItems = {
     '': '',
     'Setting up game engine...': '设置游戏引擎…',
     'Kittens Game Mobile has been released! Click on the link to follow': '小猫游戏手机版已经发布!点击链接查看',
-    'Error: Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.': '错误!账户已被锁，请稍后再试。',
-    '': '',
-    '': '',
+    'Error: Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.': '错误! 账户已被锁，请稍后再试。',
+    'Error: There is no user record corresponding to this identifier. The user may have been deleted.': '错误！账户不存在',
+    'Error: The password is invalid or the user does not have a password.': '错误！密码错误',
     '': '',
     '': '',
     '': '',
