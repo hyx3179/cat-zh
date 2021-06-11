@@ -30,7 +30,7 @@ var cnItems = {
     'Error: Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.': '错误! 账户已被锁，请稍后再试。',
     'Error: There is no user record corresponding to this identifier. The user may have been deleted.': '错误！账户不存在',
     'Error: The password is invalid or the user does not have a password.': '错误！密码错误',
-    '': '',
+    'Error: The email address is badly formatted.': '错误! 邮箱格式不对',
     '': '',
     '': '',
     '': '',
