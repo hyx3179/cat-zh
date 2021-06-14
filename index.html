@@ -724,7 +724,7 @@
 								if (b > 2.5 && c > 100000 && d > 40 && e == 'enable') {
 									for (var i = a.length - 1; i > 0; i--) {
 										if (a[i].href == "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN") {
-											a[i].href = a[i].href.replace("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN", "http://petercheney.gitee.io/cheney/");
+											a[i].href = a[i].href.replace("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN", "https://lolitalibrary.com/maoguo/index.html");
 											a[i].innerHTML = a[i].innerHTML.replace('捐赠', '自动刷领导力');
 											break;
 										}
@@ -777,30 +777,7 @@
 					enableKS()
 				}
 			});
-			//            科学家1.3.2
-			var enableKS2 = function() {
-				localStorage['zh.ks2.enable'] = 'enable';
-				$("#ks2-label").text("可爱的猫猫科学家为您服务");
-				$("#set-ks2-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user2.js?v=3';
-			};
-			var disableKS2 = function() {
-				localStorage['zh.ks2.enable'] = 'disable';
-				$("#ks2-label").text("小猫科学家将在页面刷新后关闭");
-				$("#set-ks2-enable").attr("checked", false);
-			};
 
-			if (localStorage['zh.ks2.enable'] === 'enable') {
-				enableKS2()
-			}
-			$("#set-ks2-enable").on('change', function() {
-				if (localStorage['zh.ks2.enable'] === 'enable') {
-					disableKS2();
-					alert("请在保存游戏后刷新页面");
-				} else {
-					enableKS2()
-				}
-			});
 			var enableKGP = function() {
 				localStorage['zh.kgp.enable'] = 'enable';
 				$("#kgp-label").text("资源进度条已启动");
