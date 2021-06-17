@@ -187,7 +187,7 @@
 				def = _import("i18n", def);
 				def.then(function() {
 					console.log("Loading locale system");
-					var langPromise = i18nLang.init(16);
+					var langPromise = i18nLang.init(new Date().getDate());
 					langPromise.done(function() {
 						loadingMessages = [
 							$I("ui.loading.msg.0"),
@@ -317,8 +317,8 @@
 					<!--- a Dark Souls of incremental gaming -->
 
 					<span style="font-size: small;">
-						<a href="http://kittensgame.com/beta" title="experimental, stable" target="_blank">测试版</a>
-						<a href="http://kittensgame.com/web" title="RC, nighty build" target="_blank"><b>官方版</b></a>
+						<a href="http://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>
+						<a href="http://kittensgame.com/web" title="国外英文官网版本" target="_blank"><b>ML</b></a>
 					</span>
 
 					<a href="#" style="color: red">
@@ -576,7 +576,7 @@
 				<label id="kgp-label" for="set-kgp-enable">启用资源进度条</label>
 				<br>
 				<input id="autoSaveReset" type="checkbox"  onclick="gamePage.opts['autoSaveReset'] = $('#autoSaveReset')[0].checked;">
-				<label id="autoSaveReset" for="autoSaveReset">重置游戏自动备份存档</label>
+				<label id="optionAutoSaveReset" for="autoSaveReset">重置游戏自动备份存档</label>
 				<br>
 				<input id="hideSell" type="checkbox" onclick="gamePage.opts.hideSell = $('#hideSell')[0].checked;">
 				<label id="optionHideSell" for="hideSell">Hide 'sell' buttons</label>
