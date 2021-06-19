@@ -42,7 +42,7 @@
 
 		<script type="text/javascript">
 			var now = Date.now();
-			$("<link />").attr("rel", "stylesheet").attr("type", "text/css").attr("href", "res/default.css?v=2").appendTo($("head"));
+			$("<link />").attr("rel", "stylesheet").attr("type", "text/css").attr("href", "res/default.css?v=3").appendTo($("head"));
 		</script>
 
 		<script>
@@ -105,7 +105,7 @@
 				$("<link />")
 					.attr("rel", "stylesheet")
 					.attr("type", "text/css")
-					.attr("href", "res/theme_" + themeId + ".css?_=002")
+					.attr("href", "res/theme_" + themeId + ".css?_=" + buildRevision)
 					.appendTo($("head"));
 			}
 
@@ -768,7 +768,7 @@
 				localStorage['zh.ks.enable'] = 'enable';
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$("#set-ks-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=16';
+				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=17';
 			};
 			var disableKS = function() {
 				localStorage['zh.ks.enable'] = 'disable';
