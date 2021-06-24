@@ -312,13 +312,13 @@
 
 	<body>
 		<!--汉化零碎文本-->
-		<script src="chs.js?v=07071450"></script>
-		<script src="//g8hh.com/zh/core.js"></script>
+		<script src="chs/chs.js?v=07071450"></script>
+		<script src="chs/chscore.js"></script>
 		<div id="gamePageContainer">
 
 			<div id="topBar">
 				<div style="padding-left: 10px; min-width: 0px; max-width: 400px; overflow: hidden; text-overflow: ellipsis;">
-					Kittens Game
+					猫国建设者
 					<span style="font-size: small;">
 						by <a href="http://kittensgame.com/" class="copyright" target="_blank">bloodrizer</a>
 					</span>
@@ -757,10 +757,10 @@
 				<!--  | <a href="classic/" target="_blank">classic</a> -->
 			</div>
 		</div>
-		<!—客服 开始—>
-		<link rel="stylesheet" href="//g8hh.com/static/css/kf.css" type="text/css" media="screen" charset="utf-8">
-		<script src="kf.js"></script>
-		<!— 客服 结束 —>
+		<!--客服 开始-->
+		<link rel="stylesheet" href="chs/kf.css" type="text/css" media="screen" charset="utf-8">
+		<script src="chs/kf.js"></script>
+		<!--客服 结束-->
 		<!--站长统计-->
 		<div style="display: none">
 			<script type="text/javascript" src="//s19.cnzz.com/z_stat.php?id=1267958737&web_id=1267958737"></script>
@@ -772,7 +772,7 @@
 				localStorage['zh.ks.enable'] = 'enable';
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$("#set-ks-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=23';
+				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=24';
 			};
 			var disableKS = function() {
 				localStorage['zh.ks.enable'] = 'disable';
@@ -823,9 +823,6 @@
 				} else {
 					// NummonInit();
 					document.body.appendChild(document.createElement('script')).src = 'NummonCalc.js?v=7';
-					if (game.isWebWorkerSupported() && !game.useWorkers) {
-						game.useWorkers = true;
-					}
 				}
 			};
 			_282d5adfdca92885cd9f210a9b60a328();
