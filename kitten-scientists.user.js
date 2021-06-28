@@ -1477,7 +1477,7 @@ var run = function() {
                         }
                     } else {
                         var btn = manager.getBuildButton(bestUnicornBuilding, 'z');
-                        if (!game.religionTab.zgUpgradeButtons.length) {game.religionTab.render();}
+                        if (!btn || !button.model.metadata) {game.religionTab.render();}
                         for (var i of btn.model.prices) {
                             if (i.name == 'tears') {
                                 var tearNeed = i.val;
@@ -1494,8 +1494,10 @@ var run = function() {
                             }
                             // iactivity?
                         }
-                        religionManager.build(bestUnicornBuilding, 'z', 1);
-                        refreshRequired = true;
+                        if (btn.controller.hasResources(btn.model)) {
+                            religionManager.build(bestUnicornBuilding, 'z', 1);
+                            refreshRequired = true;
+                        }
                     }
                 }
             } else {
