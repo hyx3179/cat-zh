@@ -134,6 +134,7 @@ var cnExcludeWhole = [
     /^x?\d+(\.\d+)?(e[+\-]?\d+)?\s*$/, //12.34e+4
     /^\s*$/, //纯空格
     /^fps: (\d+) ms$/,
+    //  /^[\u4E00-\u9FA5]+$/,//纯中文
     /^\d+(\.\d+)?[A-Za-z]{0,2}.?\(?([+\-]?(\d+(\.\d+)?[A-Za-z]{0,2})?)?$/, //12.34M (+34.34K
     /^(\d+(\.\d+)?[A-Za-z]{0,2}\/s)?.?\(?([+\-]?\d+(\.\d+)?[A-Za-z]{0,2})?\/s\stot$/, //2.74M/s (112.4K/s tot
     /^\d+(\.\d+)?(e[+\-]?\d+)?.?\(?([+\-]?(\d+(\.\d+)?(e[+\-]?\d+)?)?)?$/, //2.177e+6 (+4.01+4
@@ -150,11 +151,7 @@ var cnExcludePostfix = [
 //小数点：([\d\.]+)
 //原样输出的字段：(.+)
 var cnRegReplace = new Map([
-    [/^requires ([\d\.]+) more research points$/, '需要$1个研究点'],
-    [/^(\d+) Royal points$/, '$1 皇家点数'],
-    [/^(.+)Kittens Game$/, '猫国建设者'],
     [/^(.+)Thanks a lot to 4chan\/igg for being such a nice guys.$/, '非常感谢4chan\/igg这么好的人。'],
-    [/^If none of these work:\n(.+)$/, '如果以上这些都不起作用:'],
     [/^(.+)Loading...\n(.+)$/, '加载中...'],
     [/^(.+)Loading...$/, '加载中...'],
     [/^(.+)You are a kitten in a catnip forest.\n(.+)$/, '你是猫薄荷森林里的一只小猫。'],

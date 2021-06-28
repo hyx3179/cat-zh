@@ -135,7 +135,7 @@ var cnItem = function (text, node) {
             return text_prefix + text + text_reg_exclude_postfix + text_postfix;
     }
 
-    if (cnItems._OTHER_.length < 500) {
+    /*if (cnItems._OTHER_.length < 1000) {
         //未收录则保存
         cnItems._OTHER_.push(save_text);
         cnItems._OTHER_.sort(
@@ -143,7 +143,7 @@ var cnItem = function (text, node) {
                 return a.localeCompare(b)
             }
         );
-    }
+    }*/
 
     //开启生词打印
         CNITEM_DEBUG && console.log(
