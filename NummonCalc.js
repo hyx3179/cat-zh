@@ -22,7 +22,12 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             "getTitPerZebraTrade": "Titanium Per Zebra Trade",
             "getZebraTradesLeftToMaxTit": "Trades Left to Cap Titanium",
             "getZebraTradesToMaxTit": "Max Zebra Trades to Cap Titanium",
-            
+
+            "pollution": "污染",
+
+            "getPollutionTick": "pollution per second",
+            "getCoMax": "Max of CO2",
+
             "unicorns": "Unicorns",
 
             "getBestUniBuilding": "Best Unicorn Building",
@@ -46,9 +51,12 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
 
             "getTCPerSacrifice": "Time Crystals per Sacrifice",
             "getRelicPerTCRefine": "Relics Per Time Crystal Refine",
-            "getTradeAmountAvg": "Time Crystal income expected value by Per.Combust TC",
-            "getResourceRetrievalTCBackYears": "Next ResourceRetrieval get TC back of game years",
-            
+
+            "resourceRetrieval": "资源回复",
+
+            "getTradeAmountAvg": "每跳一年的时间水晶贸易收入",
+            "getResourceRetrievalTCBackYears": "下级资源回复亏损至盈利的时间",
+
             "others": "Others",
 
             "getBestMagnetoBuilding": "Best Magneto/Steamwork Building",
@@ -82,6 +90,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             "getZebraTradesLeftToMaxTit": "达到钛上限的剩余斑马交易次数",
             "getZebraTradesToMaxTit": "达到钛上限的斑马交易次数",
 
+            "pollution": "污染",
+
+            "getPollutionTick": "每秒污染值",
+            "getCoMax": "二氧化碳最大值",
+
             "unicorns": "独角兽",
 
             "getBestUniBuilding": "最佳独角兽建筑",
@@ -105,8 +118,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
 
             "getTCPerSacrifice": "每次献祭得到的时间水晶",
             "getRelicPerTCRefine": "每次时间水晶精炼得到遗物",
+            
+            "resourceRetrieval": "资源回复",
+
             "getTradeAmountAvg": "每跳一年的时间水晶贸易收入",
-            "getResourceRetrievalTCBackYears": "下个资源回复水晶回本需跳(年)",
+            "getResourceRetrievalTCBackYears": "升级后烧水晶产出利润共需要",
 
             "others": "其他",
 
@@ -114,6 +130,7 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             "getUraniumForThoriumReactors": "钍反应堆每秒耗铀",
             "getDarkFutureYears": "距离黑暗未来到来年份",
             "getBestRelicBuilding": "获取最佳遗物建筑",
+            "getBestUnobtainiumBuilding": "难得素最佳太空建筑",
             "getAIlv15Time": "天网觉醒倒计时",
             "getfutureSeason": "距离下次时间悖论(季节)",
             
@@ -327,6 +344,25 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         if(titToFill < 0)
             titToFill = 0;
         return titToFill;
+    },
+
+    // POLLUTION :
+
+    getPollutionTick: function(){
+        if (!this.game.science.get("ecology").researched) {
+            return this.i18n("best.none");
+        }
+        var polltionPerTick = this.game.bld.cathPollutionPerTick;
+        return this.game.getDisplayValueExt(polltionPerTick, true, true);
+    },
+
+    getCoMax: function(){
+        if (!this.game.science.get("ecology").researched) {
+            return this.i18n("best.none");
+        }
+        var UndissipatednPerTick = this.game.bld.getUndissipatedPollutionPerTick() * 100;
+        var coMax = Math.max(UndissipatednPerTick, 0);
+        return coMax;
     },
 
     // UNICORN :
@@ -568,6 +604,8 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         return perterade;
     },
 
+    //getTC
+
     getResourceRetrievalTCBackYears: function() {
         var shatterRe = 1 + this.game.getLimitedDR(this.game.getEffect("shatterCostReduction"), 1);
         var RedmoonCycleFestivalRatio = this.game.calendar.cycleEffectsFestival({unobtainium: 1})['unobtainium'];
@@ -586,8 +624,10 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         }else if (timeC <= 0){
             return this.i18n("$time.cfu.ressourceRetrieval.label");
         }else {
-            var TCBack = Math.ceil(cost * number / result)
-            return TCBack;
+            var TCBack = Math.ceil(cost * number / result);
+            var op = game.time.getCFU("blastFurnace").on;
+            TCBack = 50 * TCBack / op;
+            return this.game.toDisplaySeconds(TCBack);
         }
     },
     // OTHERS : 
@@ -651,6 +691,34 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         return next;
     },
     
+    getBestUnobtainiumBuilding: function() {
+        if (!game.space.getBuilding("orbitalArray").unlocked) {
+            return $I("space.planet.moon.moonOutpost.label");
+        }
+        var elevatorPanel = this.game.spaceTab.planetPanels[0].children;
+        var arrayPanel = this.game.spaceTab.planetPanels[3].children;
+        var elevatorPrices = this.getButtonPrice(elevatorPanel, "spaceElevator", "unobtainium");
+        var arrayPrices = this.getButtonPrice(arrayPanel, "orbitalArray", "eludium");
+        var elevatorVal = game.space.getBuilding("spaceElevator").val;
+        var arrayVal = game.space.getBuilding("orbitalArray").val;
+        var spaceRatio = 1 + this.game.getEffect("spaceRatio");
+        var elevatorup = (0.01 + spaceRatio) * arrayPrices * 1000;
+        var arrayup = (0.02 + spaceRatio) * elevatorPrices * (1+ this.game.getCraftRatio("chemist"));
+        if (elevatorup >= arrayup) {
+            var number = 1;
+            while (elevatorup >= arrayup && elevatorPrices < Number.MAX_VALUE / 1.15) {
+                elevatorPrices *= 1.15; 
+                spaceRatio += 0.01;
+                arrayup = (0.02 + spaceRatio) * elevatorPrices * (1+ this.game.getCraftRatio("chemist"));
+                elevatorup = (0.01 + spaceRatio) * arrayPrices * 1000;
+                number++;
+            }
+            return $I("space.planet.cath.spaceElevator.label") + " " + number + "x";
+        } else {
+            return $I("space.planet.piscine.orbitalArray.label");
+        }
+    },
+
     getDarkFutureYears: function(){
         var yearsLeft = this.game.calendar.darkFutureYears(true);
         return yearsLeft < 0 ? this.game.getDisplayValueExt(-yearsLeft) : this.i18n("done");
@@ -666,7 +734,7 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         if (this.game.bld.get("aiCore").effects["aiLevel"] >= 15)
             return this.i18n("done");
         if (gflopsproduction > 0)
-            return this.game.toDisplaySeconds((lv15Gflops - gflopsHave) / (gflopsproduction * this.game.getTicksPerSecondUI()));//修复函数
+            return this.game.toDisplaySeconds((lv15Gflops - gflopsHave) / (gflopsproduction * this.game.getTicksPerSecondUI()));
         else
             return this.i18n("infinity");
     },
@@ -739,6 +807,18 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
                 val: 0,
             },
         ],
+        pollution: [
+            {
+                name: "getPollutionTick",
+                // title: "Production Bonus",
+                val: 0,
+            },
+            {
+                name: "getCoMax",
+                // title: "Storage Bonus",
+                val: 0,
+            },
+        ],
         unicorns: [
             {
                 name: "getBestUniBuilding",
@@ -806,6 +886,8 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
                 // title: "Relics Per Time Crystal Refine",
                 val: 0,
             },
+        ],
+        resourceRetrieval: [
             {
                 name: "getTradeAmountAvg",
                 // title: "Blazars for Shatter Engine",
@@ -839,6 +921,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
                 val: 0,
             },
             {
+                name: "getBestUnobtainiumBuilding",
+                //title: "Besting space building for increase Unobtainium",
+                val: 0,
+            },
+            {
                 name: "getAIlv15Time",
                 val: 0,
             },
@@ -863,6 +950,10 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             // title: "Titanium"
         },
         {
+            name: "pollution",
+            // title: "Pollution"
+        },
+        {
             name: "unicorns",
             // title: "Unicorns"
         },
@@ -877,6 +968,10 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
         {
             name: "time",
             // title: "Time"
+        },
+        {
+            name: "resourceRetrieval",
+            // title: "resourceRetrieval"
         },
         {
             name: "others",
