@@ -429,11 +429,11 @@ WLoginForm = React.createClass({
 			xhrFields: {
 				withCredentials: true
 			},
-			error:function (xhr) {
-                game.msg(xhr.responseText, "important");
-            },
+            timeout : 5000,
 			url: this.props.game.server.getServerUrl() + "/user/login/",
-			dataType: "json"
+			dataType: "json",
+        }).fail(function(xhr){
+            game.msg(xhr.responseText, "important");
 		}).done(function(resp){
             if (resp.id){
                 self.props.game.server.setUserProfile(resp);
