@@ -420,7 +420,7 @@ WLoginForm = React.createClass({
         $.ajax({
             cache: false,
             type: "POST",
-            dataType: "JSON",
+            //dataType: "JSON",
             data: {
                 email: this.state.login,
                 password: this.state.password
@@ -489,7 +489,7 @@ WCloudSaves = React.createClass({
             //header
             saveData && $r("div", {className:"save-record header"}, [
                 $r("div", {className:"save-record-cell"}, "存档ID"),
-                $r("div", {className:"save-record-cell"}, "存档游戏时间"),
+                $r("div", {className:"save-record-cell"}, "真实游戏时间"),
                 $r("div", {className:"save-record-cell"}, "上次更新时间"),
                 $r("div", {className:"save-record-cell"}, "大小"),
                 $r("div", {className:"save-record-cell"}, "存档操作")
