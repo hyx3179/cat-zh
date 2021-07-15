@@ -519,7 +519,7 @@ var run = function() {
             },
             faith: {
                 // Should religion building be automated?
-                enabled: true,
+                enabled: false,
                 // At what percentage of the storage capacity should KS build faith buildings?
                 trigger: 0,
                 // Additional options
@@ -572,7 +572,7 @@ var run = function() {
             },
             build: {
                 // Should buildings be built automatically?
-                enabled: true,
+                enabled: false,
                 // When a building requires a certain resource (this is what their *require* property refers to), then
                 // this is the percentage of the storage capacity of that resource, that has to be met for the building
                 // to be built.
@@ -719,7 +719,7 @@ var run = function() {
                 }
             },
             timeCtrl: {
-                enabled: true,
+                enabled: false,
                 items: {
                     accelerateTime:     {enabled: true,  subTrigger: 1,     misc: true, label: i18n('option.accelerate')},
                     timeSkip:           {enabled: false, subTrigger: 5,     misc: true, label: i18n('option.time.skip'), maximum: 50,
@@ -730,7 +730,7 @@ var run = function() {
             },
             craft: {
                 // Should resources be crafted automatically?
-                enabled: true,
+                enabled: false,
                 // Every item can define a required resource with the *require* property.
                 // At what percentage of the storage capacity of that required resource should the listed resource be crafted?
                 trigger: 0.95,
@@ -773,7 +773,7 @@ var run = function() {
             },
             trade: {
                 // Should KS automatically trade?
-                enabled: true,
+                enabled: false,
                 // Every trade can define a required resource with the *require* property.
                 // At what percentage of the storage capacity of that required resource should the trade happen?
                 trigger: 0.98,
@@ -1479,7 +1479,6 @@ var run = function() {
                     btn.controller.updateEnabled(btn.model);
                     if (btn.opts.building == 'unicornPasture') {
                         buildManager.build(btn.opts.building, undefined, 1);
-                        refreshRequired = true;
                     } else {
                         if (!btn || !btn.model.metadata) {game.religionTab.render();}
                         for (var i of btn.model.prices) {
@@ -1499,7 +1498,6 @@ var run = function() {
                             // iactivity?
                         }
                         religionManager.build(btn.id, 'z', 1);
-                        refreshRequired = true;
                     }
                 }
             } else {
@@ -1640,7 +1638,8 @@ var run = function() {
             }
         },
         chrono: function () {
-            if (!game.timeTab.visible) {return;}
+            var refreshRequired = false;
+            if (!game.timeTab.visible) {return refreshRequired;}
             var builds = options.auto.time.items;
             var buildManager = this.timeManager;
             var craftManager = this.craftManager;
@@ -1673,7 +1672,6 @@ var run = function() {
 
             var buildList = bulkManager.bulk(builds, metaData, trigger);
 
-            var refreshRequired = false;
             for (var entry in buildList) {
                 if (buildList[entry].count > 0) {
                     buildManager.build(buildList[entry].id, buildList[entry].variant, buildList[entry].count);
@@ -3316,7 +3314,8 @@ var run = function() {
 
             for (var i in materials) {
                 if (i === "manpower") {
-                    var total = this.craftManager.getValueAvailable(i, true) / materials[i];
+                    var manpowerValue = Math.max(this.craftManager.getValueAvailable(i, true) - 100, 0);
+                    var total = manpowerValue / materials[i];
                 } else {
                     var total = this.craftManager.getValueAvailable(i, limited, options.auto.trade.trigger) / materials[i];
                 }
