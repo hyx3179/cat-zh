@@ -925,11 +925,6 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
                 val: 0,
             },
             {
-                name: "getAdore",
-                // title: "Solar Revolution Limit",
-                val: 0,
-            },
-            {
                 name: "getlowestRatio",
                 // title: "Solar Revolution Limit",
                 val: 0,
@@ -937,6 +932,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             {
                 name: "getNextTranscendTierProgress",
                 // title: "Apocrypha Progress",
+                val: 0,
+            },
+            {
+                name: "getAdore",
+                // title: "Solar Revolution Limit",
                 val: 0,
             },
             {
