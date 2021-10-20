@@ -7,7 +7,7 @@ $(function(){
     content +='<div id="close_im" class="close-im"><a href="javascript:void(0);" title="点击关闭">&nbsp;</a></div>';
     content +='<a href="https://qm.qq.com/cgi-bin/qm/qr?k=tCJDY9A6mYcHFtdu13CrU8OqepUIwR-j&jump_from=webapi" target="_blank" class="im-qq qq-a" title="猫国建设者交流群:499256691">';
     content +='<div class="qq-container"></div>';
-    content +='<div class="qq-hover-c"><img class="img-qq" src="https://p.qlogo.cn/gh/499256691/499256691/0" width="60px" height="80px"></div>';
+    content +='<div class="qq-hover-c"><img class="img-qq" src="https://p.qlogo.cn/gh/499256691/499256691/?v= ' + new Date().getDate() + '" width="60px" height="80px"></div>';
     content +='<span>点击加群</span>';
     content +='</a>';
     content +='<div class="im-tel">';
