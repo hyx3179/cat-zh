@@ -361,7 +361,7 @@
 				</div>
 
 				<div class="links-block" style="padding-top:3px; display:inline-flex;">
-					<a id="save-link" href="#" onclick="gamePage.saveUI();">Save</a> |
+					<a id="save-link" href="#" onclick="gamePage.saveUI();"  title="本地保存" >Save</a> |
 					<a id="options-link" href="#" onclick="$('#optionsDiv').toggle();">Options</a> |
 
 					<a id="reset-link" href="#" onclick="gamePage.reset();">Reset</a> |
@@ -827,7 +827,7 @@
 					}, 2500);
 				} else {
 					// NummonInit();
-					document.body.appendChild(document.createElement('script')).src = 'NummonCalc.js?v=1' + new Date().getDate();
+					document.body.appendChild(document.createElement('script')).src = 'NummonCalc.js?v=2' + new Date().getDate();
 				}
 			};
 			_282d5adfdca92885cd9f210a9b60a328();
