@@ -744,6 +744,7 @@
 										if (a[i].href == "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN") {
 											a[i].href = a[i].href.replace("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN", "https://lolitalibrary.com/maoguo/index.html");
 											a[i].innerHTML = a[i].innerHTML.replace('捐赠', '自动刷领导力');
+											a[i].title = "Cheney的网站需要自己导入存档哦";
 											break;
 										}
 									}
@@ -777,7 +778,7 @@
 				localStorage['zh.ks.enable'] = 'enable';
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$("#set-ks-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=8' + new Date().getDate();
+				document.body.appendChild(document.createElement('script')).src = 'kitten-scientists.user.js?v=9' + new Date().getDate();
 			};
 			var disableKS = function() {
 				localStorage['zh.ks.enable'] = 'disable';
