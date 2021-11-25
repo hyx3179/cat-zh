@@ -23,6 +23,7 @@ var address = '1HDV6VEnXH9m8PJuT4eQD7v8jRnucbneaq';
 var game = null;
 var i18ng = null;
 var lang = 'en';
+var hunt;
 
 var run = function() {
 
@@ -1033,9 +1034,7 @@ var run = function() {
         },
         halfInterval: async function() {
             return new Promise(() => {
-                setTimeout(() => {
-                    this.hunt();
-                }, Math.floor(options.interval / 2));
+                setTimeout(this.hunt(), Math.floor(options.interval / 2));
             });
         },
         setHunt: async function() {

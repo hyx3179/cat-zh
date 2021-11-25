@@ -20,7 +20,6 @@
 		<!-- I only use jquery ironically -->
 
 		<script src="lib/react.min.js"></script>
-		<!--todo: use min version -->
 
 		<!-- Local versions of libs will be hosted so our Chinese players wont be forced to use VPN -->
 		<script src="lib/jQuery.js?v=_2"></script>
@@ -334,8 +333,8 @@
 
 					<span style="font-size: small;">
 						<a href="http://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>
-						<a href="http://kittensgame.com/web" title="国外英文官网版本" target="_blank"><b>ML</b></a>
-						<a href="https://petercheney.gitee.io/kitten-game-cn/" title="备用网站" target="_blank"><b>C</b></a>
+						<a href="http://kittensgame.com/web" title="国外英文官网版本" target="_blank"><strong>ML</strong>></a>
+						<a href="https://petercheney.gitee.io/kitten-game-cn/" title="备用网站" target="_blank"><strong>C</strong>></a>
 					</span>
 				</div>
 
@@ -375,7 +374,7 @@
 
 			<div id="loadingContainer">
 				<div class="content">
-					<span style="font-size:18px;"><img class="loader" width="16" height="16" src="res/ajax-loader.gif">&nbsp;加载中...<br></span>
+					<span style="font-size:18px;"><img class="loader" width="16" height="16" src="res/ajax-loader.gif" alt="加载中">&nbsp;加载中...<br></span>
 					<br>
 					<progress id="loadingProgressBar" value="0" max="100"></progress>
 					<div id="loadingProgressInfo">Setting up game engine...</div>
@@ -542,16 +541,16 @@
 				<select id="schemeToggle" onchange="gamePage.toggleScheme($('#schemeToggle').val())">
 				</select> &nbsp;
 				<a id="schemeRelock" href="#" onclick="gamePage.ui.relockSchemes()" style="font-size:14px;">Relock schemes</a>
-				<br><i><span id="schemeTip" style="font-size: 70%;">Schemes that you cannot select yet can be permanently unlocked by specific actions.</span></i>
+				<br><em><span id="schemeTip" style="font-size: 70%;">Schemes that you cannot select yet can be permanently unlocked by specific actions.</span></em>
 				<br>
 				<br>
 
 				<input id="workersToggle" type="checkbox" onclick="gamePage.useWorkers = $('#workersToggle')[0].checked;">
 				<label id="optionWorkers" for="workersToggle">Use web worker
-					<i>(game works correctly in background tab, may cause performance issues)
+					<em>(game works correctly in background tab, may cause performance issues)
 						<br>
 						You need to refresh the browser page for this setting to take effect.
-					</i></label>
+					</em></label>
 				<br>
 
 				<!-- ===================================== NOTE: FOR FULL I18N SUPPORT ===================================== -->
@@ -562,7 +561,7 @@
 				<br>
 
 				<input id="usePerSecondValues" type="checkbox" onclick="gamePage.opts.usePerSecondValues = $('#usePerSecondValues')[0].checked;">
-				<label id="optionUsePerSecondValues" for="usePerSecondValues">Use per second values <i>(per tick otherwise)</i></label>
+				<label id="optionUsePerSecondValues" for="usePerSecondValues">Use per second values <em>(per tick otherwise)</em></label>
 				<br>
 				<input id="usePercentageResourceValues" type="checkbox" onclick="gamePage.opts.usePercentageResourceValues = $('#usePercentageResourceValues')[0].checked;">
 				<label id="optionUsePercentageResourceValues" for="usePercentageResourceValues">Use percentage resource production values</label>
@@ -584,7 +583,7 @@
 				<label id="kgp-label" for="set-kgp-enable">启用资源进度条</label>
 				<br>
 				<input id="autoSaveReset" type="checkbox" onclick="gamePage.opts['autoSaveReset'] = $('#autoSaveReset')[0].checked;">
-				<label id="optionAutoSaveReset" for="autoSaveReset">重置游戏自动备份存档<i>（需要在浏览器设置下载保存位置！）</i></label>
+				<label id="optionAutoSaveReset" for="autoSaveReset">重置游戏自动备份存档<em>（需要在浏览器设置下载保存位置！）</em></label>
 				<br>
 				<input id="hideSell" type="checkbox" onclick="gamePage.opts.hideSell = $('#hideSell')[0].checked;">
 				<label id="optionHideSell" for="hideSell">Hide 'sell' buttons</label>
@@ -593,7 +592,7 @@
 				<label id="optionHideDowngrade" for="hideDowngrade">Hide 'downgrade' buttons</label>
 				<br>
 				<input id="hideBGImage" type="checkbox" onclick="gamePage.opts.hideBGImage = $('#hideBGImage')[0].checked; gamePage.ui.updateOptions();">
-				<label id="optionHideBGImage" for="hideBGImage">Hide background image <i>(for color schemes where applicable)</i></label>
+				<label id="optionHideBGImage" for="hideBGImage">Hide background image <em>(for color schemes where applicable)</em></label>
 				<br>
 				<input id="tooltipsInRightColumn" type="checkbox" onclick="gamePage.opts.tooltipsInRightColumn = $('#tooltipsInRightColumn')[0].checked; gamePage.ui.updateOptions();">
 				<label id="optionTooltipsInRightColumn" for="tooltipsInRightColumn">Move tooltips in right column</label>
@@ -622,11 +621,11 @@
 					<label id="optionBatchSize" for="batchSize">Batch size of Ctrl-click</label>
 					<br>
 					<input id="forceLZ" type="checkbox" onclick="gamePage.opts.forceLZ = $('#forceLZ')[0].checked;">
-					<label id="optionForceLZ" for="forceLZ" style="font-size: 75%;">Always compress in-memory save, in UTF-16 <i>(experimental)</i></label>
+					<label id="optionForceLZ" for="forceLZ" style="font-size: 75%;">Always compress in-memory save, in UTF-16 <em>(experimental)</em></label>
 					<br>
 					<input id="compressSaveFile" type="checkbox" onclick="gamePage.opts.compressSaveFile = $('#compressSaveFile')[0].checked;">
-					<label id="optionCompressSaveFile" for="compressSaveFile" style="font-size: 75%;">Compress exported save file <i>(experimental)<br>
-							WARNING: it generates save files that are NOT COMPATIBLE with older versions.</i></label>
+					<label id="optionCompressSaveFile" for="compressSaveFile" style="font-size: 75%;">Compress exported save file <em>(experimental)<br>
+							WARNING: it generates save files that are NOT COMPATIBLE with older versions.</em></label>
 					<br>
 				</div>
 
@@ -706,13 +705,15 @@
 					<br>
 					<div class="btn modern" style="font-size:16px;" onclick="gamePage.server.register()">注册</div>
 					<div style="color:#01A9DB;">
+						<ul>
 						<li>因为官方网站注册有几率会被墙。</li>
-                        <li>这里注册可以代替官网注册账号。</li>
+						<li>这里注册可以代替官网注册账号。</li>
 						<li>网页存档可以手机存档一键同步。</li>
-                        <li>不同电脑使用云存档能一键同步。</li>
-                        <li>后续设置可能有点麻烦按需使用。</li>
+						<li>不同电脑使用云存档能一键同步。</li>
+						<li>后续设置可能有点麻烦按需使用。</li>
 						<li>国外官网上传和加载都有些延迟。</li>
-                        <li>成功或者失败游戏日志会有提示。</li>
+						<li>成功或者失败游戏日志会有提示。</li>
+						</ul>
 					</div>
 				</div>
 			</div>
@@ -728,11 +729,9 @@
 				<body>
 					<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=82FJX5M8M3GVN" target="_blank">捐赠</a> |
 					<script type="text/javascript">
-						var abc = function() {
+						var paragonWebsite = function() {
 							if (typeof gamePage === "undefined") {
-								setTimeout(function() {
-									abc();
-								}, 10000);
+								setTimeout(paragonWebsite, 10000);
 							} else {
 								var a = document.getElementsByTagName("a");
 								var b = game.prestige.getParagonStorageRatio();
@@ -749,15 +748,13 @@
 										}
 									}
 								} else {
-									setTimeout(function() {
-										abc();
-									}, 10000);
+									setTimeout(paragonWebsite, 10000);
 								}
 							}
 						}
-						abc();
+						paragonWebsite();
 					</script>
-				</body>
+				</strong>ody>
 				<a href="https://www.patreon.com/bloodrizer" target="_blank">支持</a>
 				<!--  | <a href="classic/" target="_blank">classic</a> -->
 			</div>
@@ -834,6 +831,6 @@
 			_282d5adfdca92885cd9f210a9b60a328();
 		</script>
 
-	</body>
+	</strong>ody>
 
 </html>
