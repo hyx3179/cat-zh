@@ -247,7 +247,7 @@ var run = function() {
             'option.praise': '赞美太阳',
             'option.shipOverride': '强制贸易船',
             'option.autofeed': '献祭上古神',
-            'option.hunt': '猎人狩猎',
+            'option.hunt': '派出猎人',
             'option.crypto': '黑币交易',
             'option.embassies': '建造大使馆',
             'option.style': '占满屏幕',
@@ -345,8 +345,7 @@ var run = function() {
             'act.adore': '赞美群星! 转化 {0} 虔诚为 {1} 顿悟',
             'summary.adore': '通过赞美群星积累了 {0} 顿悟',
             'filter.adore': '赞美群星',
-            'adore.trigger.set': '为自动赞美群星设定一个新触发值，取值范围为 0 到 1 的小数。\n\n同时满足以下条件珂学家将自动赞美群星。\n1. 赞美群星再赞美太阳后，需太阳革命加成 ≥ 触发值 * 1000%\n2. 当前信仰 / 信仰上限 ≥ 0.98\n3. 次元超越等级低于 11，需赞美群星后的猫薄荷产量＞0。\n喵喵保护协会不允许饿死喵喵喵\n4. 次元超越等级低于12，需当前虔诚＞上次赞美群星时候的虔诚',
-
+            'adore.trigger.set': '为自动赞美群星设定一个新触发值，取值范围为 0 到 1 的小数。\n\n同时满足以下条件珂学家将自动赞美群星。\n1. 赞美群星再赞美太阳后，需太阳革命加成 ≥ 触发值 * 1000%\n2. 当前信仰 / 信仰上限 ≥ 0.98(赞美太阳触发条件设置0.98配合使用)\n3. 次元超越等级低于 11，需赞美群星后的猫薄荷产量＞0。\n喵喵保护协会不允许饿死喵喵喵\n4. 次元超越等级低于12，需当前虔诚＞上次赞美群星时候的虔诚',
             'resources.add': '添加资源',
             'resources.clear.unused': '清除未使用',
             'resources.stock': '库存: {0}',
@@ -394,7 +393,7 @@ var run = function() {
             'filter.promote': '提拔领袖',
             'summary.promote': '提拔领袖 {0} 次',
 
-            'ui.trigger.useWorkers.alert': '珂学家将会在后台满速运行，注意这会消耗更多性能。\n电脑不好的建议禁用\n需满足浏览器支持且游戏选项的web worker启用。\n启用后需要重新勾选启用珂学家',
+            'ui.trigger.useWorkers.alert': '珂学家将会在后台满速运行，注意这会消耗更多性能。\n电脑不好、内存≤ 8G的建议禁用\n需满足浏览器支持且游戏选项的web worker启用。\n启用后需要重新勾选启用珂学家',
             'ui.timeCtrl': '时间操纵',
             'option.accelerate': '时间加速',
             'act.accelerate': '固有时制御，二倍速!',
