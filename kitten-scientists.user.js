@@ -1921,7 +1921,7 @@ var run = function() {
                 }
             }
 
-            if (upgrades.races.enabled && gamePage.diplomacyTab.visible) {
+            if (upgrades.races.enabled && game.diplomacy.hasUnlockedRaces()) {
                 var maxRaces = (game.diplomacy.get('leviathans').unlocked) ? 8 : 7;
                 if (game.diplomacyTab.racePanels.length < maxRaces) {
                     var manpower = craftManager.getValueAvailable('manpower', true);
@@ -3199,6 +3199,7 @@ var run = function() {
                 if (data.tHidden === true) {continue;}
                 if (data.rHidden === true) {continue;}
                 if ((data.rHidden === undefined) && !data.unlocked) {continue;}
+				if (data.almostLimited && !game.workshop.get('geodesy').researched){continue;}
                 if (name === 'cryochambers' && (game.time.getVSU('usedCryochambers').val > 0
                     || game.bld.getBuildingExt('chronosphere').meta.val <= data.val)) {continue;}
                 if (name === 'ressourceRetrieval' && data.val >= 100) {continue;}
