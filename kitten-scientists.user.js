@@ -334,7 +334,7 @@ var run = function() {
             'ui.upgrade.policies.load': '读取',
             'ui.upgrade.policies.show': '列表',
 
-            'ui.faith.addtion': '宗教选项',
+            'ui.faith.addtion': '赞美功能',
             'option.faith.best.unicorn': '自动最效率独角兽建筑',
             'option.faith.best.unicorn.desc': '自动献祭独角兽，并会建造最佳独角兽建筑',
             'option.faith.transcend': '自动最佳次元超越',
@@ -410,7 +410,7 @@ var run = function() {
             'time.skip.trigger.set': '为跳转时间(燃烧时间水晶)设定一个新触发值，取值范围为正整数',
             'summary.time.skip': '跳过 {0} 年',
             'filter.time.skip': '时间跳转',
-            'option.time.reset': '重启时间线 (危险!)',
+            'option.time.reset': '重启时间线 (弃用)',
             'status.reset.check.enable': '在重启时间线前检查 {0}',
             'status.reset.check.disable': '在重启时间线前不检查 {0}',
             'ui.min': 'Min: {0}',
@@ -789,28 +789,28 @@ var run = function() {
                 // The *allowcapped* property allows us to trade even if the sold resources are at their cap.
                 render: false,
                 items: {
-                    dragons:    {enabled: true,  require: 'titanium',    allowcapped: false,    limited: true,
+                    dragons:    {enabled: false,  require: 'titanium',    allowcapped: false,    limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true},
 
                     zebras:     {enabled: true,  require: false,         allowcapped: false,    limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true},
 
-                    lizards:    {enabled: true,  require: 'minerals',    allowcapped: false,    limited: true,
+                    lizards:    {enabled: false,  require: 'minerals',    allowcapped: false,    limited: true,
                         summer:  true,  autumn:  false, winter:  false,         spring:      false},
 
-                    sharks:     {enabled: true,  require: 'iron',        allowcapped: false,    limited: true,
+                    sharks:     {enabled: false,  require: 'iron',        allowcapped: false,    limited: true,
                         summer:  false, autumn:  false, winter:  true,          spring:      false},
 
-                    griffins:   {enabled: true,  require: 'wood',        allowcapped: false,    limited: true,
+                    griffins:   {enabled: false,  require: 'wood',        allowcapped: false,    limited: true,
                         summer:  false, autumn:  true,  winter:  false,         spring:      false},
 
-                    nagas:      {enabled: true,  require: false,         allowcapped: false,    limited: true,
+                    nagas:      {enabled: false,  require: false,         allowcapped: false,    limited: true,
                         summer:  false, autumn:  false, winter:  false,         spring:      true},
 
-                    spiders:    {enabled: true,  require: false,         allowcapped: false,    limited: true,
+                    spiders:    {enabled: false,  require: false,         allowcapped: false,    limited: true,
                         summer:  false, autumn:  true,  winter:  false,         spring:      false},
 
-                    leviathans: {enabled: true,  require: 'unobtainium', allowcapped: true,     limited: true,
+                    leviathans: {enabled: false,  require: 'unobtainium', allowcapped: true,     limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true}
                 }
             },
@@ -1626,7 +1626,6 @@ var run = function() {
                         var obeliskRatio = ((tt + 1) * 5 * blackObelisk + 1000) / (tt * 5 * blackObelisk + 1000);
                         var k = adoreIncreaceRatio * obeliskRatio;
                         var epiphanyRecommend = (1 - k + Math.sqrt(80 * (k * k - 1) * x + (k - 1) * (k - 1))) * k / (40 * (k + 1) * (k + 1) * (k - 1)) + x + x / (k * k - 1);
-                        var needNextLevel = game.religion._getTranscendTotalPrice(tt + 1) - game.religion._getTranscendTotalPrice(tt);
 
                         // Transcend Condition
                         var booleanforEpiphany = (epiphany > epiphanyRecommend && worship > Math.min((tt - 3) * 1e6, 0) + 1e6);
@@ -4427,6 +4426,7 @@ var run = function() {
                 var addition = $('<div/>', {
                     id: 'toggle-addition-controls',
                     text: i18n('ui.faith.addtion'),
+                    title: "太阳教团的自动化项目",
                     css: {cursor: 'pointer',
                         display: 'inline-block',
                         float: 'right',
