@@ -893,7 +893,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		tier: 25,
 		priceRatio: 1.15,
 		effects: {
-			"maxKittensRatio": 0.01,
+			"maxKittensRatio": -0.01,
 			"simScalingRatio": 0.02,
 			"activeHG": 0
 		},
@@ -977,6 +977,14 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 				(1 - this.game.getLimitedDR(this.game.getEffect("maxKittensRatio"), 1))
 			)
 		) *(1 + scalingRatio);
+	},
+
+	turnHGOff: function(){
+		var self = this;
+		this.game.ui.confirm("", $I("turnHGOff.confirmation.msg"), function() {
+			self.activeHolyGenocide = 0;
+			self.getTU("holyGenocide").on = 0;
+		});
 	},
 
 	praise: function(){
