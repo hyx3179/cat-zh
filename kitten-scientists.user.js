@@ -1336,7 +1336,7 @@ var run = function() {
                     if (optionVals.timeSkip[(currentCycle + skipCycles) % cyclesPerEra] && canSkip > 0) {willSkip += canSkip;}
                 }
                 if (willSkip > 0) {
-					willSkip = Math.min(willSkip, 2500);
+					willSkip = Math.min(willSkip, Math.max(500 , game.getEffect("temporalPressCap") * 25));
                     optionVals.timeSkip.adore = true;
                     var beforeSkipYear = game.calendar.year;
                     shatter.controller.doShatterAmt(shatter.model, willSkip);
@@ -4471,6 +4471,11 @@ var run = function() {
 
             triggerButton.on('click', function () {
                 var value;
+				if (toggleName === 'faith') {
+					itext += "(" + $I("resources.faith.title")+ ")";
+				} else if (toggleName === 'trade') {
+					itext += "(" + $I("resources.gold.title") + ")";
+				}
                 value = window.prompt(i18n('ui.trigger.set', [itext]), auto.trigger);
 
                 if (value !== null) {
@@ -4898,6 +4903,9 @@ var run = function() {
 
     var getCraftOption = function (name, option) {
         var iname = ucfirst(i18n('$resources.' + name + '.title'));
+        if (name == "ship") {
+            iname = ucfirst(i18n('$workshop.crafts.' + name + '.label'));
+        }
 
         var element = getOption(name, option, iname);
 
