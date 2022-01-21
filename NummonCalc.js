@@ -300,13 +300,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
 
         var chance = 25;
         chance += this.game.getEffect("starEventChance") * 10000;
-        chance *= chanceRatio;
+        chance *= chanceRatio * 0.01;
         if (this.game.prestige.getPerk("astromancy").researched)
             chance *= 2;
 
-        chance = Math.round(chance);
-        chance /= 100; //It's out of 10,000 originally
-        return chance + "%";
+        return game.getDisplayValueExt(chance) + "%";
     },
 
     getCelestialAutoSuccess: function() {
@@ -948,11 +946,11 @@ dojo.declare("classes.managers.NummonStatsManager", com.nuclearunicorn.core.TabM
             // title: "Necrocorns Per Second",
             val: 0,
         },
-        {
-            name: "getNecrocornTime",
-            // title: "Time Until Next Necrocorn",
-            val: 0,
-        },
+        //{
+        //    name: "getNecrocornTime",
+        //    // title: "Time Until Next Necrocorn",
+        //    val: 0,
+        //},
         {
             name: "getLeviChance",
             // title: "Chance per year of Leviathans",
