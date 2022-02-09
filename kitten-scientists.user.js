@@ -300,6 +300,8 @@ var run = function() {
             'act.sun.discover': '小猫宗教 {0} 方面获得演化',
             'act.sun.discovers': '小猫宗教 {0} 方面获得演化 {1} 次',
 
+            'ui.autokarma': '自动获取业',
+            'ui.autokarma.cryAmount': '冷冻仓数量',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -310,6 +312,7 @@ var run = function() {
             'ui.none': '无',
             'ui.limit': '限制',
             'ui.upgradesLimit': '过滤',
+            'ui.trigger.cryAmount.set': '输入一个新的 冷冻仓数量 触发值,大于 0 的整数。\n大小需要和已拥有的冷冻仓数量（）相等。',
             'ui.trigger.shipOverride.set': '输入一个新的 强制贸易船 触发值，\n贸易船数量低于触发条件时会无视工艺的贸易船限制启用。',
             'ui.trigger.missions.set': '输入一个新的 探索星球 触发值,取值范围为 0 到 13 的整数。\n分别对应13颗星球。',
             'ui.trigger.crypto.set': '输入一个新的 {0} 触发值，\n支持3个参数：-符号隔开数字参数\n第一个数字：当遗物数量大于触发值才会进行黑币交易\n第二个数字：买入的最高价\n第三个数字：卖出最低的价格。\n默认10000-881-1060',
@@ -516,6 +519,14 @@ var run = function() {
                 // Should any automation run at all?
                 enabled: false
             },
+            // 自动获取业
+            autokarma: {
+                enabled: false,
+                trigger: 0.1,
+                items: {
+                    cryAmount:     {enabled: true, subTrigger: 750, checkForReset: true, triggerForReset: -1},
+                }
+            },
             // split form faith to make "Best Unicorn Building" easily
             unicorn: {
                 items: {
@@ -714,19 +725,19 @@ var run = function() {
                 items: {
                     // Variants denote whether these buildings fall within the Chronoforge or Void categories.
                     // Chronoforge has variant chrono.
-                    temporalBattery:     {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    blastFurnace:        {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    timeBoiler:          {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    temporalAccelerator: {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    temporalImpedance:   {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    ressourceRetrieval:  {require: false,          enabled: false, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    temporalBattery:     {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    blastFurnace:        {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    timeBoiler:          {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    temporalAccelerator: {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    temporalImpedance:   {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    ressourceRetrieval:  {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
 
                     // Void Space has variant void.
-                    cryochambers:        {require: false,          enabled: false, variant: 'void', checkForReset: true, triggerForReset: -1},
-                    voidHoover:          {require: 'antimatter',   enabled: false, variant: 'void', checkForReset: true, triggerForReset: -1},
-                    voidRift:            {require: false,          enabled: false, variant: 'void', checkForReset: true, triggerForReset: -1},
-                    chronocontrol:       {require: 'temporalFlux', enabled: false, variant: 'void', checkForReset: true, triggerForReset: -1},
-                    voidResonator:       {require: false,          enabled: false, variant: 'void', checkForReset: true, triggerForReset: -1}
+                    cryochambers:        {require: false,          enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
+                    voidHoover:          {require: 'antimatter',   enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
+                    voidRift:            {require: false,          enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
+                    chronocontrol:       {require: 'temporalFlux', enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
+                    voidResonator:       {require: false,          enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1}
                 }
             },
             timeCtrl: {
@@ -1042,6 +1053,7 @@ var run = function() {
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
             if (refresh)                                                                    {game.ui.render();}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
+            if (options.auto.autokarma.enabled)                                             {await this.autokarma();}
         },
         halfInterval: async function () {
             return new Promise(() => {
@@ -1052,6 +1064,194 @@ var run = function() {
         },
         setHunt: async function () {
             await this.halfInterval();
+        },
+        dataCapCheck: function () {
+            var defaultResLimited = 1.79e308;
+            var chronosphere = game.bld.get('chronosphere');
+            var weekResLimited = defaultResLimited / (chronosphere.on * chronosphere.effects.resStasisRatio);
+
+            var leaderTrait = options.auto.distribute.items.leader.leaderTrait;
+            var hunterRatio = game.getEffect('hunterRatio') + game.village.getEffectLeader('manager', 0);
+
+            // gold 因为黄金的特殊性，其极限值为20%的喵力完全贸易所消耗的量，通过打猎获取象牙与娜迦交易消耗多余黄金
+            var goldLimited = weekResLimited / game.diplomacy.getManpowerCost() * game.diplomacy.getGoldCost() / 5;
+            if (goldLimited < game.resPool.get('gold').value) {
+                var race = game.diplomacy.get('nagas');
+                var tradeCount = (game.resPool.get('gold').value - goldLimited) / game.diplomacy.getGoldCost();
+                if (game.resPool.get('ivory').value != Infinity) {
+                    var ivory = race.buys[0].val * tradeCount == Infinity ? 1e307 : race.buys[0].val * tradeCount - game.resPool.get('ivory').value;
+                    if (leaderTrait !== 'manager') {
+                        $('#toggle-leaderTrait-manager').click();
+                        return 0;
+                    } // 打猎前切换领袖，防止消耗过多喵力
+                    var huntCount = ivory / hunterRatio;
+                    if (huntCount > 0) {
+                        game.resPool.addResEvent('manpower', -huntCount * 100);
+                        game.village.gainHuntRes(huntCount);
+                    }
+                }
+                game.diplomacy.tradeMultiple(race, tradeCount);
+                return 0;
+            }
+            // manpower
+            if (weekResLimited < game.resPool.get('manpower').value) {
+                var huntCount = Math.ceil((game.resPool.get('manpower').value - weekResLimited) / 100);
+                game.resPool.addResEvent('manpower', -huntCount * 100);
+                game.village.gainHuntRes(huntCount);
+            }
+            if (leaderTrait !== 'engineer') {
+                $('#toggle-leaderTrait-engineer').click();
+                return 0;
+            }
+            // science
+            if (weekResLimited < game.resPool.get('science').value) {
+                var compediumPrices = game.workshop.getCraft('compedium').prices;
+                var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
+                var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
+                var compedium = (game.resPool.get('science').value - weekResLimited) / compediumPrices[0].val;
+                var manuscript = compedium * compediumPrices[1].val / (1 + game.getResCraftRatio('manuscript'));
+                if (manuscript * manuscriptPrices[0].val / (1 + game.getResCraftRatio('parchment')) > game.resPool.get('culture').value) { return 0; }
+                var parchment = manuscript * manuscriptPrices[1].val / (1 + game.getResCraftRatio('parchment'));
+                /*if (game.resPool.get('furs').value != Infinity) {
+                    var furs = parchment * parchmentPrices == Infinity ? 1e307 : parchment * parchmentPrices - game.resPool.get('furs').value;
+                    if (leaderTrait !== 'manager') {
+                        $('#toggle-leaderTrait-manager').click();
+                        return 0;
+                    } // 打猎前切换领袖，防止消耗过多喵力
+                    var huntCount = furs / hunterRatio;
+                    if (huntCount > 0) {
+                        game.resPool.addResEvent('manpower', -huntCount * 100);
+                        game.village.gainHuntRes(huntCount);
+                    }
+                }*/
+                game.craft('parchment', parchment);
+                game.craft('manuscript', manuscript);
+                game.craft('compedium', compedium);
+            }
+            // culture
+            if (weekResLimited < game.resPool.get('culture').value) {
+                var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
+                var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
+                var manuscript = (game.resPool.get('culture').value - weekResLimited) / manuscriptPrices[0].val;
+                var parchment = manuscript * manuscriptPrices[1].val / (1 + game.getResCraftRatio('parchment'));
+                /*if (game.resPool.get('furs').value != Infinity) {
+                    var furs = parchment * parchmentPrices == Infinity ? 1e307 : parchment * parchmentPrices - game.resPool.get('furs').value;
+                    if (leaderTrait !== 'manager') {
+                        $('#toggle-leaderTrait-manager').click();
+                        return 0;
+                    } // 打猎前切换领袖，防止消耗过多喵力
+                    var huntCount = furs / hunterRatio;
+                    if (huntCount > 0) {
+                        game.resPool.addResEvent('manpower', -huntCount * 100);
+                        game.village.gainHuntRes(huntCount);
+                    }
+                }*/
+                game.craft('parchment', parchment);
+                game.craft('manuscript', manuscript);
+            }
+            // 可以通过工艺制作简单控制的资源
+            var conventionalRes = ['catnip', 'wood', 'minerals', 'coal', 'iron', 'oil', 'uranium'];
+            var processProductionRes = ['wood', 'beam', 'slab', 'steel', 'plate', 'kerosene', 'thorium'];
+            for (var i in conventionalRes) {
+                var res = game.resPool.get(conventionalRes[i]);
+                var pPRes = processProductionRes[i];
+                if (weekResLimited < res.value) {
+                    game.craft(pPRes, (res.value - weekResLimited) / game.workshop.getCraft(pPRes).prices[0].val);
+                }
+            };
+            // unobtainium
+            if (weekResLimited < game.resPool.get('unobtainium').value) {
+                var eludiumPrices = game.workshop.getCraft('eludium').prices;
+                var alloyPrices = game.workshop.getCraft('alloy').prices;
+                var steelPrices = game.workshop.getCraft('steel').prices;
+                var eludium = (game.resPool.get('unobtainium').value - weekResLimited) / eludiumPrices[0].val;
+                var alloy = eludium * eludiumPrices[1].val / (1 + game.getResCraftRatio('alloy'));
+                if (alloy * alloyPrices[0].val / (1 + game.getResCraftRatio('alloy')) > game.resPool.get('titanium').value) {
+                    game.resPool.get('unobtainium').value /= 1e10;
+                    return 0;
+                }
+                var steel = alloy * alloyPrices[1].val / (1 + game.getResCraftRatio('steel'));
+                if (steel > game.resPool.get('steel').value) {
+                    var coal = steel * steelPrices[0].val;
+                    if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
+                        game.resPool.get('unobtainium').value /= 1e10;
+                        return 0;
+                    } else { game.craft('steel', steel); }
+                }
+                game.craft('alloy', alloy);
+                game.craft('eludium', eludium);
+            }
+            // titanium 通过修建太阳能发电站控制钛
+            if (weekResLimited < game.resPool.get('titanium').value) {
+                var titanium = game.resPool.get('titanium').value - weekResLimited;
+                var pasturePrices = game.bld.get('pasture').stages[1].prices[0].val;
+                var priceRatio = game.bld.getPriceRatio('pasture');
+                options.auto.build.items.solarFarm.max = Math.ceil(Math.log(1 - titanium / pasturePrices * (1 - priceRatio)) / Math.log(priceRatio));
+                if (!options.auto.build.items.solarFarm.enabled) { $('#toggle-solarFarm').click(); }
+                return 0;
+            } else { if (options.auto.build.items.solarFarm.enabled) { $('#toggle-solarFarm').click(); } }
+            // void
+            if (weekResLimited < game.resPool.get('void').value) {
+                var voidAmount = game.resPool.get('void').value - weekResLimited / 10;
+                var voidRift = game.time.getVSU('voidRift');
+                if (voidRift.prices[0].val * Math.pow(voidRift.priceRatio, voidRift.on) > game.resPool.get('void').value) {
+                    game.resPool.get('void').value /= 10; // 特殊情况 -_-
+                } else {
+                    options.auto.time.items.voidRift.max = Math.ceil(Math.log(1 - voidAmount / voidRift.prices[0].val * (1 - voidRift.priceRatio)) / Math.log(voidRift.priceRatio));
+                    if (!options.auto.time.items.voidRift.enabled) { $('#toggle-voidRift').click(); }
+                }
+                return 0;
+            } else { if (options.auto.time.items.voidRift.enabled) { $('#toggle-voidRift').click(); } }
+            return 1;
+        },
+        autokarma: async function () {
+            if (game.resPool.get('timeCrystal').value < 1e200) {
+                options.auto.autokarma.enabled = false;
+                saveToKittenStorage();
+            }
+            var race = game.diplomacy.get('nagas');
+            // 检查需要的功能是否全部开启
+            if (!race.unlocked
+                || !game.workshop.get('chronoforge').researched
+                || !game.workshop.get('turnSmoothly').researched
+                || !game.workshop.get('fluxCondensator').researched // 处理难得素可能导致合金爆炸，导致下周目无法点出通量冷凝器
+            ) { return; }
+            // 准备传送仪资源
+            if (game.bld.get('chronosphere').on < options.auto.build.items.chronosphere.max) {
+                var chronospherePrices = game.bld.getPrices('chronosphere',
+                    options.auto.build.items.chronosphere.max - game.bld.get('chronosphere').on)
+                for (var i in chronospherePrices) {
+                    if (chronospherePrices[i].name === 'blueprint') {
+                        var tradeCount = (chronospherePrices[i].val - game.resPool.get('blueprint').value) * 10;
+                        if (tradeCount > 0) {
+                            var ivory = race.buys[0].val * tradeCount;
+                            var hunterRatio = game.getEffect('hunterRatio') + game.village.getEffectLeader('manager', 0);
+                            var huntCount = ivory / hunterRatio;
+                            game.resPool.addResEvent('manpower', - huntCount * 100);
+                            game.village.gainHuntRes(huntCount);
+                            game.diplomacy.tradeAll(race);
+                        }
+                        continue;
+                    }
+                    if (!(game.resPool.get(chronospherePrices[i].name).value / 1e17 > chronospherePrices[i].val)) { return; }
+                } // 检查修建传送仪需要的资源，蓝图不足打猎后和娜迦交易，其他不足直接返回
+            }
+            var shatter = game.timeTab.cfPanel.children[0].children[0];
+            var temporalFlux = game.resPool.get('temporalFlux').maxValue - game.resPool.get('temporalFlux').value;
+            if (temporalFlux > 0) {
+                willSkip = temporalFlux / options.auto.build.items.chronosphere.max;
+                shatter.controller.doShatterAmt(shatter.model, Math.ceil(willSkip));
+            }
+            var vsPanel = game.timeTab.vsPanel.children[0].children;
+            var maxbuy = Math.floor(game.resPool.get('temporalFlux').value / 3000);
+            for (var i = 0; i < Math.min(maxbuy, vsPanel[2].model.on); i++) {
+                vsPanel[0].controller.buyItem(vsPanel[0].model, {}, function () { });
+            }
+            if (vsPanel[1].model.on == options.auto.autokarma.items.cryAmount.subTrigger && this.dataCapCheck()) {
+                var weekResLimited = 1.79e308 / (game.bld.get('chronosphere').on * game.bld.get('chronosphere').effects.resStasisRatio);
+                if (weekResLimited < game.resPool.get('coal').value) { game.resPool.get('coal').value /= 100; } // 处理极少量特殊情况 -_-，可能原因为精度误差
+                game.resetAutomatic();
+            }
         },
         reset: async function () {
 
@@ -1759,7 +1959,7 @@ var run = function() {
             var trigger = options.auto.time.trigger;
 
             // Render the tab to make sure that the buttons actually exist in the DOM. Otherwise we can't click them.
-            //buildManager.manager.render();
+            buildManager.manager.render(); // 进行更新以显示时间波动升级
 
             var metaData = {};
             for (var name in builds) {
@@ -3812,6 +4012,7 @@ var run = function() {
 
     var saveToKittenStorage = function () {
         kittenStorage.toggles = {
+            autokarma: options.auto.autokarma.enabled,
             build: options.auto.build.enabled,
             space: options.auto.space.enabled,
             craft: options.auto.craft.enabled,
@@ -3826,6 +4027,7 @@ var run = function() {
         };
         kittenStorage.resources = options.auto.resources;
         kittenStorage.triggers = {
+            autokarma: options.auto.autokarma.trigger,
             faith: options.auto.faith.trigger,
             time: options.auto.time.trigger,
             build: options.auto.build.trigger,
@@ -3940,6 +4142,7 @@ var run = function() {
             }
             
             if (saved.triggers) {
+                options.auto.autokarma.trigger = saved.triggers.autokarma,
                 options.auto.faith.trigger = saved.triggers.faith;
                 options.auto.time.trigger = saved.triggers.time;
                 options.auto.build.trigger = saved.triggers.build;
@@ -3947,6 +4150,7 @@ var run = function() {
                 options.auto.craft.trigger = saved.triggers.craft;
                 options.auto.trade.trigger = saved.triggers.trade;
 
+                if (game.resPool.get('timeCrystal').value > 1e200) { $('#trigger-autokarma')[0].title = options.auto.autokarma.trigger; }
                 $('#trigger-faith')[0].title = options.auto.faith.trigger;
                 $('#trigger-time')[0].title = options.auto.time.trigger;
                 $('#trigger-build')[0].title = options.auto.build.trigger;
@@ -4218,7 +4422,7 @@ var run = function() {
         });
 
         var disableall = $('<div/>', {
-            id: 'toggle-all-items-' + toggleName,
+            id: 'toggle-all-disable-items-' + toggleName,
             text: i18n('ui.disable.all'),
             css: {cursor: 'pointer',
                 display: 'inline-block',
@@ -4237,7 +4441,7 @@ var run = function() {
         list.append(disableall);
 
         var enableall = $('<div/>', {
-            id: 'toggle-all-items-' + toggleName,
+            id: 'toggle-all-enable-items-' + toggleName,
             text: i18n('ui.enable.all'),
             css: {cursor: 'pointer',
                 display: 'inline-block',
@@ -4375,7 +4579,50 @@ var run = function() {
             input.on('change', function () {
                 if (input.is(':checked') && auto.enabled == false) {
                     auto.enabled = true;
-                    if (toggleName === 'filter' || toggleName === 'options') {
+                    if (toggleName === 'autokarma') {
+                        var autoall = options.auto;
+                        // 禁用所有选项，开启Workers，过滤所有日志
+                        if (!autoall['filter'].enabled) { $('#toggle-filter').click(); }
+                        $('#toggle-all-enable-items-filter').click();
+                        if (!autoall['options'].enabled) { $('#toggle-options').click(); }
+                        $('#toggle-all-disable-items-options').click();
+                        $('#toggle-useWorkers').click();
+                        // 关闭不需要的项目
+                        var ksList = ['space', 'craft', 'trade', 'faith', 'timeCtrl'];
+                        for (var i in ksList) {
+                            if (autoall[ksList[i]].enabled) { $('#toggle-' + ksList[i]).click(); }
+                        }
+                        // build
+                        $('#toggle-all-disable-items-build').click();
+                        if (!autoall['build'].enabled) { $('#toggle-build').click(); }
+                        options.auto.build.items.workshop.max = 1;
+                        kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
+                        options.auto.build.items.chronosphere.max = // 超时空传送仪数量应超过67，保证资源数量
+                            options.auto.autokarma.items.cryAmount.subTrigger - gamePage.challenges.getChallenge('postApocalypse').on;
+                        if (options.auto.build.items.chronosphere.max < 67) { options.auto.build.items.chronosphere.max = 73 };
+                        kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
+                        $('#toggle-workshop').click();
+                        $('#toggle-chronosphere').click();
+                        // upgrade
+                        $('#toggle-all-enable-items-upgrade').click();
+                        $('#toggle-policies').click();
+                        if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
+                        // time
+                        $('#toggle-all-disable-items-time').click();
+                        if (!autoall['time'].enabled) { $('#toggle-time').click(); }
+                        options.auto.time.items.temporalBattery.max = 2000;
+                        kittenStorage.items['set-temporalBattery-max'] = options.auto.time.items.temporalBattery.max;
+                        options.auto.time.items.chronocontrol.max = 1;
+                        kittenStorage.items['set-chronocontrol-max'] = options.auto.time.items.chronocontrol.max;
+                        if (!autoall['time'].items.temporalBattery.enabled) { $('#toggle-temporalBattery').click(); }
+                        if (!autoall['time'].items.chronocontrol.enabled) { $('#toggle-chronocontrol').click(); }
+                        // distribute
+                        $('#toggle-all-disable-items-distribute').click();
+                        if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
+                        if (!autoall['distribute'].items.farmer.enabled) { $('#toggle-farmer').click(); }
+                        if (!autoall['distribute'].items.leader.enabled) { $('#toggle-leader').click(); }
+                        $('#toggle-leaderTrait-manager').click();
+                    } else if (toggleName === 'filter' || toggleName === 'options') {
                         imessage('status.sub.enable', [itext]);
                     } else {
                         imessage('status.auto.enable', [itext]);
@@ -4425,6 +4672,9 @@ var run = function() {
             // fill out list with toggle items
             for (var itemName in auto.items) {
                 switch (toggleName) {
+                    case 'autokarma':
+                        list.append(getautokarmaOption(itemName, auto.items[itemName]));
+                        break;
                     case 'trade':
                         list.append(getTradeOption(itemName, auto.items[itemName]));
                         break;
@@ -4445,6 +4695,7 @@ var run = function() {
                         break;
                     case 'build':
                     case 'faith':
+                    case 'time':
                     case 'space':
                         list.append(getLimitedOption(itemName, auto.items[itemName]));
                         break;
@@ -4566,6 +4817,41 @@ var run = function() {
         if (toggleName === 'craft') {element.append(resourcesList);} else if (toggleName === 'faith') {element.append(additionList);}
 
         if (auto.items) {element.append(toggle, list);}
+
+        return element;
+    };
+
+    var getautokarmaOption = function (name, option) {
+        var iname = i18n('ui.autokarma.' + name);
+        var element = getOption(name, option, iname);
+
+        var triggerButton = $('<div/>', {
+            id: 'set-' + name + '-subTrigger',
+            text: i18n('ui.trigger'),
+            title: option.subTrigger,
+            css: {
+                cursor: 'pointer',
+                display: 'inline-block',
+                float: 'right',
+                paddingRight: '5px',
+                textShadow: '3px 3px 4px gray'
+            }
+        }).data('option', option);
+
+        triggerButton.on('click', function () {
+            var value;
+            if (name == 'cryAmount') { value = window.prompt(i18n('ui.trigger.cryAmount.set'), option.subTrigger); } else { value = window.prompt(i18n('ui.trigger.set'), option.subTrigger); }
+
+            if (value !== null) {
+                option.subTrigger = parseFloat(value);
+                kittenStorage.items[triggerButton.attr('id')] = option.subTrigger;
+                kittenStorage.items['set-chronosphere-max'] = option.subTrigger;
+                saveToKittenStorage();
+                triggerButton[0].title = option.subTrigger;
+            }
+        });
+
+        element.append(triggerButton);
 
         return element;
     };
@@ -5731,6 +6017,7 @@ var run = function() {
     optionsElement.append(optionsTitleElement);
 
     optionsListElement.append(getToggle('engine'));
+    if (game.resPool.get('timeCrystal').value > 1e200) { optionsListElement.append(getToggle('autokarma')); }
     optionsListElement.append(getToggle('build'));
     optionsListElement.append(getToggle('space'));
     optionsListElement.append(getToggle('craft'));
@@ -5915,6 +6202,13 @@ var run = function() {
 
     var engine = new Engine();
     var toggleEngine = $('#toggle-engine');
+
+    if (localStorage['cbc.kitten-scientists'] != undefined &&
+        localStorage['cbc.kitten-scientists'] != null &&
+        JSON.parse(localStorage['cbc.kitten-scientists']).toggles.autokarma) {
+        if (!options.auto.engine.enabled) { toggleEngine.click(); }
+        engine.start();
+    }
 
     toggleEngine.on('change', function () {
         if (toggleEngine.is(':checked')) {
