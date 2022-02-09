@@ -35,5 +35,8 @@
     "http-server": "^0.12.3",
     "husky": "^4.2.5",
     "jest": "^26.1.0"
+  },
+  "dependencies": {
+    "yarn": "^1.22.17"
   }
 }
