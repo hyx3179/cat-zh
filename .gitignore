@@ -3,5 +3,5 @@ yarn-error.log
 build.version.json
 chs.js
 chscore.js
-node.exe
-start.bat
+load/node/*
+load/tmp/*

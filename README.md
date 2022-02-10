@@ -1,3 +1,20 @@
+# 猫国建设者本地版
+添加了本地运行脚本（目前仅Windows）  
+* 自动处理依赖  
+* 傻瓜式启动  
+
+
+实际就是对原版[install](#installation)进行包装
+### 启动
+点击`load`文件夹中的`start`即可
+### 安装
+点击`load`文件夹中的`install`即可  
+可能会出现无法下载[node](https://nodejs.org/)和[yarn](https://yarnpkg.com/)的情况  
+**解决方法：**  
+* 梯子
+* 从国内源下载后放置在`load\tmp`文件夹
+---
+以下为原库信息
 # Kittens Game （猫国建设者
 
 游戏地址:[http://likexia.gitee.io/cat-zh/](http://likexia.gitee.io/cat-zh/)
