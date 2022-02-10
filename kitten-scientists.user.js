@@ -304,6 +304,7 @@ var run = function() {
             'ui.infinity.autoKarma': '自动获取业',
             'ui.infinity.capCheck': '上限检查',
             'ui.infinity.autoReset': '自动重置',
+            'ui.infinity.autohunt': '无限打猎',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -316,6 +317,7 @@ var run = function() {
             'ui.upgradesLimit': '过滤',
             'ui.trigger.autoKarma.set': '输入一个新的 自动获取业 触发值，大于 0 的整数。\n大小需要和已拥有的冷冻仓数量（）相等。',
             'ui.trigger.capCheck.set': '输入一个新的 上限检查 触发值。\n不建议设置超过 1.79e308 的值（数据极限为2^1024），\n数据超过上限会显示 ∞ ，并在刷新后归零。',
+            'ui.trigger.autohunt.set': '输入一个新的 无限打猎 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时打猎次数为不消耗喵力的最大数量。\n仅在毛皮、象牙、独角兽中有 0 时触发。',
             'ui.trigger.shipOverride.set': '输入一个新的 强制贸易船 触发值，\n贸易船数量低于触发条件时会无视工艺的贸易船限制启用。',
             'ui.trigger.missions.set': '输入一个新的 探索星球 触发值,取值范围为 0 到 13 的整数。\n分别对应13颗星球。',
             'ui.trigger.crypto.set': '输入一个新的 {0} 触发值，\n支持3个参数：-符号隔开数字参数\n第一个数字：当遗物数量大于触发值才会进行黑币交易\n第二个数字：买入的最高价\n第三个数字：卖出最低的价格。\n默认10000-881-1060',
@@ -528,8 +530,9 @@ var run = function() {
                 allow: false,
                 items: {
                     autoKarma:     {enabled: false, subTrigger: 750, doneMark: false},
-                    capCheck:      {enabled: false, subTrigger: 1.79e308, doneMark: false},
+                    capCheck:      {enabled: false, subTrigger: 1e300, doneMark: false},
                     autoReset:     {enabled: false},
+                    autohunt:      {enabled: false, subTrigger: 0},
                 }
             },
             // split form faith to make "Best Unicorn Building" easily
@@ -920,7 +923,11 @@ var run = function() {
     };
 
     // 无限流条件判断
-    options.auto.infinity.allow = true;
+    if (game.resPool.get('timeCrystal').value > 1e8 &&
+        game.resPool.get('burnedParagon').value > 7e5 &&
+        game.resPool.get('unobtainium').value > 8e9) {
+        options.auto.infinity.allow = true;
+    }
 
     // GameLog Modification
     // ====================
@@ -1062,6 +1069,7 @@ var run = function() {
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
             if (refresh)                                                                    {game.ui.render();}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
+            if (infinity.enabled && infinity.items.autohunt.enabled)                        {this.autohunt();}
             if (infinity.enabled && infinity.items.autoKarma.enabled)                       {this.autoKarma();}
             if (infinity.enabled && infinity.items.capCheck.enabled)                        {this.dataCapCheck();}
             if (infinity.enabled && infinity.items.autoReset.enabled)                       {await this.infinityReset();}
@@ -1076,16 +1084,33 @@ var run = function() {
         setHunt: async function () {
             await this.halfInterval();
         },
+        autohunt: async function () {
+            if (game.resPool.get('furs').value > 0 &&
+                game.resPool.get('ivory').value > 0 &&
+                game.resPool.get('unicorns').value > 0
+            ) { return; }
+            var autohunt = options.auto.infinity.items.autohunt.subTrigger;
+            if (autohunt > 0) {
+                var huntCount = Math.ceil(game.resPool.get('manpower').value * autohunt / 100);
+            } else {
+                var huntCount = Math.ceil(game.resPool.get('manpower').value / 1e20);
+            }
+            if (huntCount) {
+                game.resPool.addResEvent('manpower', -huntCount * 100);
+                game.village.gainHuntRes(huntCount);
+            }
+        },
         dataCapCheck: async function () {
             var items = options.auto.infinity.items;
             var doneCount = 0;
             for (var itemName in items) {
                 if (itemName == 'capCheck') { continue; }
+                if (items[itemName].doneMark == undefined) { continue; }
                 if (items[itemName].enabled) {
-                    if (items[itemName].doneMark || items[itemName].doneMark == undefined) { doneCount++ } else { return; }
+                    if (items[itemName].doneMark) { doneCount++ } else { return; }
                 }
             }
-            if (doneCount < 2) { return; }
+            if (doneCount < 1) { return; }
             var defaultResLimited = options.auto.infinity.items.capCheck.subTrigger;
             var chronosphere = game.bld.get('chronosphere');
             var weekResLimited = defaultResLimited / (chronosphere.on * chronosphere.effects.resStasisRatio);
@@ -1119,7 +1144,7 @@ var run = function() {
                 game.resPool.addResEvent('manpower', -huntCount * 100);
                 game.village.gainHuntRes(huntCount);
             }
-            if (leaderTrait !== 'engineer') {
+            if (leaderTrait !== 'engineer' && leaderTrait !== 'metallurgist') {
                 $('#toggle-leaderTrait-engineer').click();
                 return;
             }
@@ -1155,7 +1180,11 @@ var run = function() {
                     game.craft(pPRes, (res.value - weekResLimited) / game.workshop.getCraft(pPRes).prices[0].val);
                 }
             };
-            // unobtainium
+            if (leaderTrait !== 'metallurgist') {
+                $('#toggle-leaderTrait-metallurgist').click();
+                return;
+            }
+            // unobtainium 处理难得素前切换冶金学家
             if (weekResLimited < game.resPool.get('unobtainium').value) {
                 var eludiumPrices = game.workshop.getCraft('eludium').prices;
                 var alloyPrices = game.workshop.getCraft('alloy').prices;
@@ -1233,32 +1262,40 @@ var run = function() {
                     if (!(game.resPool.get(chronospherePrices[i].name).value / 1e17 > chronospherePrices[i].val)) { return; }
                 } // 检查修建传送仪需要的资源，蓝图不足打猎后和娜迦交易，其他不足直接返回
             }
+            // 跳时间获取时间通量
             var shatter = game.timeTab.cfPanel.children[0].children[0];
             var temporalFlux = game.resPool.get('temporalFlux').maxValue - game.resPool.get('temporalFlux').value;
             if (temporalFlux > 0) {
                 willSkip = temporalFlux / options.auto.build.items.chronosphere.max;
                 shatter.controller.doShatterAmt(shatter.model, Math.ceil(willSkip));
             }
+            // 修复冷冻仓
             var vsPanel = game.timeTab.vsPanel.children[0].children;
             var maxbuy = Math.floor(game.resPool.get('temporalFlux').value / 3000);
             for (var i = 0; i < Math.min(maxbuy, vsPanel[2].model.on); i++) {
                 vsPanel[0].controller.buyItem(vsPanel[0].model, {}, function () { });
             }
-            if (vsPanel[1].model.on == options.auto.infinity.items.autoKarma.subTrigger) { options.auto.infinity.items.autoKarma.doneMark = true; }
+            // 判断条件
+            if (vsPanel[1].model.on >= options.auto.infinity.items.autoKarma.subTrigger &&
+                vsPanel[1].model.on >= game.time.getVSU('cryochambers').val) { // 
+                options.auto.infinity.items.autoKarma.doneMark = true;
+            } else { // 在日志中提示原因
+            }
         },
         infinityReset: async function () {
             var items = options.auto.infinity.items;
             var doneCount = 0;
             for (var itemName in items) {
+                if (items[itemName].doneMark == undefined) { continue; }
                 if (items[itemName].enabled) {
-                    if (items[itemName].doneMark || items[itemName].doneMark == undefined) { doneCount++ } else { return 0; }
+                    if (items[itemName].doneMark) { doneCount++ } else { return; }
                 }
             }
             var weekResLimited = options.auto.infinity.items.capCheck.subTrigger /
                 (game.bld.get('chronosphere').on * game.bld.get('chronosphere').effects.resStasisRatio);
             if (weekResLimited < game.resPool.get('coal').value) { game.resPool.get('coal').value /= 100; } // 处理极少量特殊情况 -_-，可能原因为精度误差
             // 所有启用的选项全部标记为完成，并且传送仪数量 > 67 才允许重置
-            if (doneCount > 1 && game.bld.get('chronosphere').on > 67) { game.resetAutomatic(); }
+            if (doneCount > 0 && game.bld.get('chronosphere').on > 67) { game.resetAutomatic(); }
         },
         reset: async function () {
 
@@ -4807,7 +4844,8 @@ var run = function() {
                 if (value !== null) {
                     option.subTrigger = parseFloat(value);
                     kittenStorage.items[triggerButton.attr('id')] = option.subTrigger;
-                    kittenStorage.items['set-chronosphere-max'] = option.subTrigger;
+                    // 仅修改冷冻仓选项时同步修改传送仪数量
+                    if (triggerButton.attr('id') == 'set-autoKarma-subTrigger') { kittenStorage.items['set-chronosphere-max'] = option.subTrigger; }
                     saveToKittenStorage();
                     triggerButton[0].title = option.subTrigger;
                 }
