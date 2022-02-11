@@ -302,9 +302,15 @@ var run = function() {
 
             'ui.infinity': '无限流',
             'ui.infinity.autoKarma': '自动获取业',
-            'ui.infinity.capCheck': '上限检查',
+            'ui.infinity.capCheck': '重置超上限检查',
             'ui.infinity.autoReset': '自动重置',
             'ui.infinity.autohunt': '无限打猎',
+            'ui.infinity.capCheck.soleCap': '独立上限',
+            'ui.infinity.capCheck.soleCap.enable': '启用 {0} 的重置超上限自动处理',
+            'ui.infinity.capCheck.soleCap.disable': '禁用 {0} 的重置超上限自动处理',
+            'ui.infinity.capCheck.limit': '上限: {0}',
+            'ui.infinity.capCheck.limit.set': '设置 {0} 的自动处理上限',
+            'ui.infinity.capCheck.limit.confirm': '确定要取消 {0} 的独立重置超上限检查?',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -529,10 +535,15 @@ var run = function() {
                 enabled: false,
                 allow: false,
                 items: {
-                    autoKarma:     {enabled: false, subTrigger: 750, doneMark: false},
-                    capCheck:      {enabled: false, subTrigger: 1e300, doneMark: false, step: 0},
+                    autoKarma:     {enabled: false, subTrigger: 0, doneMark: false},
+                    capCheck:      {enabled: false, subTrigger: 1e308, doneMark: false, step: 0},
                     autoReset:     {enabled: false},
                     autohunt:      {enabled: false, subTrigger: 0},
+                },
+                resCap: {
+                    titanium:        {enabled: true,  limit: 1e304},
+                    unobtainium:     {enabled: true, limit: 1e300},
+                    void:            {enabled: true,  limit: 1e300},
                 }
             },
             // split form faith to make "Best Unicorn Building" easily
@@ -1071,7 +1082,7 @@ var run = function() {
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
             if (infinity.enabled && infinity.items.autohunt.enabled)                        {this.autohunt();}
             if (infinity.enabled && infinity.items.autoKarma.enabled)                       {this.autoKarma();}
-            if (infinity.enabled && infinity.items.capCheck.enabled)                        {this.dataCapCheck();}
+            if (infinity.enabled && infinity.items.capCheck.enabled)                        {this.resCapCheck();}
             if (infinity.enabled && infinity.items.autoReset.enabled)                       {await this.infinityReset();}
         },
         halfInterval: async function () {
@@ -1100,7 +1111,7 @@ var run = function() {
                 game.village.gainHuntRes(huntCount);
             }
         },
-        dataCapCheck: async function () {
+        resCapCheck: async function () {
             var items = options.auto.infinity.items;
             var doneCount = 0;
             for (var itemName in items) {
@@ -4113,6 +4124,7 @@ var run = function() {
             options: options.auto.options.enabled,
             filter: options.auto.filter.enabled
         };
+        kittenStorage.resCap = options.auto.infinity.resCap;
         kittenStorage.resources = options.auto.resources;
         kittenStorage.triggers = {
             faith: options.auto.faith.trigger,
@@ -4227,7 +4239,14 @@ var run = function() {
                     if ('stockForReset' in res) {setStockValue(resource, res.stockForReset ? res.stockForReset : Infinity, true);}
                 }
             }
-            
+
+            var CapReslist = $("#CapRes-list");
+            for (var resource in kittenStorage.resCap) {
+                var res = kittenStorage.resCap[resource];
+                setLimitValue(resource, res.limit, res.enabled);
+                if ($('#CapRes-' + resource).length === 0) { CapReslist.append(addInfNewResOption(resource)); }
+            }
+
             if (saved.triggers) {
                 options.auto.faith.trigger = saved.triggers.faith;
                 options.auto.time.trigger = saved.triggers.time;
@@ -4715,7 +4734,7 @@ var run = function() {
             for (var itemName in auto.items) {
                 switch (toggleName) {
                     case 'infinity':
-                        list.append(getinfinityOption(itemName, auto.items[itemName]));
+                        list.append(getInfinityOption(itemName, auto.items[itemName]));
                         break;
                     case 'trade':
                         list.append(getTradeOption(itemName, auto.items[itemName]));
@@ -4863,11 +4882,35 @@ var run = function() {
         return element;
     };
 
-    var getinfinityOption = function (name, option) {
+    var getInfinityOption = function (name, option) {
         var iname = i18n('ui.infinity.' + name);
-        var element = getinfinityOptionOption(name, option, iname);
+        var element = getInfinityOptionOption(name, option, iname);
 
         if (option.subTrigger !== undefined) {
+
+            // Add resource controls for crafting, sort of a hack
+            if (name === 'capCheck') {
+                var resources = $('<div/>', {
+                    id: 'toggle-capCheck-controls',
+                    text: i18n('ui.infinity.capCheck.soleCap'),
+                    css: {
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                        float: 'right',
+                        paddingRight: '5px',
+                        textShadow: '3px 3px 4px gray'
+                    },
+                });
+
+                var resourcesList = getInfinityCapResOptions();
+
+                resources.on('click', function () {
+                    resourcesList.toggle();
+                });
+
+                element.append(resources);
+            }
+
             var triggerButton = $('<div/>', {
                 id: 'set-' + name + '-subTrigger',
                 text: i18n('ui.trigger'),
@@ -4883,7 +4926,11 @@ var run = function() {
 
             triggerButton.on('click', function () {
                 var value;
+                engine.stop(false);
                 value = window.prompt(i18n('ui.trigger.' + name + '.set'), option.subTrigger);
+                if (options.auto.engine.enabled) {
+                    engine.start(false);
+                }
 
                 if (value !== null) {
                     option.subTrigger = parseFloat(value);
@@ -4896,12 +4943,202 @@ var run = function() {
             });
 
             element.append(triggerButton);
+            if (name === 'capCheck') { element.append(resourcesList); }
         }
 
         return element;
     };
 
-    var getinfinityOptionOption = function (name, option, iname) {
+    var getInfinityCapResOptions = function () {
+        var list = $('<ul/>', {
+            id: 'CapRes-list',
+            css: { display: 'none', paddingLeft: '20px' }
+        });
+
+        var add = $('<div/>', {
+            id: 'CapRes-add',
+            text: i18n('resources.add'),
+            css: {
+                cursor: 'pointer',
+                display: 'inline-block',
+                textShadow: '3px 3px 4px gray',
+                borderBottom: '1px solid rgba(185, 185, 185, 0.7)'
+            },
+        });
+
+        var clearunused = $('<div/>', {
+            id: 'CapRes-clear-unused',
+            text: i18n('resources.clear.unused'),
+            css: {
+                cursor: 'pointer',
+                display: 'inline-block',
+                float: 'right',
+                paddingRight: '5px',
+                textShadow: '3px 3px 4px gray'
+            },
+        });
+
+        clearunused.on('click', function () {
+            for (var name in options.auto.resources) {
+                // Only delete resources with unmodified values. Require manual
+                // removal of resources with non-standard values.
+                if (!options.auto.resources[name].stock &&
+                    options.auto.resources[name].consume == options.consume ||
+                    options.auto.resources[name].consume == undefined) {
+                    $('#resource-' + name).remove();
+                }
+            }
+        });
+
+        var allresources = $('<ul/>', {
+            id: 'available-CapRes-list',
+            css: { display: 'none', paddingLeft: '20px' }
+        });
+
+        add.on('click', function () {
+            allresources.toggle();
+            allresources.empty();
+            allresources.append(getInfAvailableResOptions());
+        });
+
+        list.append(add, clearunused, allresources);
+
+        for (var name in options.auto.infinity.resCap) {
+            list.append(addInfNewResOption(name));
+        }
+
+        return list;
+    };
+
+    var getInfAvailableResOptions = function () {
+        var items = [];
+        var idPrefix = '#CapRes-';
+
+        var resList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 33, 34];
+        for (var i in resList) {
+            var res = game.resPool.resources[i];
+
+            if (res.name && $(idPrefix + res.name).length === 0) {
+                var item = $('<div/>', {
+                    id: 'CapRes-add-' + res.name,
+                    text: ucfirst(res.title ? res.title : res.name),
+                    css: {
+                        cursor: 'pointer',
+                        textShadow: '3px 3px 4px gray'
+                    },
+                });
+
+                (function (res, item) {
+                    item.on('click', function () {
+                        item.remove();
+                        if (!options.auto.infinity.resCap[res.name]) { options.auto.infinity.resCap[res.name] = {}; }
+                        options.auto.infinity.resCap[res.name].enabled = true;
+                        options.auto.infinity.resCap[res.name].limit = options.auto.infinity.items.capCheck.subTrigger;
+                        $('#CapRes-list').append(addInfNewResOption(res.name));
+                        saveToKittenStorage();
+                    });
+                })(res, item);
+
+                items.push(item);
+            }
+        }
+
+        return items;
+    };
+
+    var setLimitValue = function (name, value, enabled) {
+        var n = parseFloat(value);
+
+        if (isNaN(n) || n < 1e10) {
+            warning('ignoring non-numeric or invalid limit value ' + value);
+            return;
+        }
+
+        if (!options.auto.infinity.resCap[name]) { options.auto.infinity.resCap[name] = {}; }
+        if (enabled != undefined) { options.auto.infinity.resCap[name].enabled = enabled }
+        options.auto.infinity.resCap[name].limit = n;
+        $('#limit-value-' + name).text(i18n('ui.infinity.capCheck.limit', [n.toFixed(2)]));
+    };
+
+    var addInfNewResOption = function (name) {
+        var title = game.resPool.get(name).title;
+        var res = options.auto.infinity.resCap[name];
+
+        var container = $('<div/>', {
+            id: 'CapRes-' + name,
+            css: { display: 'inline-block', width: '100%' },
+        });
+
+        var input = $('<input/>', {
+            id: 'toggle-CapRes-' + name,
+            type: 'checkbox'
+        });
+
+        if (res.enabled) {
+            input.prop('checked', true);
+        }
+
+        input.on('change', function () {
+            if (input.is(':checked') && res.enabled == false) {
+                res.enabled = true;
+                imessage('ui.infinity.capCheck.soleCap.enable', [title]);
+            } else if ((!input.is(':checked')) && res.enabled == true) {
+                res.enabled = false;
+                imessage('ui.infinity.capCheck.soleCap.disable', [title]);
+            }
+            saveToKittenStorage();
+        });
+
+        var label = $('<div/>', {
+            id: 'CapRes-label-' + name,
+            text: title,
+            css: { display: 'inline-block', width: '95px' },
+        });
+
+        var limit = $('<div/>', {
+            id: 'limit-value-' + name,
+            text: i18n('ui.infinity.capCheck.limit', [res.limit === Infinity ? '∞' : game.getDisplayValueExt(res.limit)]),
+            css: { cursor: 'pointer', display: 'inline-block', width: '100px' },
+        });
+
+        var del = $('<div/>', {
+            id: 'CapRes-delete-' + name,
+            text: i18n('resources.del'),
+            css: {
+                cursor: 'pointer',
+                display: 'inline-block',
+                float: 'right',
+                paddingRight: '5px',
+                textShadow: '3px 3px 4px gray'
+            },
+        });
+
+        container.append(input, label, limit, del);
+
+        limit.on('click', function () {
+            engine.stop(false);
+            var value = window.prompt(i18n('ui.infinity.capCheck.limit.set', [title]));
+            if (options.auto.engine.enabled) {
+                engine.start(false);
+            }
+            if (value !== null) {
+                setLimitValue(name, value);
+                saveToKittenStorage();
+            }
+        });
+
+        del.on('click', function () {
+            if (window.confirm(i18n('ui.infinity.capCheck.limit.confirm', [title]))) {
+                container.remove();
+                delete options.auto.infinity.resCap[name];
+                saveToKittenStorage();
+            }
+        });
+
+        return container;
+    };
+
+    var getInfinityOptionOption = function (name, option, iname) {
         var element = $('<li/>');
         var elementLabel = iname;
 
