@@ -530,7 +530,7 @@ var run = function() {
                 allow: false,
                 items: {
                     autoKarma:     {enabled: false, subTrigger: 750, doneMark: false},
-                    capCheck:      {enabled: false, subTrigger: 1e300, doneMark: false},
+                    capCheck:      {enabled: false, subTrigger: 1e300, doneMark: false, step: 0},
                     autoReset:     {enabled: false},
                     autohunt:      {enabled: false, subTrigger: 0},
                 }
@@ -1118,6 +1118,13 @@ var run = function() {
             var leaderTrait = options.auto.distribute.items.leader.leaderTrait;
             var hunterRatio = game.getEffect('hunterRatio') + game.village.getEffectLeader('manager', 0);
 
+            if (options.auto.infinity.items.capCheck.step == 0) {
+                if (leaderTrait !== 'manager') {
+                    $('#toggle-leaderTrait-manager').click();
+                    return;
+                }
+            } // 打猎前切换领袖，防止消耗过多喵力
+
             // gold 因为黄金的特殊性，其极限值为20%的喵力完全贸易所消耗的量，通过打猎获取象牙与娜迦交易消耗多余黄金
             var goldLimited = weekResLimited / game.diplomacy.getManpowerCost() * game.diplomacy.getGoldCost() / 5;
             if (goldLimited < game.resPool.get('gold').value) {
@@ -1125,10 +1132,6 @@ var run = function() {
                 var tradeCount = (game.resPool.get('gold').value - goldLimited) / game.diplomacy.getGoldCost();
                 if (game.resPool.get('ivory').value != Infinity) {
                     var ivory = race.buys[0].val * tradeCount == Infinity ? 1e307 : race.buys[0].val * tradeCount - game.resPool.get('ivory').value;
-                    if (leaderTrait !== 'manager') {
-                        $('#toggle-leaderTrait-manager').click();
-                        return;
-                    } // 打猎前切换领袖，防止消耗过多喵力
                     var huntCount = ivory / hunterRatio;
                     if (huntCount > 0) {
                         game.resPool.addResEvent('manpower', -huntCount * 100);
@@ -1143,71 +1146,110 @@ var run = function() {
                 var huntCount = Math.ceil((game.resPool.get('manpower').value - weekResLimited) / 100);
                 game.resPool.addResEvent('manpower', -huntCount * 100);
                 game.village.gainHuntRes(huntCount);
+                options.auto.infinity.items.capCheck.step = 1;
             }
-            if (leaderTrait !== 'engineer' && leaderTrait !== 'metallurgist') {
-                $('#toggle-leaderTrait-engineer').click();
-                return;
+            // 以下为合成方式处理，切换工匠
+            if (options.auto.infinity.items.capCheck.step == 1) {
+                if (leaderTrait !== 'engineer') {
+                    $('#toggle-leaderTrait-engineer').click();
+                    return;
+                }
             }
             // science
             if (weekResLimited < game.resPool.get('science').value) {
                 var compediumPrices = game.workshop.getCraft('compedium').prices;
                 var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
-                var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
-                var compedium = (game.resPool.get('science').value - weekResLimited) / compediumPrices[0].val;
+                // 先进行喵力处理，已获取足够毛皮，如不够，剩余喵力也不足以支持消耗多余科学(文化同理)
+                // 这种情况应用 太阳建筑-收容室 消耗，喵力则用 大使馆 消耗
+                // var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
+                var compedium = Math.ceil((game.resPool.get('science').value - weekResLimited) / compediumPrices[0].val);
                 var manuscript = compedium * compediumPrices[1].val / (1 + game.getResCraftRatio('manuscript'));
                 if (manuscript * manuscriptPrices[0].val / (1 + game.getResCraftRatio('parchment')) > game.resPool.get('culture').value) { return; }
                 var parchment = manuscript * manuscriptPrices[1].val / (1 + game.getResCraftRatio('parchment'));
-                game.craft('parchment', parchment);
+                // 溢出 1% 羊皮纸，防止后续合成因原料不足失败，对概要向上取整也是相同理由（对多级合成的处理都需相同操作）
+                game.craft('parchment', parchment * 1.01);
                 game.craft('manuscript', manuscript);
                 game.craft('compedium', compedium);
             }
             // culture
             if (weekResLimited < game.resPool.get('culture').value) {
                 var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
-                var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
-                var manuscript = (game.resPool.get('culture').value - weekResLimited) / manuscriptPrices[0].val;
+                // var parchmentPrices = game.workshop.getCraft('parchment').prices[0].val;
+                var manuscript = Math.ceil((game.resPool.get('culture').value - weekResLimited) / manuscriptPrices[0].val);
                 var parchment = manuscript * manuscriptPrices[1].val / (1 + game.getResCraftRatio('parchment'));
-                game.craft('parchment', parchment);
+                game.craft('parchment', parchment * 1.01);
                 game.craft('manuscript', manuscript);
             }
             // 可以通过工艺制作简单控制的资源
-            var conventionalRes = ['catnip', 'wood', 'minerals', 'coal', 'iron', 'oil', 'uranium'];
-            var processProductionRes = ['wood', 'beam', 'slab', 'steel', 'plate', 'kerosene', 'thorium'];
+            var conventionalRes = ['catnip', 'wood', 'minerals', 'oil', 'uranium'];
+            var processProductionRes = ['wood', 'beam', 'slab', 'kerosene', 'thorium'];
             for (var i in conventionalRes) {
                 var res = game.resPool.get(conventionalRes[i]);
                 var pPRes = processProductionRes[i];
                 if (weekResLimited < res.value) {
                     game.craft(pPRes, (res.value - weekResLimited) / game.workshop.getCraft(pPRes).prices[0].val);
                 }
+                options.auto.infinity.items.capCheck.step = 2;
             };
-            if (leaderTrait !== 'metallurgist') {
-                $('#toggle-leaderTrait-metallurgist').click();
+            // 处理下面几种资源前应切换冶金学家
+            if (options.auto.infinity.items.capCheck.step == 2) {
+                if (leaderTrait !== 'metallurgist') {
+                    $('#toggle-leaderTrait-metallurgist').click();
+                    return;
+                }
+            }
+            // coal 处理钛和难得素时需使用钢
+            if (weekResLimited < game.resPool.get('coal').value) {
+                game.craft('steel', (game.resPool.get('coal').value - weekResLimited) / game.workshop.getCraft('steel').prices[0].val);
                 return;
             }
-            // unobtainium 处理难得素前切换冶金学家
+            // titanium
+            if (weekResLimited < game.resPool.get('titanium').value) {
+                var notWorkshopTitanium = false;
+                var alloyPrices = game.workshop.getCraft('alloy').prices;
+                var steelPrices = game.workshop.getCraft('steel').prices;
+                var alloy = Math.ceil((game.resPool.get('titanium').value - weekResLimited) / alloyPrices[0].val);
+                var steel = alloy * alloyPrices[1].val - game.resPool.get('steel').value;
+                if (steel > 0) {
+                    var coal = steel * steelPrices[0].val / (1 + game.getResCraftRatio('steel'));
+                    if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
+                        notWorkshopTitanium = true;
+                    } else { game.craft('steel', steel * 1.01); }
+                }
+                if (!notWorkshopTitanium) { game.craft('alloy', alloy); }
+            }
+            // unobtainium
             if (weekResLimited < game.resPool.get('unobtainium').value) {
                 var eludiumPrices = game.workshop.getCraft('eludium').prices;
                 var alloyPrices = game.workshop.getCraft('alloy').prices;
                 var steelPrices = game.workshop.getCraft('steel').prices;
-                var eludium = (game.resPool.get('unobtainium').value - weekResLimited) / eludiumPrices[0].val;
-                var alloy = eludium * eludiumPrices[1].val / (1 + game.getResCraftRatio('alloy'));
-                if (alloy * alloyPrices[0].val / (1 + game.getResCraftRatio('alloy')) > game.resPool.get('titanium').value) {
-                    game.resPool.get('unobtainium').value /= 1e10;
-                    return;
-                }
-                var steel = alloy * alloyPrices[1].val / (1 + game.getResCraftRatio('steel'));
-                if (steel > game.resPool.get('steel').value) {
-                    var coal = steel * steelPrices[0].val;
-                    if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
-                        game.resPool.get('unobtainium').value /= 1e10;
+                var eludium = Math.ceil((game.resPool.get('unobtainium').value - weekResLimited) / eludiumPrices[0].val);
+                var alloy = eludium * eludiumPrices[1].val - game.resPool.get('alloy').value;
+                if (alloy > 0) {
+                    var titanium = alloy * alloyPrices[0].val / (1 + game.getResCraftRatio('alloy'));
+                    if (titanium > game.resPool.get('titanium').value) {
+                        game.resPool.get('unobtainium').value /= 1e5;
                         return;
-                    } else { game.craft('steel', steel); }
+                    }
+                    var steel = alloy * alloyPrices[1].val / (1 + game.getResCraftRatio('alloy')) - game.resPool.get('steel').value;
+                    if (steel > 0) {
+                        var coal = steel * steelPrices[0].val / (1 + game.getResCraftRatio('steel'));
+                        if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
+                            game.resPool.get('unobtainium').value /= 1e5;
+                            return;
+                        } else { game.craft('steel', steel * 1.01); }
+                    }
+                    game.craft('alloy', alloy);
                 }
-                game.craft('alloy', alloy);
                 game.craft('eludium', eludium);
             }
+            // iron
+            if (weekResLimited < game.resPool.get('iron').value) {
+                game.craft('plate', (game.resPool.get('iron').value - weekResLimited) / game.workshop.getCraft('plate').prices[0].val);
+            }
+            // 以下为建造方式的处理
             // titanium 通过修建太阳能发电站控制钛
-            if (weekResLimited < game.resPool.get('titanium').value) {
+            if (weekResLimited < game.resPool.get('titanium').value && notWorkshopTitanium) {
                 var titanium = game.resPool.get('titanium').value - weekResLimited;
                 var pasturePrices = game.bld.get('pasture').stages[1].prices[0].val;
                 var priceRatio = game.bld.getPriceRatio('pasture');
@@ -1227,6 +1269,8 @@ var run = function() {
                 }
                 return;
             } else { if (options.auto.time.items.voidRift.enabled) { $('#toggle-voidRift').click(); } }
+            // science 太阳建筑-收容室
+            // culture 大使馆
             // 完成后设置标记
             options.auto.infinity.items.capCheck.doneMark = true;
         },
