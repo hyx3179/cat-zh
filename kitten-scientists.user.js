@@ -4241,6 +4241,13 @@ var run = function() {
             }
 
             var CapReslist = $("#CapRes-list");
+            // 删除不在 kittenStorage 中的默认设置项目
+            for (var resCapName in options.auto.infinity.resCap) {
+                if (!(resCapName in kittenStorage.resCap)) {
+                    delete options.auto.infinity.resCap[resCapName];
+                    $('#CapRes-' + resCapName).remove();
+                }
+            }
             for (var resource in kittenStorage.resCap) {
                 var res = kittenStorage.resCap[resource];
                 setLimitValue(resource, res.limit, res.enabled);
@@ -4979,15 +4986,14 @@ var run = function() {
         });
 
         clearunused.on('click', function () {
-            for (var name in options.auto.resources) {
-                // Only delete resources with unmodified values. Require manual
-                // removal of resources with non-standard values.
-                if (!options.auto.resources[name].stock &&
-                    options.auto.resources[name].consume == options.consume ||
-                    options.auto.resources[name].consume == undefined) {
-                    $('#resource-' + name).remove();
+            for (var name in options.auto.infinity.resCap) {
+                if (options.auto.infinity.resCap[name].enabled &&
+                    options.auto.infinity.resCap[name].limit == options.auto.infinity.items.capCheck.subTrigger) {
+                    delete options.auto.infinity.resCap[name]
+                    $('#CapRes-' + name).remove();
                 }
             }
+            saveToKittenStorage();
         });
 
         var allresources = $('<ul/>', {
@@ -5016,7 +5022,7 @@ var run = function() {
 
         var resList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 33, 34];
         for (var i in resList) {
-            var res = game.resPool.resources[i];
+            var res = game.resPool.resources[resList[i]];
 
             if (res.name && $(idPrefix + res.name).length === 0) {
                 var item = $('<div/>', {
@@ -5056,8 +5062,8 @@ var run = function() {
 
         if (!options.auto.infinity.resCap[name]) { options.auto.infinity.resCap[name] = {}; }
         if (enabled != undefined) { options.auto.infinity.resCap[name].enabled = enabled }
+        else { $('#limit-value-' + name).text(i18n('ui.infinity.capCheck.limit', [n.toFixed(2)])); }
         options.auto.infinity.resCap[name].limit = n;
-        $('#limit-value-' + name).text(i18n('ui.infinity.capCheck.limit', [n.toFixed(2)]));
     };
 
     var addInfNewResOption = function (name) {
@@ -5101,20 +5107,6 @@ var run = function() {
             css: { cursor: 'pointer', display: 'inline-block', width: '100px' },
         });
 
-        var del = $('<div/>', {
-            id: 'CapRes-delete-' + name,
-            text: i18n('resources.del'),
-            css: {
-                cursor: 'pointer',
-                display: 'inline-block',
-                float: 'right',
-                paddingRight: '5px',
-                textShadow: '3px 3px 4px gray'
-            },
-        });
-
-        container.append(input, label, limit, del);
-
         limit.on('click', function () {
             engine.stop(false);
             var value = window.prompt(i18n('ui.infinity.capCheck.limit.set', [title]));
@@ -5127,6 +5119,18 @@ var run = function() {
             }
         });
 
+        var del = $('<div/>', {
+            id: 'CapRes-delete-' + name,
+            text: i18n('resources.del'),
+            css: {
+                cursor: 'pointer',
+                display: 'inline-block',
+                float: 'right',
+                paddingRight: '5px',
+                textShadow: '3px 3px 4px gray'
+            },
+        });
+
         del.on('click', function () {
             if (window.confirm(i18n('ui.infinity.capCheck.limit.confirm', [title]))) {
                 container.remove();
@@ -5134,6 +5138,8 @@ var run = function() {
                 saveToKittenStorage();
             }
         });
+
+        container.append(input, label, limit, del);
 
         return container;
     };
