@@ -757,7 +757,7 @@ var run = function() {
                     temporalAccelerator: {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
                     temporalImpedance:   {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
                     ressourceRetrieval:  {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    temporalPress:  {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    temporalPress:       {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
 
                     // Void Space has variant void.
                     cryochambers:        {require: false,          enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
@@ -1106,7 +1106,9 @@ var run = function() {
                 game.resPool.get('unicorns').value > 0
             ) { return; }
             var autohunt = options.auto.infinity.items.autohunt.subTrigger;
-            if (autohunt > 0) {
+            if (game.resPool.get('manpower').value == Infinity) {
+                var huntCount = Math.ceil(Number.MAX_VALUE * autohunt / 100);
+            } else if (autohunt > 0) {
                 var huntCount = Math.ceil(game.resPool.get('manpower').value * autohunt / 100);
             } else {
                 var huntCount = Math.ceil(game.resPool.get('manpower').value / 1e20);
@@ -1200,7 +1202,7 @@ var run = function() {
                         notCanAutoProcess['manpower'] = true;
                     } else if (manpowerLimited < game.resPool.get('manpower').value) {
                         if (!notCanAutoProcess['manpower']) {
-                            var huntCount = Math.ceil((game.resPool.get('manpower').value - manpowerLimited) / 100) * 1.01;
+                            var huntCount = Math.ceil((game.resPool.get('manpower').value - manpowerLimited) / 100);
                             game.resPool.addResEvent('manpower', -huntCount * 100);
                             game.village.gainHuntRes(huntCount);
                         }
@@ -1415,12 +1417,12 @@ var run = function() {
                         }
                     }
                     // 打印日志提示会爆数据上限的资源
-                    var maxV = Math.pow(2 - 0.00000000000000012, 1024) / resetMultiplier;
+                    var resMax = Number.MAX_VALUE / resetMultiplier;
                     var resList = options.auto.infinity.resList;
                     for (var i in resList) {
                         var res = game.resPool.resources[resList[i]];
                         var resName = res.name;
-                        if (res.value > maxV && (resCap[resName] == undefined || resCap[resName].limit != Infinity)) {
+                        if (res.value > resMax && (resCap[resName] == undefined || resCap[resName].limit != Infinity)) {
                             imessage('ui.infinity.capCheck.resetZero', [res.title]);
                             return;
                         }
@@ -1440,19 +1442,25 @@ var run = function() {
             var cryo = game.time.getVSU('cryochambers');
             var usedCryo = game.time.getVSU('usedCryochambers').on;
             var cryoPanel = vsPanel[1].model;
+            var postApocalypse = gamePage.challenges.getChallenge('postApocalypse').on;
             if (!cryo.val && options.auto.infinity.items.cryoFix.subTrigger > usedCryo) {
                 if (game.religion.getHGScalingBonus() == 1) {
                     var buildCryo = options.auto.infinity.items.cryoFix.subTrigger - usedCryo;
                     var canBuildCryo = Math.floor(Math.log(1 / cryoPanel.prices[0].val) / Math.log(cryo.priceRatio));
-                    options.auto.time.items.cryochambers.max = Math.min(buildCryo, canBuildCryo);
-                    if (!options.auto.time.items.cryochambers.enabled) { $('#toggle-cryochambers').click(); }
-                    return;
+                    var minCryo = Math.min(buildCryo, canBuildCryo);
+                    if (game.bld.get('chronosphere').on + postApocalypse < minCryo) {
+                        options.auto.build.items.chronosphere.max = minCryo - postApocalypse;
+                        return;
+                    }
+                    for (var i = 0; i < minCryo; i++) {
+                        vsPanel[1].controller.buyItem(cryoPanel, {}, function () { });
+                    }
                 } else { message('冷冻仓：已开启神圣灭绝，不新建冷冻仓'); }
-            } else { if (options.auto.time.items.cryochambers.enabled) { $('#toggle-cryochambers').click(); } }
+            }
             // 准备传送仪（数量= 拥有冷冻仓数量 - 后启示录完成次数）
             var cryochambers = cryo.val + usedCryo;
-            var chronosphereMax = cryochambers - gamePage.challenges.getChallenge('postApocalypse').on;
-            if (engine.buildChronosphere(chronosphereMax) == undefined) { return; }
+            var chronosphereMax = cryochambers - postApocalypse;
+            if (this.buildChronosphere(chronosphereMax) == undefined) { return; }
             // 跳时间获取时间通量
             var shatter = game.timeTab.cfPanel.children[0].children[0];
             var temporalFlux = game.resPool.get('temporalFlux').maxValue - game.resPool.get('temporalFlux').value;
@@ -1477,7 +1485,7 @@ var run = function() {
             options.auto.build.items.chronosphere.max = chronosphereMax
             if (game.bld.get('chronosphere').on < chronosphereMax) {
                 var chronosphere = chronosphereMax - game.bld.get('chronosphere').on;
-                var returnValue = engine.readyChronosphereRes(chronosphere);
+                var returnValue = this.readyChronosphereRes(chronosphere);
                 switch (returnValue) {
                     case 'done':
                         break;
@@ -3838,7 +3846,7 @@ var run = function() {
                         } else if (cryoKarma) {
                             var nextPriceCheck = (tempPool['karma'] < karmaPrice * Math.pow(priceRatio, k + data.val));
                         } else {
-                            var nextPriceCheck = (tempPool[prices[p].name] < prices[p].val * Math.pow(priceRatio, k + data.val));
+                            var nextPriceCheck = (tempPool[prices[p].name] <= prices[p].val * Math.pow(priceRatio, k + data.val));
                         }
                         if (nextPriceCheck || (data.noStackable && (k + data.val) >= 1) || (build.id === 'ressourceRetrieval' && k + data.val >= 100)
                           || (build.id === 'cryochambers' && game.bld.getBuildingExt('chronosphere').meta.val <= k + data.val)) {
@@ -4054,8 +4062,10 @@ var run = function() {
                 if (i === "manpower") {
                     var manpowerValue = Math.max(this.craftManager.getValueAvailable(i, true) - 100, 0);
                     var total = manpowerValue / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 } else {
                     var total = this.craftManager.getValueAvailable(i, limited, options.auto.trade.trigger) / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 }
 
                 amount = (amount === undefined || total < amount) ? total : amount;
@@ -5292,7 +5302,7 @@ var run = function() {
     };
 
     var setLimitValue = function (name, value, enabled) {
-        var n = parseFloat(value);
+        var n = value == null ? Infinity : parseFloat(value);
 
         if (isNaN(n) || n < 1e10) {
             warning('ignoring non-numeric or invalid limit value ' + value);
@@ -5436,13 +5446,12 @@ var run = function() {
                             // time
                             $('#toggle-all-disable-items-time').click();
                             var temporalBattery = game.time.getCFU('temporalBattery');
-                            var timeCrystal = game.resPool.get('timeCrystal').value / 1e20;
                             // 不消耗时间水晶，极限值在 1e17 左右，具体原理查看 IEEE 754
+                            var timeCrystal = game.resPool.get('timeCrystal').value / 1e20;
+                            timeCrystal = timeCrystal == Infinity ? Number.MAX_VALUE : timeCrystal;
                             options.auto.time.items.temporalBattery.max =
                                 Math.floor(Math.log(timeCrystal / temporalBattery.prices[0].val) / Math.log(temporalBattery.priceRatio));
                             kittenStorage.items['set-temporalBattery-max'] = options.auto.time.items.temporalBattery.max;
-                            options.auto.time.items.cryochambers.max = 0;
-                            kittenStorage.items['set-cryochambers-max'] = options.auto.time.items.cryochambers.max;
                             options.auto.time.items.chronocontrol.max = 1;
                             kittenStorage.items['set-chronocontrol-max'] = options.auto.time.items.chronocontrol.max;
                             $('#toggle-temporalBattery').click();
