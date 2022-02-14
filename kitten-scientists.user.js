@@ -308,6 +308,7 @@ var run = function() {
             'ui.infinity.capCheck.notCanAutoProcess': '无法完成 {0} 的重置超上限自动处理',
             'ui.infinity.autoReset': '自动重置',
             'ui.infinity.autohunt': '无限打猎',
+            'ui.infinity.autoTransform': '无限遗物',
             'ui.infinity.chronosphere': '传送仪：{0} 不足以再修建 {1} 个传送仪',
             'ui.infinity.capCheck.soleCap': '独立上限',
             'ui.infinity.capCheck.soleCap.enable': '启用 {0} 的重置超上限自动处理',
@@ -319,6 +320,7 @@ var run = function() {
             'ui.trigger.cryoFix.set': '输入一个新的 冷冻仓修复 触发值，大于等于 0 的整数。\n建议小于等于已拥有的冷冻仓数量，\n仅在消耗业力 ＜1 且未开启 神圣灭绝 时会自动建造新的冷冻仓。',
             'ui.trigger.capCheck.set': '输入一个新的 上限检查 触发值。\n不建议设置超过 1.79e308 的值（数据极限为2^1024），\n数据超过上限会显示 ∞ ，并在刷新后归零。',
             'ui.trigger.autohunt.set': '输入一个新的 无限打猎 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时打猎次数为不消耗喵力的最大数量。\n仅在毛皮、象牙、独角兽中有 0 时触发。',
+            'ui.trigger.autohunt.set': '输入一个新的 无限遗物 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时精炼次数为不消耗 时间水晶 的最大数量。\n仅在遗物为 0 时触发。',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -546,6 +548,7 @@ var run = function() {
                     capCheck:             {enabled: false, subTrigger: 1e308, doneMark: false, step: 0},
                     autoReset:            {enabled: false},
                     autohunt:             {enabled: false, subTrigger: 0},
+                    autoTransform:        {enabled: false, subTrigger: 0},
                 },
                 resCap: {
                     titanium:             {enabled: true,  limit: 1e304},
@@ -1093,6 +1096,7 @@ var run = function() {
             // 防止合并冲突
             var inf = options.auto.infinity;
             var infItems = inf.items;
+            if (inf.enabled && infItems.autoTransform.enabled)                              {this.autoTransform();}
             if (inf.enabled && infItems.autohunt.enabled)                                   {this.autohunt();}
             if (inf.enabled && infItems.buildChronosphere.enabled &&
                 !infItems.buildChronosphere.doneMark)                                       {this.buildChronosphere();}
@@ -1105,18 +1109,41 @@ var run = function() {
                 game.resPool.get('ivory').value > 0 &&
                 game.resPool.get('unicorns').value > 0
             ) { return; }
-            var autohunt = options.auto.infinity.items.autohunt.subTrigger;
+            var huntTrigger = options.auto.infinity.items.autohunt.subTrigger;
             if (game.resPool.get('manpower').value == Infinity) {
-                var huntCount = Math.ceil(Number.MAX_VALUE * autohunt / 100);
-            } else if (autohunt > 0) {
-                var huntCount = Math.ceil(game.resPool.get('manpower').value * autohunt / 100);
+                var huntCount = Math.floor(Number.MAX_VALUE / 100);
+            } else if (huntTrigger > 0) {
+                var huntCount = Math.floor(game.resPool.get('manpower').value * huntTrigger / 100);
             } else {
-                var huntCount = Math.ceil(game.resPool.get('manpower').value / 1e20);
+                var huntCount = Math.floor(game.resPool.get('manpower').value / 1e20);
             }
             if (huntCount) {
                 game.resPool.addResEvent('manpower', -huntCount * 100);
                 game.village.gainHuntRes(huntCount);
             }
+        },
+        autoTransform: async function () {
+            if (game.resPool.get('relic').value > 0) { return; }
+            var refineTCBtn = game.religionTab.refineTCBtn;
+            if (refineTCBtn == undefined) {
+                options.auto.build.items.ziggurat.max = 1;
+                if (!options.auto.build.items.ziggurat.enabled) { $('#toggle-ziggurat').click(); }
+            } else { if (options.auto.build.items.ziggurat.enabled) { $('#toggle-ziggurat').click(); } }
+            var transformTrigger = options.auto.infinity.items.autoTransform.subTrigger;
+            var timeCrystal = game.resPool.get('timeCrystal').value;
+            if (timeCrystal < 1e100) {
+                if (!options.auto.infinity.items.autoTransform.enabled) { $('#toggle-autoTransform').click(); }
+                message('时间水晶不足，关闭无限遗物。');
+                return;
+            }
+            if (timeCrystal == Infinity) {
+                var transformCount = Math.floor(Number.MAX_VALUE / 25);
+            } else if (transformTrigger > 0) {
+                var transformCount = Math.floor(timeCrystal * autohunt / 25);
+            } else {
+                var transformCount = Math.floor(timeCrystal / 1e20);
+            }
+            refineTCBtn.controller._transform(refineTCBtn.model, transformCount)
         },
         resCapCheck: async function () {
             var items = options.auto.infinity.items;
