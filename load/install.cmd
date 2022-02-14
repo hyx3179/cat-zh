@@ -1,1 +1,0 @@
-.\scripts\main.bat install
