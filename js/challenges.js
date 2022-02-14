@@ -542,6 +542,7 @@ dojo.declare("classes.reserveMan", null,{
 				delete this.reserveResources[i];
 				continue;
 			}
+			this.reserveResources[i] = this.reserveResources[i] == null ? Infinity : this.reserveResources[i];
 			var resCap = this.game.resPool.get(i).maxValue;
 			if(!resCap){
 				this.game.resPool.get(i).value += this.reserveResources[i];
