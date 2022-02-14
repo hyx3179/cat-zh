@@ -2550,6 +2550,7 @@ dojo.declare("classes.managers.WorkshopManager", com.nuclearunicorn.core.TabMana
 		var minAmt = Number.MAX_VALUE;
 		for (var j = prices.length - 1; j >= 0; j--) {
 			var totalRes = this.game.resPool.get(prices[j].name).value;
+			totalRes = totalRes == Infinity ? Number.MAX_VALUE : totalRes;
 			var allAmt = totalRes / prices[j].val; // we need fraction here, do floor later
 			if (allAmt < minAmt){
 				minAmt = allAmt;
