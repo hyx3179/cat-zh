@@ -1419,6 +1419,7 @@ dojo.declare("classes.ui.religion.TransformBtnController", com.nuclearunicorn.ga
 
 	transform: function(model, divider, event, callback) {
 		var amt = Math.floor(this._canAfford(model) / divider);
+		amt = amt == Infinity ? Number.MAX_VALUE / model.prices[0].val / divider : amt;
 		if (amt < 1) {
 			callback(false /*itemBought*/, { reason: "cannot-afford" });
 			return;

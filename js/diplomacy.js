@@ -637,6 +637,9 @@ dojo.declare("classes.managers.DiplomacyManager", null, {
 
 		amt[0] += (goldCost > 0) ? 0 : Number.MAX_VALUE;
 		amt[1] += (manpowerCost > 0) ? 0 : Number.MAX_VALUE;
+		amt[0] = amt[0] == Infinity ? Math.floor(Number.MAX_VALUE / Math.max(goldCost, 1)) : amt[0];
+		amt[1] = amt[1] == Infinity ? Math.floor(Number.MAX_VALUE / Math.max(manpowerCost, 1)) : amt[1];
+		amt[2] = amt[2] == Infinity ? Math.floor(Number.MAX_VALUE / race.buys[0].val) : amt[2];
 
 		var min = Number.MAX_VALUE;
 		for (var i = 0; i < amt.length; i++){

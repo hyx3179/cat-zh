@@ -933,6 +933,13 @@ dojo.declare("classes.managers.ResourceManager", com.nuclearunicorn.core.TabMana
 				var price = prices[i];
 
 				var res = this.get(price.name);
+				if (price.val * amt == Infinity &&
+					res.value == Infinity &&
+					(res.maxValue !== 0 || res.name === 'void')) {
+					// 无需处理 虚空 以外的无上限资源
+					hasRes = false;
+					break;
+				}
 				if (res.value < (price.val * amt)){
 					hasRes = false;
 					break;

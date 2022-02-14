@@ -751,6 +751,7 @@ dojo.declare("classes.managers.VillageManager", com.nuclearunicorn.core.TabManag
 
 	huntAll: function() {
 		var squads = Math.floor(this.game.resPool.get("manpower").value / 100);
+		squads = squads == Infinity ? Number.MAX_VALUE / 100 : squads;
 		if (squads >= 1) {
 			this.game.resPool.addResEvent("manpower", -squads * 100);
 			this.gainHuntRes(squads);
