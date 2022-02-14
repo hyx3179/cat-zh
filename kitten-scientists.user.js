@@ -3322,7 +3322,7 @@ var run = function() {
                         } else if (cryoKarma) {
                             var nextPriceCheck = (tempPool['karma'] < karmaPrice * Math.pow(priceRatio, k + data.val));
                         } else {
-                            var nextPriceCheck = (tempPool[prices[p].name] < prices[p].val * Math.pow(priceRatio, k + data.val));
+                            var nextPriceCheck = (tempPool[prices[p].name] <= prices[p].val * Math.pow(priceRatio, k + data.val));
                         }
                         if (nextPriceCheck || (data.noStackable && (k + data.val) >= 1) || (build.id === 'ressourceRetrieval' && k + data.val >= 100)
                           || (build.id === 'cryochambers' && game.bld.getBuildingExt('chronosphere').meta.val <= k + data.val)) {
@@ -3538,8 +3538,10 @@ var run = function() {
                 if (i === "manpower") {
                     var manpowerValue = Math.max(this.craftManager.getValueAvailable(i, true) - 100, 0);
                     var total = manpowerValue / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 } else {
                     var total = this.craftManager.getValueAvailable(i, limited, options.auto.trade.trigger) / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 }
 
                 amount = (amount === undefined || total < amount) ? total : amount;
