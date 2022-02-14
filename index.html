@@ -9,6 +9,17 @@
 	  s.parentNode.insertBefore(hm, s);
 	})();
 	</script>
+	<script>
+		(function () {
+			if (window.localStorage['test.confirm'] != undefined) { return; }
+			var confirm = window.confirm('这是一个测试网页，包含了无限修复，无限流珂学家。\n如果你不知道这意味这什么请点击取消，即可进入原库地址。\n本提示只出现一次！！！！\n欢迎反馈问题')
+			if (confirm) {
+				window.localStorage['test.confirm'] = confirm;
+			} else {
+				window.location.replace("http://likexia.gitee.io/cat-zh/");
+			}
+		})();
+	</script>
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="Cache-Control" content="private, no-cache, no-store">
