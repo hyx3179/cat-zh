@@ -232,7 +232,7 @@ dojo.declare("com.nuclearunicorn.core.TabManager", com.nuclearunicorn.core.Contr
 				if (!elem) { continue; }
 
 				for (var fld in savedMetaElem){
-					if (fld == name) {
+					if (fld == 'name') {
 						continue;
 					}
 					if (!elem.hasOwnProperty(fld)){
@@ -242,7 +242,14 @@ dojo.declare("com.nuclearunicorn.core.TabManager", com.nuclearunicorn.core.Contr
 						if (savedMetaElem[fld] != null && typeof(savedMetaElem[fld]) == "object") {
 							this.loadMetadata(elem[fld], savedMetaElem[fld]);
 						} else {
-							elem[fld] = savedMetaElem[fld];
+							// 保存数据中仅 "resources":[{"value":null}] 一种情况需要转换
+							// key 为 value 时 仅 resources 中的 value 会出现 null
+							// 资源变化时已经处理了 NaN 的情况
+							if (fld == 'value') {
+								elem[fld] = savedMetaElem[fld] == null ? Infinity : savedMetaElem[fld];
+							} else {
+								elem[fld] = savedMetaElem[fld];
+							}
 						}
 					}
 				}

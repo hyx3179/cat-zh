@@ -1270,6 +1270,7 @@ dojo.declare("classes.ui.religion.TransformBtnController", com.nuclearunicorn.ga
 
 	transform: function(model, divider, event, callback) {
 		var amt = Math.floor(this._canAfford(model) / divider);
+		amt = amt == Infinity ? Number.MAX_VALUE / model.prices[0].val / divider : amt;
 		if (model.enabled && amt >= 1) {
 			callback(this._transform(model, amt));
 		}

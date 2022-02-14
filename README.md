@@ -1,3 +1,5 @@
+# <font color=red>这是一个测试网页，可能会产生未知问题</font>
+[链接](http://kittensgame-test-hyx3179.github.io/)
 # 猫国建设者本地版
 添加了本地运行脚本（目前仅Windows）  
 * 自动处理依赖  
