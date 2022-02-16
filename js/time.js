@@ -1052,9 +1052,8 @@ dojo.declare("classes.ui.time.ShatterTCBtnController", com.nuclearunicorn.game.u
             });
         }
 
-        if (prices_cloned.length == 1 &&
-            amt > 500 &&
-            this.game.time.heat > heatMax) {
+        if (amt > 500) {
+            if (this.game.time.heat <= heatMax || prices_cloned.length != 1) { return 'skip'; } // 保险
             priceLoop = prices_cloned[0].val;
             var darkYears = this.game.calendar.darkFutureYears(true);
             if (darkYears > 0) {
@@ -1064,7 +1063,7 @@ dojo.declare("classes.ui.time.ShatterTCBtnController", com.nuclearunicorn.game.u
                 this.game.getEffect("shatterCostIncreaseChallenge"));
             pricesTotal.timeCrystal = priceLoop * (1 + (this.game.time.heat - heatMax) * 0.01) * amt + priceLoop * heatFactor * 0.01 * amt * (amt - 1) / 2;
             return pricesTotal;
-        } // 时间跃迁（单次跳跃超 500 年，热度超上限）
+        } // 时间跃迁（单次跳跃超 500 年，热度超上限，无虚空成本）
 
 		for (var k = 0; k < amt; k++) {
 			for (var i in prices_cloned) {
@@ -1115,6 +1114,7 @@ dojo.declare("classes.ui.time.ShatterTCBtnController", com.nuclearunicorn.game.u
             return;
         }
         var price = this.getPricesMultiple(model, amt);
+        if (price === 'skip') { return; }
         if(price.void){
             if (price.timeCrystal <= this.game.resPool.get("timeCrystal").value &&
             (price.void <= this.game.resPool.get("void").value)) {
