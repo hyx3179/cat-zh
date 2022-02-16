@@ -303,24 +303,14 @@ var run = function() {
             'ui.infinity': '无限流',
             'ui.infinity.buildChronosphere': '修建传送仪',
             'ui.infinity.cryoFix': '冷冻仓修复',
-            'ui.infinity.capCheck': '重置超上限检查',
-            'ui.infinity.capCheck.resetZero': '{0} 会在重置后归零（要跳过检查请将其独立上限设置为 Infinity）',
-            'ui.infinity.capCheck.notCanAutoProcess': '无法完成 {0} 的重置超上限自动处理',
             'ui.infinity.autoReset': '自动重置',
             'ui.infinity.autohunt': '无限打猎',
             'ui.infinity.autoTransform': '无限遗物',
             'ui.infinity.autoCT': '无限奥秘',
             'ui.infinity.skiptime': '燃烧时间水晶',
             'ui.infinity.chronosphere': '传送仪：{0} 不足以再修建 {1} 个传送仪',
-            'ui.infinity.capCheck.soleCap': '独立上限',
-            'ui.infinity.capCheck.soleCap.enable': '启用 {0} 的重置超上限自动处理',
-            'ui.infinity.capCheck.soleCap.disable': '禁用 {0} 的重置超上限自动处理',
-            'ui.infinity.capCheck.limit': '上限: {0}',
-            'ui.infinity.capCheck.limit.set': '设置 {0} 的自动处理上限',
-            'ui.infinity.capCheck.limit.confirm': '确定要取消 {0} 的独立重置超上限检查?',
             'ui.trigger.buildChronosphere.set': '输入一个新的 修建传送仪 触发值，大于等于 0 的整数。\n默认值 67 ，自动重置会强制检查数量。\n目前无自动调整，无限流前期使用需注意调整。\n可以稳定建造 666 以上传送仪时建议配合冷冻仓，\n使用 冷冻仓修复 功能，可同步获得大量业力。',
             'ui.trigger.cryoFix.set': '输入一个新的 冷冻仓修复 触发值，大于等于 0 的整数。\n建议小于等于已拥有的冷冻仓数量，\n仅在消耗业力 ＜1 且未开启 神圣灭绝 时会自动建造新的冷冻仓。',
-            'ui.trigger.capCheck.set': '输入一个新的 上限检查 触发值。\n不建议设置超过 1.79e308 的值（数据极限为2^1024），\n数据超过上限会显示 ∞ ，并在刷新后归零。',
             'ui.trigger.autohunt.set': '输入一个新的 无限打猎 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时打猎次数为不消耗喵力的最大数量。\n仅在毛皮、象牙、独角兽中有 0 时触发。',
             'ui.trigger.autoTransform.set': '输入一个新的 无限遗物 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时精炼次数为不消耗 时间水晶 的最大数量。\n遗物小于 ∞ 时触发。',
             'ui.trigger.skiptime.set': '输入一个新的 燃烧时间水晶 触发值， 在 [0,2^62] 内的整数。\n其值为需要到达的游戏日历年，默认为 40K。\n游戏规则内 能到达的最大日历年为\n2^62 = 第4,611,686,018,427,388,000年，\n最大真实年为 2^53 = 第9,007,199,254,740,992年\n本功能需要 时间水晶 超过 1e100 才允许使用',
@@ -545,22 +535,15 @@ var run = function() {
             infinity: {
                 enabled: false,
                 allow: false,
-                resList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 33, 34],
                 items: {
                     buildChronosphere:    {enabled: false, subTrigger: 67, doneMark: false},
                     cryoFix:              {enabled: false, subTrigger: 0, doneMark: false},
-                    capCheck:             {enabled: false, subTrigger: 1e308, doneMark: false, step: 0},
-                    autoReset:            {enabled: false},
                     autohunt:             {enabled: false, subTrigger: 0},
                     autoTransform:        {enabled: false, subTrigger: 0},
                     autoCT:               {enabled: false, subTrigger: ''},
                     skiptime:             {enabled: false, subTrigger: 4e4, doneMark: false},
+                    autoReset:            {enabled: false},
                 },
-                resCap: {
-                    titanium:             {enabled: true,  limit: 1e304},
-                    unobtainium:          {enabled: true, limit: 1e300},
-                    void:                 {enabled: true,  limit: 1e300},
-                }
             },
             // split form faith to make "Best Unicorn Building" easily
             unicorn: {
@@ -1109,7 +1092,6 @@ var run = function() {
             if (inf.enabled && infItems.buildChronosphere.enabled &&
                 !infItems.buildChronosphere.doneMark)                                       {this.buildChronosphere();}
             if (inf.enabled && infItems.cryoFix.enabled && !infItems.cryoFix.doneMark)      {this.cryoFix();}
-            if (inf.enabled && infItems.capCheck.enabled && !infItems.capCheck.doneMark)    {this.resCapCheck();}
             if (inf.enabled && infItems.autoReset.enabled)                                  {await this.infinityReset();}
         },
         autoCT: async function () {
@@ -1216,313 +1198,6 @@ var run = function() {
                 var transformCount = Math.floor(timeCrystal / 1e20);
             }
             refineTCBtn.controller._transform(refineTCBtn.model, transformCount)
-        },
-        resCapCheck: async function () {
-            var items = options.auto.infinity.items;
-            var enabledCount = 0;
-            var doneCount = 0;
-            for (var itemName in items) {
-                if (itemName == 'capCheck') { continue; }
-                if (items[itemName].doneMark == undefined) { continue; }
-                if (items[itemName].enabled) {
-                    enabledCount++;
-                    if (items[itemName].doneMark) { doneCount++ } else { return; }
-                }
-            }
-            if (enabledCount > doneCount) { return; }
-
-            var defaultResLimited = options.auto.infinity.items.capCheck.subTrigger;
-            var chronosphere = game.bld.get('chronosphere');
-            var resetMultiplier = chronosphere.on * chronosphere.effects.resStasisRatio;
-            var weekResLimited = defaultResLimited / resetMultiplier;
-            var resCap = options.auto.infinity.resCap;
-
-            if (options.resCapCheckStep == undefined) {
-                options.resCapCheckStep = 0;
-            }
-            var step = options.resCapCheckStep;
-
-            if (options.notCanAutoProcess == undefined) {
-                options.notCanAutoProcess = {};
-            }
-            var notCanAutoProcess = options.notCanAutoProcess;
-
-            if (step < 3) {
-                var traitList = ['manager', 'engineer', 'metallurgist']
-                if (game.village.leader.trait.name !== traitList[step]) {
-                    $('#toggle-leaderTrait-' + traitList[step]).click();
-                    return;
-                } // 按步骤切换领袖
-            }
-
-            switch (step) {
-                case 0:
-                    // gold 因为黄金的特殊性，其极限值为20%的喵力完全贸易所消耗的量，通过打猎获取象牙与娜迦交易消耗多余黄金
-                    notCanAutoProcess['gold'] = false;
-                    var goldMultiplier = 1 / game.diplomacy.getManpowerCost() * game.diplomacy.getGoldCost() / 5;
-                    var goldLimited = defaultResLimited * goldMultiplier; // 无独立限制
-                    if (resCap.manpower != undefined && resCap.gold == undefined) { // 仅独立限制喵力
-                        goldLimited = resCap.manpower.limit * goldMultiplier;
-                    } else if (resCap.manpower == undefined && resCap.gold != undefined && goldLimited > resCap.gold.limit) {
-                        // 仅独立限制黄金
-                        goldLimited = resCap.gold.limit;
-                    } else if (resCap.manpower != undefined && resCap.gold != undefined) { // 同时限制
-                        if (resCap.manpower.limit * goldMultiplier > resCap.gold.limit) {
-                            goldLimited = resCap.gold.limit;
-                        } else {
-                            goldLimited = resCap.manpower.limit * goldMultiplier;
-                        }
-                    } // 可写成 ?: 形式，懒，算了
-                    goldLimited /= resetMultiplier
-                    if (resCap.gold != undefined && !resCap.gold.enabled) {
-                        notCanAutoProcess['gold'] = true;
-                    } else if (goldLimited < game.resPool.get('gold').value) {
-                        var race = game.diplomacy.get('nagas');
-                        var tradeCount = (game.resPool.get('gold').value - goldLimited) / game.diplomacy.getGoldCost();
-                        if (game.resPool.get('ivory').value != Infinity) {
-                            var ivory = race.buys[0].val * tradeCount == Infinity ? 1e307 : race.buys[0].val * tradeCount - game.resPool.get('ivory').value;
-                            var hunterRatio = game.getEffect('hunterRatio') + game.village.getEffectLeader('manager', 0);
-                            var huntCount = ivory / hunterRatio;
-                            if (huntCount > 0) {
-                                if (game.resPool.get('manpower').value > huntCount * 100) {
-                                    game.resPool.addResEvent('manpower', -huntCount * 100);
-                                    game.village.gainHuntRes(huntCount);
-                                } else { notCanAutoProcess['gold'] = true; }
-                            }
-                        }
-                        if (!notCanAutoProcess['gold']) {
-                            game.diplomacy.tradeMultiple(race, tradeCount * 1.01);
-                        }
-                    }
-                    // manpower
-                    notCanAutoProcess['manpower'] = false;
-                    var manpowerLimited = resCap.manpower != undefined ? resCap.manpower.limit / resetMultiplier : weekResLimited;
-                    if (resCap.manpower != undefined && !resCap.manpower.enabled) {
-                        notCanAutoProcess['manpower'] = true;
-                    } else if (manpowerLimited < game.resPool.get('manpower').value) {
-                        if (!notCanAutoProcess['manpower']) {
-                            var huntCount = Math.ceil((game.resPool.get('manpower').value - manpowerLimited) / 100);
-                            game.resPool.addResEvent('manpower', -huntCount * 100);
-                            game.village.gainHuntRes(huntCount);
-                        }
-                    }
-                    if ((goldLimited >= game.resPool.get('gold').value || notCanAutoProcess['gold']) &&
-                        (manpowerLimited >= game.resPool.get('manpower').value || notCanAutoProcess['manpower'])) {
-                        options.resCapCheckStep = step + 1;
-                    }
-                    options.notCanAutoProcess = notCanAutoProcess;
-                    return;
-                case 1:
-                    // 以下为合成方式处理，需工匠领袖
-                    // science
-                    // 先进行喵力处理，已获取足够毛皮，如不够，剩余喵力也不足以支持消耗多余科学(文化同理)
-                    // 这种情况应用 太阳建筑-收容室 消耗，喵力则用 大使馆 消耗
-                    // 文化不足处理方法同毛皮
-                    // 溢出 1% 羊皮纸，防止后续合成因原料不足失败，对概要向上取整也是相同理由（对多级合成的处理都需相同操作）
-                    // 多级合成溢出量递减
-                    notCanAutoProcess['science'] = false;
-                    var scienceLimited = resCap.science != undefined ? resCap.science.limit / resetMultiplier : weekResLimited;
-                    if (resCap.science != undefined && !resCap.science.enabled) {
-                        notCanAutoProcess['science'] = true;
-                    } else if (scienceLimited < game.resPool.get('science').value) {
-                        var compediumPrices = game.workshop.getCraft('compedium').prices;
-                        var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
-                        var compedium = Math.ceil((game.resPool.get('science').value - scienceLimited) / compediumPrices[0].val);
-                        var manuscript = (compedium * compediumPrices[1].val - game.resPool.get('manuscript').value) / (1 + game.getResCraftRatio('manuscript'));
-                        if (manuscript * manuscriptPrices[0].val > game.resPool.get('culture').value) {
-                            notCanAutoProcess['science'] = true;
-                        }
-                        var parchment = (manuscript * manuscriptPrices[1].val - game.resPool.get('parchment').value) / (1 + game.getResCraftRatio('parchment'));
-                        if (!notCanAutoProcess['science']) {
-                            game.craft('parchment', (parchment > 0 ? parchment : 0) * 1.01);
-                            game.craft('manuscript', (manuscript > 0 ? manuscript : 0) * 1.001);
-                            game.craft('compedium', compedium);
-                        }
-                    }
-                    // culture
-                    notCanAutoProcess['culture'] = false;
-                    var cultureLimited = resCap.culture != undefined ? resCap.culture.limit / resetMultiplier : weekResLimited;
-                    if (resCap.culture != undefined && !resCap.culture.enabled) {
-                        notCanAutoProcess['culture'] = true;
-                    } else if (cultureLimited < game.resPool.get('culture').value) {
-                        var manuscriptPrices = game.workshop.getCraft('manuscript').prices;
-                        var manuscript = Math.ceil((game.resPool.get('culture').value - cultureLimited) / manuscriptPrices[0].val);
-                        var parchment = (manuscript * manuscriptPrices[1].val - game.resPool.get('parchment').value) / (1 + game.getResCraftRatio('parchment'));
-                        if (!notCanAutoProcess['culture']) {
-                            game.craft('parchment', (parchment > 0 ? parchment : 0) * 1.01);
-                            game.craft('manuscript', manuscript);
-                        }
-                    }
-                    // 可以通过工艺制作简单控制的资源
-                    // 处理 钛 难得素 时需使用 煤 铁 合成 钢
-                    var conventionalRes = ['catnip', 'wood', 'minerals', /*'coal', 'iron', */'oil', 'uranium'];
-                    var workshopRes = ['wood', 'beam', 'slab', /*'steel', 'plate', */'kerosene', 'thorium'];
-                    for (var i in conventionalRes) {
-                        var res = game.resPool.get(conventionalRes[i]);
-                        var wRes = workshopRes[i];
-                        notCanAutoProcess[conventionalRes[i]] = false;
-                        var Limited = resCap[conventionalRes[i]] != undefined ? resCap[conventionalRes[i]].limit / resetMultiplier : weekResLimited;
-                        if (resCap[conventionalRes[i]] != undefined && !resCap[conventionalRes[i]].enabled) {
-                            notCanAutoProcess[conventionalRes[i]] = true;
-                        } else if (Limited < res.value) {
-                            if (!notCanAutoProcess[conventionalRes[i]]) {
-                                game.craft(wRes, (res.value - Limited) / game.workshop.getCraft(wRes).prices[0].val);
-                            }
-                        }
-                    };
-                    if ((scienceLimited >= game.resPool.get('science').value || notCanAutoProcess['science']) &&
-                        (cultureLimited >= game.resPool.get('culture').value || notCanAutoProcess['culture'])) {
-                        options.resCapCheckStep = step + 1;
-                    }
-                    options.notCanAutoProcess = notCanAutoProcess;
-                    return;
-                case 2:
-                    // 处理下面几种资源前应切换冶金学家领袖
-                    // titanium
-                    notCanAutoProcess['titanium'] = false;
-                    var titaniumLimited = resCap.titanium != undefined ? resCap.titanium.limit / resetMultiplier : weekResLimited;
-                    if (resCap.titanium != undefined && !resCap.titanium.enabled) {
-                        notCanAutoProcess['titanium'] = true;
-                    } else if (titaniumLimited < game.resPool.get('titanium').value) {
-                        var alloyPrices = game.workshop.getCraft('alloy').prices;
-                        var steelPrices = game.workshop.getCraft('steel').prices;
-                        var alloy = Math.ceil((game.resPool.get('titanium').value - titaniumLimited) / alloyPrices[0].val);
-                        var steel = (alloy * alloyPrices[1].val - game.resPool.get('steel').value) / (1 + game.getResCraftRatio('steel'));
-                        if (game.resPool.hasRes(steelPrices, steel)) { notCanAutoProcess['titanium'] = true; }
-                        if (!notCanAutoProcess['titanium']) {
-                            game.craft('steel', (steel > 0 ? steel : 0) * 1.01);
-                            game.craft('alloy', alloy);
-                        }
-                    }
-                    // unobtainium
-                    notCanAutoProcess['unobtainium'] = false;
-                    var unobtainiumLimited = resCap.unobtainium != undefined ? resCap.unobtainium.limit / resetMultiplier : weekResLimited;
-                    if (resCap.unobtainium != undefined && !resCap.unobtainium.enabled) {
-                        notCanAutoProcess['unobtainium'] = true;
-                    } else if (unobtainiumLimited < game.resPool.get('unobtainium').value) {
-                        var eludiumPrices = game.workshop.getCraft('eludium').prices;
-                        var alloyPrices = game.workshop.getCraft('alloy').prices;
-                        var steelPrices = game.workshop.getCraft('steel').prices;
-                        var eludium = Math.ceil((game.resPool.get('unobtainium').value - unobtainiumLimited) / eludiumPrices[0].val);
-                        var alloy = (eludium * eludiumPrices[1].val - game.resPool.get('alloy').value) / (1 + game.getResCraftRatio('alloy'));
-                        var titanium = alloy * alloyPrices[0].val;
-                        if (titanium > game.resPool.get('titanium').value) {
-                            notCanAutoProcess['unobtainium'] = true;
-                        }
-                        var steel = (alloy * alloyPrices[1].val - game.resPool.get('steel').value) / (1 + game.getResCraftRatio('steel'));
-                        if (game.resPool.hasRes(steelPrices, steel)) { notCanAutoProcess['unobtainium'] = true; }
-                        if (!notCanAutoProcess['unobtainium']) {
-                            game.craft('steel', (steel > 0 ? steel : 0) * 1.01);
-                            game.craft('alloy', (alloy > 0 ? alloy : 0) * 1.001);
-                            game.craft('eludium', eludium);
-                        }
-                    }
-                    var conventionalRes = ['coal', 'iron'];
-                    var workshopRes = ['steel', 'plate'];
-                    for (var i in conventionalRes) {
-                        var res = game.resPool.get(conventionalRes[i]);
-                        var wRes = workshopRes[i];
-                        notCanAutoProcess[conventionalRes[i]] = false;
-                        var Limited = resCap[conventionalRes[i]] != undefined ? resCap[conventionalRes[i]].limit / resetMultiplier : weekResLimited;
-                        if (resCap[conventionalRes[i]] != undefined && !resCap[conventionalRes[i]].enabled) {
-                            notCanAutoProcess[conventionalRes[i]] = true;
-                        } else if (Limited < res.value) {
-                            if (!notCanAutoProcess[conventionalRes[i]]) {
-                                game.craft(wRes, (res.value - Limited) / game.workshop.getCraft(wRes).prices[0].val);
-                            }
-                        }
-                    }
-                    if ((titaniumLimited >= game.resPool.get('titanium').value || notCanAutoProcess['titanium']) &&
-                        (unobtainiumLimited >= game.resPool.get('unobtainium').value || notCanAutoProcess['unobtainium'])) {
-                        options.resCapCheckStep = step + 1;
-                    }
-                    options.notCanAutoProcess = notCanAutoProcess;
-                    return;
-                case 3:
-                    // 以下为建造方式的处理
-                    // void
-                    notCanAutoProcess['void'] = false;
-                    var voidLimited = resCap.void != undefined ? resCap.void.limit / resetMultiplier : weekResLimited;
-                    if (resCap.void != undefined && !resCap.void.enabled) {
-                        notCanAutoProcess['void'] = true;
-                    } else if (voidLimited < game.resPool.get('void').value && options.nextWeekProcessVoid == undefined) {
-                        var voidAmount = game.resPool.get('void').value - voidLimited;
-                        var voidRift = game.time.getVSU('voidRift');
-                        if (game.timeTab.vsPanel.children[0].children[4].model.prices[0].val > game.resPool.get('void').value) {
-                            notCanAutoProcess['void'] = true;
-                            options.nextWeekProcessVoid = true;
-                            return;
-                        } else {
-                            options.auto.time.items.voidRift.max = Math.ceil(Math.log(1 - voidAmount / voidRift.prices[0].val * (1 - voidRift.priceRatio)) / Math.log(voidRift.priceRatio));
-                            if (!options.auto.time.items.voidRift.enabled) { $('#toggle-voidRift').click(); }
-                            return;
-                        }
-                    } else { if (options.auto.time.items.voidRift.enabled) { $('#toggle-voidRift').click(); } }
-                    // titanium 通过修建太阳能发电站控制钛
-                    if (resCap.titanium == undefined || resCap.titanium.enabled) {
-                        var titaniumLimited = resCap.titanium != undefined ? resCap.titanium.limit / resetMultiplier : weekResLimited;
-                        if (titaniumLimited < game.resPool.get('titanium').value && notCanAutoProcess['titanium']) {
-                            var titanium = game.resPool.get('titanium').value - titaniumLimited;
-                            var pasturePrices = game.bld.get('pasture').stages[1].prices[0].val;
-                            var priceRatio = game.bld.getPriceRatio('pasture');
-                            if (game.bld.getPrices('pasture', 0)[0].val > game.resPool.get('titanium').value) {
-                                message('懒得写了，自己卖太阳能发电站吧 ヾ(≧O≦)〃嗷~');
-                            }
-                            options.auto.build.items.solarFarm.max = Math.ceil(Math.log(1 - titanium / pasturePrices * (1 - priceRatio)) / Math.log(priceRatio));
-                            if (!options.auto.build.items.solarFarm.enabled) { $('#toggle-solarFarm').click(); }
-                            return;
-                        } else {
-                            notCanAutoProcess['titanium'] = false;
-                            if (options.auto.build.items.solarFarm.enabled) { $('#toggle-solarFarm').click(); }
-                        }
-                    }
-                    // science 太阳建筑-收容室
-                    if (resCap.science == undefined || resCap.science.enabled) {
-                        var scienceLimited = resCap.science != undefined ? resCap.science.limit / resetMultiplier : weekResLimited;
-                        if (scienceLimited < game.resPool.get('science').value && notCanAutoProcess['science']) {
-                            message('懒得写了，自己建点 收容室 消耗 科学 吧 ヾ(≧O≦)〃嗷~');
-                        }
-                    }
-                    // culture 大使馆
-                    if (resCap.science == undefined || resCap.science.enabled) {
-                        var cultureLimited = resCap.culture != undefined ? resCap.culture.limit / resetMultiplier : weekResLimited;
-                        if (scienceLimited < game.resPool.get('science').value &&
-                            notCanAutoProcess['science'] &&
-                            (resCap['science'] != undefined || resCap['science'].enabled)) {
-                            message('懒得写了，自己建点 大使馆 消耗 文化 吧 ヾ(≧O≦)〃嗷~');
-                        }
-                    }
-
-                    if ((voidLimited >= game.resPool.get('void').value || notCanAutoProcess['void'] || options.nextWeekProcessVoid) &&
-                        (titaniumLimited >= game.resPool.get('titanium').value || notCanAutoProcess['titanium'])) {
-                        options.resCapCheckStep = step + 1;
-                    }
-                    options.notCanAutoProcess = notCanAutoProcess;
-                    return;
-                default:
-                    // 打印日志提示有无法自动控制的资源
-                    for (var resName in notCanAutoProcess) {
-                        if (notCanAutoProcess[resName] && (resCap[resName] == undefined || resCap[resName].enabled)) {
-                            if (resName != 'void') {
-                                imessage('ui.infinity.capCheck.notCanAutoProcess', [game.resPool.get(resName).title]);
-                                options.resCapCheckStep = 0;
-                            }
-                        }
-                    }
-                    // 打印日志提示会爆数据上限的资源
-                    var resMax = Number.MAX_VALUE / resetMultiplier;
-                    var resList = options.auto.infinity.resList;
-                    for (var i in resList) {
-                        var res = game.resPool.resources[resList[i]];
-                        var resName = res.name;
-                        if (res.value > resMax && (resCap[resName] == undefined || resCap[resName].limit != Infinity)) {
-                            imessage('ui.infinity.capCheck.resetZero', [res.title]);
-                            return;
-                        }
-                    }
-                    // 完成后设置标记
-                    if (options.resCapCheckStep == 4) { options.auto.infinity.items.capCheck.doneMark = true; }
-            }
         },
         cryoFix: async function () {
             // 检查需要的功能是否全部开启
@@ -4468,7 +4143,6 @@ var run = function() {
             options: options.auto.options.enabled,
             filter: options.auto.filter.enabled
         };
-        kittenStorage.resCap = options.auto.infinity.resCap;
         kittenStorage.resources = options.auto.resources;
         kittenStorage.triggers = {
             faith: options.auto.faith.trigger,
@@ -4582,21 +4256,6 @@ var run = function() {
                     if ($('#resource-reset-' + resource).length === 0) {resetList.append(addNewResourceOption(resource, undefined, true));}
                     if ('stockForReset' in res) {setStockValue(resource, res.stockForReset ? res.stockForReset : Infinity, true);}
                 }
-            }
-
-            var CapReslist = $("#CapRes-list");
-            // 删除不在 kittenStorage 中的默认设置项目
-            for (var resCapName in options.auto.infinity.resCap) {
-                if (!(resCapName in kittenStorage.resCap)) {
-                    delete options.auto.infinity.resCap[resCapName];
-                    $('#CapRes-' + resCapName).remove();
-                }
-            }
-            for (var resource in kittenStorage.resCap) {
-                var res = kittenStorage.resCap[resource];
-                setLimitValue(resource, res.limit, res.enabled);
-                if ($('#CapRes-' + resource).length === 0) { CapReslist.append(addInfNewResOption(resource)); }
-                else { $('#toggle-CapRes-' + resource).prop('checked', res.enabled); }
             }
 
             if (saved.triggers) {
@@ -5252,28 +4911,6 @@ var run = function() {
 
         if (option.subTrigger !== undefined) {
 
-            if (name === 'capCheck') {
-                var resources = $('<div/>', {
-                    id: 'toggle-capCheck-controls',
-                    text: i18n('ui.infinity.capCheck.soleCap'),
-                    css: {
-                        cursor: 'pointer',
-                        display: 'inline-block',
-                        float: 'right',
-                        paddingRight: '5px',
-                        textShadow: '3px 3px 4px gray'
-                    },
-                });
-
-                var resourcesList = getInfinityCapResOptions();
-
-                resources.on('click', function () {
-                    resourcesList.toggle();
-                });
-
-                element.append(resources);
-            }
-
             var triggerButton = $('<div/>', {
                 id: 'set-' + name + '-subTrigger',
                 text: i18n('ui.trigger'),
@@ -5304,198 +4941,9 @@ var run = function() {
             });
 
             element.append(triggerButton);
-            if (name === 'capCheck') { element.append(resourcesList); }
         }
 
         return element;
-    };
-
-    var getInfinityCapResOptions = function () {
-        var list = $('<ul/>', {
-            id: 'CapRes-list',
-            css: { display: 'none', paddingLeft: '20px' }
-        });
-
-        var add = $('<div/>', {
-            id: 'CapRes-add',
-            text: i18n('resources.add'),
-            css: {
-                cursor: 'pointer',
-                display: 'inline-block',
-                textShadow: '3px 3px 4px gray',
-                borderBottom: '1px solid rgba(185, 185, 185, 0.7)'
-            },
-        });
-
-        var clearunused = $('<div/>', {
-            id: 'CapRes-clear-unused',
-            text: i18n('resources.clear.unused'),
-            css: {
-                cursor: 'pointer',
-                display: 'inline-block',
-                float: 'right',
-                paddingRight: '5px',
-                textShadow: '3px 3px 4px gray'
-            },
-        });
-
-        clearunused.on('click', function () {
-            for (var name in options.auto.infinity.resCap) {
-                if (options.auto.infinity.resCap[name].enabled &&
-                    options.auto.infinity.resCap[name].limit == options.auto.infinity.items.capCheck.subTrigger) {
-                    delete options.auto.infinity.resCap[name]
-                    $('#CapRes-' + name).remove();
-                }
-            }
-            saveToKittenStorage();
-        });
-
-        var allresources = $('<ul/>', {
-            id: 'available-CapRes-list',
-            css: { display: 'none', paddingLeft: '20px' }
-        });
-
-        add.on('click', function () {
-            allresources.toggle();
-            allresources.empty();
-            allresources.append(getInfAvailableResOptions());
-        });
-
-        list.append(add, clearunused, allresources);
-
-        for (var name in options.auto.infinity.resCap) {
-            list.append(addInfNewResOption(name));
-        }
-
-        return list;
-    };
-
-    var getInfAvailableResOptions = function () {
-        var items = [];
-        var idPrefix = '#CapRes-';
-
-        var resList = options.auto.infinity.resList;
-        for (var i in resList) {
-            var res = game.resPool.resources[resList[i]];
-
-            if (res.name && $(idPrefix + res.name).length === 0) {
-                var item = $('<div/>', {
-                    id: 'CapRes-add-' + res.name,
-                    text: ucfirst(res.title ? res.title : res.name),
-                    css: {
-                        cursor: 'pointer',
-                        textShadow: '3px 3px 4px gray'
-                    },
-                });
-
-                (function (res, item) {
-                    item.on('click', function () {
-                        item.remove();
-                        if (!options.auto.infinity.resCap[res.name]) { options.auto.infinity.resCap[res.name] = {}; }
-                        options.auto.infinity.resCap[res.name].enabled = true;
-                        options.auto.infinity.resCap[res.name].limit = options.auto.infinity.items.capCheck.subTrigger;
-                        $('#CapRes-list').append(addInfNewResOption(res.name));
-                        saveToKittenStorage();
-                    });
-                })(res, item);
-
-                items.push(item);
-            }
-        }
-
-        return items;
-    };
-
-    var setLimitValue = function (name, value, enabled) {
-        var n = value == null ? Infinity : parseFloat(value);
-
-        if (isNaN(n) || n < 1e10) {
-            warning('ignoring non-numeric or invalid limit value ' + value);
-            return;
-        }
-
-        if (!options.auto.infinity.resCap[name]) { options.auto.infinity.resCap[name] = {}; }
-        if (enabled != undefined) { options.auto.infinity.resCap[name].enabled = enabled }
-        $('#limit-value-' + name).text(i18n('ui.infinity.capCheck.limit', [n.toFixed(2)]));
-        options.auto.infinity.resCap[name].limit = n;
-    };
-
-    var addInfNewResOption = function (name) {
-        var title = game.resPool.get(name).title;
-        var res = options.auto.infinity.resCap[name];
-
-        var container = $('<div/>', {
-            id: 'CapRes-' + name,
-            css: { display: 'inline-block', width: '100%' },
-        });
-
-        var input = $('<input/>', {
-            id: 'toggle-CapRes-' + name,
-            type: 'checkbox'
-        });
-
-        if (res.enabled) {
-            input.prop('checked', true);
-        }
-
-        input.on('change', function () {
-            if (input.is(':checked') && res.enabled == false) {
-                res.enabled = true;
-                imessage('ui.infinity.capCheck.soleCap.enable', [title]);
-            } else if ((!input.is(':checked')) && res.enabled == true) {
-                res.enabled = false;
-                imessage('ui.infinity.capCheck.soleCap.disable', [title]);
-            }
-            saveToKittenStorage();
-        });
-
-        var label = $('<div/>', {
-            id: 'CapRes-label-' + name,
-            text: title,
-            css: { display: 'inline-block', width: '95px' },
-        });
-
-        var limit = $('<div/>', {
-            id: 'limit-value-' + name,
-            text: i18n('ui.infinity.capCheck.limit', [res.limit === Infinity ? '∞' : game.getDisplayValueExt(res.limit)]),
-            css: { cursor: 'pointer', display: 'inline-block', width: '100px' },
-        });
-
-        limit.on('click', function () {
-            engine.stop(false);
-            var value = window.prompt(i18n('ui.infinity.capCheck.limit.set', [title]));
-            if (options.auto.engine.enabled) {
-                engine.start(false);
-            }
-            if (value !== null) {
-                setLimitValue(name, value);
-                saveToKittenStorage();
-            }
-        });
-
-        var del = $('<div/>', {
-            id: 'CapRes-delete-' + name,
-            text: i18n('resources.del'),
-            css: {
-                cursor: 'pointer',
-                display: 'inline-block',
-                float: 'right',
-                paddingRight: '5px',
-                textShadow: '3px 3px 4px gray'
-            },
-        });
-
-        del.on('click', function () {
-            if (window.confirm(i18n('ui.infinity.capCheck.limit.confirm', [title]))) {
-                container.remove();
-                delete options.auto.infinity.resCap[name];
-                saveToKittenStorage();
-            }
-        });
-
-        container.append(input, label, limit, del);
-
-        return container;
     };
 
     var getInfinityOptionOption = function (name, option, iname) {
