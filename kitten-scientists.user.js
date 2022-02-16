@@ -322,9 +322,9 @@ var run = function() {
             'ui.trigger.cryoFix.set': '输入一个新的 冷冻仓修复 触发值，大于等于 0 的整数。\n建议小于等于已拥有的冷冻仓数量，\n仅在消耗业力 ＜1 且未开启 神圣灭绝 时会自动建造新的冷冻仓。',
             'ui.trigger.capCheck.set': '输入一个新的 上限检查 触发值。\n不建议设置超过 1.79e308 的值（数据极限为2^1024），\n数据超过上限会显示 ∞ ，并在刷新后归零。',
             'ui.trigger.autohunt.set': '输入一个新的 无限打猎 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时打猎次数为不消耗喵力的最大数量。\n仅在毛皮、象牙、独角兽中有 0 时触发。',
-            'ui.trigger.autoTransform.set': '输入一个新的 无限遗物 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时精炼次数为不消耗 时间水晶 的最大数量。\n仅在遗物为 0 时触发。',
-            'ui.trigger.skiptime.set': '输入一个新的 燃烧时间水晶 触发值，大于 0 的整数。\n其值为需要到达的游戏日历年，默认为 40K。\n每次最多跳 5M 年。\n本功能需要大量时间水晶，建议水晶超过 1e100 了再使用',
-            'ui.trigger.autoCT.set': '输入一个新的 无限奥秘 触发值，\n支持3个参数：-符号隔开数字参数。\n第一个数字：0-9，分别对应 10 个奥秘神学\n第二个数字：每轮升级次数（最大为 1000 ）\n第三个数字：需要达到的等级（最大 2^53）\n默认为空，必须自行设置\n只有拥有 ∞ 的时间水晶才能使用',
+            'ui.trigger.autoTransform.set': '输入一个新的 无限遗物 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时精炼次数为不消耗 时间水晶 的最大数量。\n遗物小于 ∞ 时触发。',
+            'ui.trigger.skiptime.set': '输入一个新的 燃烧时间水晶 触发值， 在 [0,2^62] 内的整数。\n其值为需要到达的游戏日历年，默认为 40K。\n游戏规则内 能到达的最大日历年为\n2^62 = 第4,611,686,018,427,388,000年，\n最大真实年为 2^53 = 第9,007,199,254,740,992年\n本功能需要 时间水晶 超过 1e100 才允许使用',
+            'ui.trigger.autoCT.set': '输入一个新的 无限奥秘 触发值，\n支持3个参数：-符号隔开数字参数。\n第一个数字：0-9，分别对应 10 个奥秘神学\n第二个数字：每轮升级次数（最大为 1000 ）\n第三个数字：需要达到的等级（最大 2^53）\n默认为空，必须自行设置\n只有拥有 ∞ 的时间水晶才能使用\n会自动清除精炼时间水晶产生的大量日志',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -1115,50 +1115,69 @@ var run = function() {
         autoCT: async function () {
             if (game.resPool.get('timeCrystal').value !== Infinity) {
                 if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
-                message('时间水晶太少，关闭无限奥秘。');
+                message('无限奥秘：时间水晶太少');
                 return;
             }
             subTrigger = options.auto.infinity.items.autoCT.subTrigger.split('-')
             if (subTrigger.length !== 3) {
                 if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
-                message('触发值设置错误，关闭无限奥秘。');
+                message('无限奥秘：触发值设置错误');
                 return;
             }
             var CT = game.religionTab.ctPanel.children[0].children[parseInt(subTrigger[0])];
             if (!CT || !CT.model.visible) {
                 if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
-                message(subTrigger[0] + ' 对应的奥秘神学未解锁。');
+                message('无限奥秘：' + subTrigger[0] + ' 对应的奥秘神学未解锁。');
                 return;
             }
             if (CT.model.metadata.val >= parseInt(subTrigger[2])) {
                 if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
-                message(CT.model.metadata.label + ' 以达到 ' + CT.model.metadata.val);
+                message('无限奥秘：' + CT.model.metadata.label + ' 以达到 ' + CT.model.metadata.val);
                 return;
             }
+            if (CT.model.metadata.upgrades) {
+                var cache = CT.model.metadata.upgrades;
+                delete CT.model.metadata.upgrades;
+            } // 删除 upgrade 属性减少卡顿
             var refineTCBtn = game.religionTab.refineTCBtn;
             var transformCount = Math.floor(Number.MAX_VALUE / 25);
-            var max = parseInt(subTrigger[1]) < parseInt(subTrigger[2]) - CT.model.metadata.val ?
-                parseInt(subTrigger[1]) : parseInt(subTrigger[2]) - CT.model.metadata.val;
+            var max = Math.min(parseInt(subTrigger[1]), parseInt(subTrigger[2]) - CT.model.metadata.val);
             for (var i = 0, k = 0; i < max && k < 10000; k++) {
                 if (game.resPool.get('relic').value == Infinity) { i += CT.controller.build(CT.model, 1); }
                 refineTCBtn.controller._transform(refineTCBtn.model, transformCount);
             }
             $("#clearLogHref").click()
-            message(CT.model.metadata.label + ' 升级了 ' + i + ' 次。');
+            if (cache) { CT.model.metadata.upgrades = cache; }
+            storeForSummary(CT.model.metadata.label, i, 'faith');
         },
         skiptime: async function () {
-            if (!game.workshop.get('chronoforge').researched) { return; }
             if (game.resPool.get('timeCrystal').value < 1e100) {
                 if (options.auto.infinity.items.skiptime.enabled) { $('#toggle-skiptime').click(); }
-                message('时间水晶太少，关闭燃烧时间水晶。');
+                message('燃烧时间水晶：时间水晶太少');
                 return;
             }
-            var willSkip = options.auto.infinity.items.skiptime.subTrigger - game.calendar.year;
-            willSkip = willSkip > 5e6 ? 5e6 : willSkip;// 一次最多 5M ，再多容易卡死
+            if (!game.workshop.get('chronoforge').researched) { return; }
+            var year = game.calendar.year;
+            if (year >= Math.pow(2, 62)) {
+                options.auto.infinity.items.skiptime.doneMark = true;
+                message('燃烧时间水晶：游戏日历年以达到最大值');
+                return;
+            }
+            var shatter = game.timeTab.cfPanel.children[0].children[0];
+            if (game.time.heat <= game.getEffect("heatMax")) {
+                shatter.controller.doShatterAmt(shatter.model, 500);
+                return;
+            }
+            var willSkip = Math.min(options.auto.infinity.items.skiptime.subTrigger, Math.pow(2, 62));
+            willSkip -= year;
             if (willSkip > 0) {
-                var shatter = game.timeTab.cfPanel.children[0].children[0];
                 shatter.controller.doShatterAmt(shatter.model, willSkip);
-            } else { options.auto.infinity.items.skiptime.doneMark = true; }
+                storeForSummary('time.skip', willSkip);
+            } else {
+                options.auto.infinity.items.skiptime.doneMark = true;
+                message('燃烧时间水晶：游戏日历年以达到设定值');
+                return;
+            }
         },
         autohunt: async function () {
             if (game.resPool.get('furs').value > 0 &&
@@ -1180,19 +1199,19 @@ var run = function() {
         },
         autoTransform: async function () {
             if (game.resPool.get('relic').value == Infinity) { return; }
-            var refineTCBtn = game.religionTab.refineTCBtn;
-            if (refineTCBtn == undefined) { return; }
-            var transformTrigger = options.auto.infinity.items.autoTransform.subTrigger;
             var timeCrystal = game.resPool.get('timeCrystal').value;
             if (timeCrystal < 1e100) {
                 if (options.auto.infinity.items.autoTransform.enabled) { $('#toggle-autoTransform').click(); }
-                message('时间水晶不足，关闭无限遗物。');
+                message('无限遗物：时间水晶太少');
                 return;
             }
+            var refineTCBtn = game.religionTab.refineTCBtn;
+            if (refineTCBtn == undefined) { return; }
+            var transformTrigger = options.auto.infinity.items.autoTransform.subTrigger;
             if (timeCrystal == Infinity) {
                 var transformCount = Math.floor(Number.MAX_VALUE / 25);
             } else if (transformTrigger > 0) {
-                var transformCount = Math.floor(timeCrystal * autohunt / 25);
+                var transformCount = Math.floor(timeCrystal * transformTrigger / 25);
             } else {
                 var transformCount = Math.floor(timeCrystal / 1e20);
             }
@@ -1369,10 +1388,7 @@ var run = function() {
                         var steelPrices = game.workshop.getCraft('steel').prices;
                         var alloy = Math.ceil((game.resPool.get('titanium').value - titaniumLimited) / alloyPrices[0].val);
                         var steel = (alloy * alloyPrices[1].val - game.resPool.get('steel').value) / (1 + game.getResCraftRatio('steel'));
-                        var coal = steel * steelPrices[0].val;
-                        if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
-                            notCanAutoProcess['titanium'] = true;
-                        }
+                        if (game.resPool.hasRes(steelPrices, steel)) { notCanAutoProcess['titanium'] = true; }
                         if (!notCanAutoProcess['titanium']) {
                             game.craft('steel', (steel > 0 ? steel : 0) * 1.01);
                             game.craft('alloy', alloy);
@@ -1394,10 +1410,7 @@ var run = function() {
                             notCanAutoProcess['unobtainium'] = true;
                         }
                         var steel = (alloy * alloyPrices[1].val - game.resPool.get('steel').value) / (1 + game.getResCraftRatio('steel'));
-                        var coal = steel * steelPrices[0].val;
-                        if (game.resPool.get('coal').value < coal || game.resPool.get('iron').value < coal) {
-                            notCanAutoProcess['unobtainium'] = true;
-                        }
+                        if (game.resPool.hasRes(steelPrices, steel)) { notCanAutoProcess['unobtainium'] = true; }
                         if (!notCanAutoProcess['unobtainium']) {
                             game.craft('steel', (steel > 0 ? steel : 0) * 1.01);
                             game.craft('alloy', (alloy > 0 ? alloy : 0) * 1.001);
@@ -1545,7 +1558,9 @@ var run = function() {
             var temporalFlux = game.resPool.get('temporalFlux').maxValue - game.resPool.get('temporalFlux').value;
             if (temporalFlux > 0) {
                 var willSkip = Math.ceil(temporalFlux / chronosphereMax);
+                if (game.time.heat <= game.getEffect("heatMax")) { willSkip = Math.min(willSkip, 500); }
                 shatter.controller.doShatterAmt(shatter.model, willSkip);
+                storeForSummary('time.skip', willSkip);
             }
             // 修复冷冻仓
             var maxbuy = Math.floor(game.resPool.get('temporalFlux').value / 3000);
@@ -5506,52 +5521,55 @@ var run = function() {
             if (input.is(':checked') && option.enabled == false) {
                 option.enabled = true;
                 var autoall = options.auto;
-                    // 各项目的单独设置
-                    switch (name) {
-                        case 'cryoFix':
+                // 各项目的单独设置
+                switch (name) {
+                    case 'cryoFix':
                         if (autoall.infinity.items['buildChronosphere'].enabled) { $('#toggle-buildChronosphere').click(); }
-                            // time
-                            $('#toggle-all-disable-items-time').click();
-                            var temporalBattery = game.time.getCFU('temporalBattery');
-                            // 不消耗时间水晶，极限值在 1e17 左右，具体原理查看 IEEE 754
-                            var timeCrystal = game.resPool.get('timeCrystal').value / 1e20;
-                            timeCrystal = timeCrystal == Infinity ? Number.MAX_VALUE : timeCrystal;
-                            options.auto.time.items.temporalBattery.max =
-                                Math.floor(Math.log(timeCrystal / temporalBattery.prices[0].val) / Math.log(temporalBattery.priceRatio));
-                            kittenStorage.items['set-temporalBattery-max'] = options.auto.time.items.temporalBattery.max;
-                            options.auto.time.items.chronocontrol.max = 1;
-                            kittenStorage.items['set-chronocontrol-max'] = options.auto.time.items.chronocontrol.max;
-                            $('#toggle-temporalBattery').click();
-                            $('#toggle-chronocontrol').click();
-                            if (!autoall['time'].enabled) { $('#toggle-time').click(); }
-                        case 'buildChronosphere':
+                        // time
+                        $('#toggle-all-disable-items-time').click();
+                        var temporalBattery = game.time.getCFU('temporalBattery');
+                        // 不消耗时间水晶，极限值在 1e17 左右，具体原理查看 IEEE 754
+                        var timeCrystal = game.resPool.get('timeCrystal').value / 1e20;
+                        timeCrystal = timeCrystal == Infinity ? Number.MAX_VALUE : timeCrystal;
+                        options.auto.time.items.temporalBattery.max =
+                            Math.floor(Math.log(timeCrystal / temporalBattery.prices[0].val) / Math.log(temporalBattery.priceRatio));
+                        kittenStorage.items['set-temporalBattery-max'] = options.auto.time.items.temporalBattery.max;
+                        options.auto.time.items.chronocontrol.max = 1;
+                        kittenStorage.items['set-chronocontrol-max'] = options.auto.time.items.chronocontrol.max;
+                        $('#toggle-temporalBattery').click();
+                        $('#toggle-chronocontrol').click();
+                        if (!autoall['time'].enabled) { $('#toggle-time').click(); }
+                        break;
+                    case 'buildChronosphere':
                         if (autoall.infinity.items['cryoFix'].enabled) { $('#toggle-cryoFix').click(); }
-                            if (autoall['time'].enabled) { $('#toggle-time').click(); }
-                        default:
-                        // build
-                        $('#toggle-all-disable-items-build').click();
-                        options.auto.build.items.workshop.max = 1;
-                        kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
-                        options.auto.build.items.ziggurat.max = 1;
-                        kittenStorage.items['set-ziggurat-max'] = options.auto.build.items.ziggurat.max;
-                        options.auto.build.items.chronosphere.max = 1;
-                        kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
-                        $('#toggle-workshop').click();
-                        $('#toggle-ziggurat').click();
-                        $('#toggle-chronosphere').click();
-                        if (!autoall['build'].enabled) { $('#toggle-build').click(); }
-                        // upgrade
-                        $('#toggle-all-enable-items-upgrade').click();
-                        $('#toggle-policies').click();
-                        if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
-                        // distribute
-                        $('#toggle-all-disable-items-distribute').click();
-                        $('#toggle-farmer').click();
-                        $('#toggle-leader').click();
-                        $('#toggle-leaderTrait-manager').click();
-                        if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
-                    }
-                    imessage('status.sub.enable', [elementLabel]);
+                        if (autoall['time'].enabled) { $('#toggle-time').click(); }
+                        break;
+                    default:
+                        break;
+                }
+                // build
+                $('#toggle-all-disable-items-build').click();
+                options.auto.build.items.workshop.max = 1;
+                kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
+                options.auto.build.items.ziggurat.max = 1;
+                kittenStorage.items['set-ziggurat-max'] = options.auto.build.items.ziggurat.max;
+                options.auto.build.items.chronosphere.max = 1;
+                kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
+                $('#toggle-workshop').click();
+                $('#toggle-ziggurat').click();
+                $('#toggle-chronosphere').click();
+                if (!autoall['build'].enabled) { $('#toggle-build').click(); }
+                // upgrade
+                $('#toggle-all-enable-items-upgrade').click();
+                $('#toggle-policies').click();
+                if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
+                // distribute
+                $('#toggle-all-disable-items-distribute').click();
+                $('#toggle-farmer').click();
+                $('#toggle-leader').click();
+                $('#toggle-leaderTrait-manager').click();
+                if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
+                imessage('status.sub.enable', [elementLabel]);
             } else if ((!input.is(':checked')) && option.enabled == true) {
                 option.enabled = false;
                 imessage('status.sub.disable', [elementLabel]);
