@@ -414,10 +414,10 @@ var run = function() {
 
             'ui.trigger.useWorkers.alert': '珂学家将会在后台满速运行，注意这会消耗更多性能。\n电脑不好、内存≤ 8G的建议禁用\n需满足浏览器支持且游戏选项的web worker启用。\n确认后会自动重新勾选启用珂学家',
             'ui.timeCtrl': '时间操纵',
-            'option.accelerate': '时间加速',
+            'option.accelerate': '光阴似箭',
             'act.accelerate': '固有时制御，二倍速!',
-            'filter.accelerate': '时间加速',
-            'summary.accelerate': '加速时间 {0} 次',
+            'filter.accelerate': '光阴似箭',
+            'summary.accelerate': '珂学家加速时间 {0} 次',
             'option.time.skip': '时间跳转',
             'act.time.skip': '燃烧时间水晶, 跳过接下来的 {0} 年!',
             'ui.cycles': '周期',
@@ -460,6 +460,14 @@ var run = function() {
             'act.fix.cry': '小猫修复了 {0} 个冷冻仓',
             'summary.fix.cry': '修复了 {0} 个冷冻仓',
 
+            'summary.blackcoin.buy': '小猫出售遗物并买入 {0} 次黑币',
+            'summary.blackcoin.sell': '小猫出售黑币并买入了 {0} 次遗物',
+            'summary.catnip': '呐，你的猫猫没有猫薄荷吸并强制分配 {0} 个农民',
+            'summary.pumpjack': '珂学家担心电不够并关闭了 {0} 次油井自动化',
+            'summary.biolab': '珂学家担心电不够并关闭了 {0} 个生物实验室',
+            'summary.temporalAccelerator': '珂学家担心卡顿打开了时空加速器的自动化',
+            'summary.reactor': '珂学家往反应堆投入了铀开始发光呐',
+            'summary.steamworks': '珂学家往蒸汽工房加了煤开始排蒸汽呐',
             'summary.festival': '举办了 {0} 次节日',
             'summary.stars': '观测了 {0} 颗流星',
             'summary.praise': '通过赞美太阳积累了 {0} 虔诚',
@@ -1031,7 +1039,7 @@ var run = function() {
         cacheManager: undefined,
         loop: undefined,
         start: function (msg = true) {
-            options.interval = Math.ceil (1e4 / game.getTicksPerSecondUI());
+            options.interval = Math.ceil (100 / game.getTicksPerSecondUI()) * 100;
             if (game.isWebWorkerSupported() && game.useWorkers && options.auto.options.items.useWorkers.enabled) {
                 var blob = new Blob([
                     "onmessage = function(e) { setInterval(function(){postMessage('miaowu')}, '" + options.interval + "' ); }"
@@ -1585,6 +1593,12 @@ var run = function() {
                     iactivity('act.accelerate', [], 'ks-accelerate');
                     storeForSummary('accelerate', 1);
                 }
+                if (options.interval != Math.ceil (100 / game.getTicksPerSecondUI()) * 100) {
+                    engine.stop(false);
+                    if (options.auto.engine.enabled) {
+                        engine.start(false);
+                    }
+                }
             }
 
             // Combust time crystal
@@ -1718,7 +1732,7 @@ var run = function() {
                 game.village.assignJob(game.village.getJob("farmer"), 1);
                 iactivity('act.distribute.catnip', [], 'ks-distribute');
                 iactivity('act.distribute', [i18n('$village.job.' + "farmer")], 'ks-distribute');
-                storeForSummary('distribute', 1);
+                storeForSummary('catnip', 1);
                 this.villageManager.render();
                 return;
             }
@@ -1790,7 +1804,7 @@ var run = function() {
                 }
                 options.auto.options.items.crypto.subTrigger = relic + "-881-1060";
                 //kittenStorage.items['set-crypto-subTrigger'] = JSON.stringify(relic + "-881-1060");
-                $("#set-crypto-subTrigger")[0].title = relic;
+                //$("#set-crypto-subTrigger")[0].title = relic;
                 return saveToKittenStorage();
             }
 
@@ -1804,8 +1818,9 @@ var run = function() {
                 }
 
                 var currentCoin = game.resPool.get('blackcoin').value;
-                exchangedCoin = Math.round(currentCoin - previousCoin);
+                var exchangedCoin = Math.round(currentCoin - previousCoin);
                 iactivity('blackcoin.buy', [exchangedCoin]);
+                storeForSummary('blackcoin.buy', 1);
             } else if (coinPrice > maxCoinPrice && game.resPool.get('blackcoin').value > 0) {
                 // function name changed in v1.4.8.0
                 if (typeof game.diplomacy.sellEcoin === 'function') {
@@ -1815,9 +1830,10 @@ var run = function() {
                 }
 
                 var currentRelic = game.resPool.get('relic').value;
-                exchangedRelic = Math.round(currentRelic - previousRelic);
+                var exchangedRelic = Math.round(currentRelic - previousRelic);
 
                 iactivity('blackcoin.sell', [exchangedRelic]);
+                storeForSummary('blackcoin.sell', 1);
             }
         },
         worship: function () {
@@ -2021,6 +2037,10 @@ var run = function() {
             // Render the tab to make sure that the buttons actually exist in the DOM. Otherwise we can't click them.
             //buildManager.manager.render();
 
+            if (!game.religion.meta[1].meta[5].on) {
+                buildManager.build("solarRevolution", "s", 1);
+            }
+
             var metaData = {};
             for (var name in builds) {
                 var build = builds[name];
@@ -2050,7 +2070,10 @@ var run = function() {
             var refreshRequired = 0;
             for (var entry in buildList) {
                 if (buildList[entry].count > 0) {
-                    buildManager.build(buildList[entry].id, buildList[entry].variant, buildList[entry].count);
+
+                    let count = (game.religion.meta[1].meta[5].on) ? buildList[entry].count : 1;
+
+                    buildManager.build(buildList[entry].id, buildList[entry].variant, count);
                     refreshRequired = 1;
                 }
             }
@@ -2449,7 +2472,9 @@ var run = function() {
                         }
                     }
 
-                    buildManager.build(buildList[i].name || buildList[i].id, buildList[i].stage, buildList[i].count);
+                    let count = (game.religion.meta[1].meta[5].on) ? buildList[i].count : 1;
+
+                    buildManager.build(buildList[i].name || buildList[i].id, buildList[i].stage, count);
                     refreshRequired = 1;
                 }
             }
@@ -2534,9 +2559,9 @@ var run = function() {
             if (!game.villageTab.festivalBtn.model.enabled) {game.villageTab.festivalBtn.controller.updateEnabled(game.villageTab.festivalBtn.model);}
 
             if (game.villageTab.festivalBtn.model.enabled) {
-                var beforeDays = game.calendar.festivalDays;
                 game.villageTab.festivalBtn.onClick();
-                storeForSummary('festival');
+                var beforeDays = game.calendar.festivalDays;
+                storeForSummary('festival', 1);
                 if (beforeDays > 0) {
                     iactivity('festival.extend', [], 'ks-festival');
                 } else {
@@ -2615,7 +2640,8 @@ var run = function() {
 
                 // If we have enough to trigger the check, then attempt to trade
                 var prof = tradeManager.getProfitability(name);
-                if (trade.limited && prof) {
+                var sloar = game.religion.meta[1].meta[5].on || game.challenges.isActive("atheism") || gold.value >= 450;
+                if (trade.limited && prof && sloar) {
                     trades.push(name);
                 } else if ((!require || requireTrigger <= require.value / require.maxValue) && requireTrigger <= gold.value / gold.maxValue) {
                     trades.push(name);
@@ -2787,17 +2813,37 @@ var run = function() {
                 if (st.val && st.on == 0 && ma.val > 5 && ma.on > 0) {
                     var stButton = buildManager.getBuildButton('steamworks');
                     stButton.controller.onAll(stButton.model);
+                    iactivity('summary.steamworks');
+                    storeForSummary('steamworks');
                 }
                 var re = game.bld.getBuildingExt('reactor').meta;
                 var ur = game.getResourcePerTick("uranium",true);
                 if (re.val && re.on == 0 && ur > 0) {
                     var reButton = buildManager.getBuildButton('reactor');
                     reButton.controller.onAll(reButton.model);
+                    iactivity('summary.reactor');
+                    storeForSummary('reactor');
                 }
                 var timeA = game.time.getCFU("temporalAccelerator");
                 if (timeA.on && game.time.testShatter === 0){
                     timeA.isAutomationEnabled = true;
                     game.time.testShatter = 1;
+                    iactivity('summary.temporalAccelerator');
+                    storeForSummary('temporalAccelerator');
+                }
+                if (game.resPool.energyWinterProd < game.resPool.energyCons) {
+                    if (game.workshop.get('biofuel').researched && game.bld.getBuildingExt('biolab').meta.on) {
+                        let number = game.bld.getBuildingExt('biolab').meta.on;
+                        game.bld.getBuildingExt('biolab').meta.on = 0;
+                        iactivity('summary.biolab', [number]);
+                        storeForSummary('biolab', number);
+                    }
+                    let oilWell = game.bld.getBuildingExt('oilWell').meta;
+                    if (game.workshop.get('pumpjack').researched && oilWell.isAutomationEnabled) {
+                        oilWell.isAutomationEnabled = false;
+                        iactivity('summary.pumpjack', [1]);
+                        storeForSummary('pumpjack', 1);
+                    }
                 }
             }
             return refreshRequired;
