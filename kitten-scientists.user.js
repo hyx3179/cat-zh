@@ -944,7 +944,8 @@ var run = function() {
     // 无限流条件判断
     if (game.resPool.get('timeCrystal').value > 1e8 &&
         game.resPool.get('burnedParagon').value > 7e5 &&
-        game.resPool.get('unobtainium').value > 8e9) {
+        game.resPool.get('unobtainium').value > 8e9 ||
+        game.resPool.get('timeCrystal').value > 1e100) {
         options.auto.infinity.allow = true;
     }
     if (!options.auto.infinity.allow) {
@@ -1250,6 +1251,7 @@ var run = function() {
             for (var i = 0; i < Math.min(maxbuy, vsPanel[2].model.on); i++) {
                 vsPanel[0].controller.buyItem(vsPanel[0].model, {}, function () { });
             }
+            storeForSummary('fix.cry', i);
             // 判断条件
             if (cryo.on == cryochambers && game.resPool.get('temporalFlux').maxValue == game.resPool.get('temporalFlux').value) {
                 if (game.village.sim.kittens.length < cryochambers) {
@@ -2462,7 +2464,7 @@ var run = function() {
                         }
                     }
 
-                    count = (game.religion.meta[1].meta[5].on) ? buildList[i].count : Math.ceil(buildList[i].count / 3);
+                    count = game.stats.statGroups[0].group[3].val > 1000 ? buildList[i].count : (game.religion.meta[1].meta[5].on) ? buildList[i].count : Math.ceil(buildList[i].count / 3);
 
                     buildManager.build(buildList[i].name || buildList[i].id, buildList[i].stage, count);
                     refreshRequired = 1;
@@ -5055,28 +5057,35 @@ var run = function() {
                     default:
                         break;
                 }
-                // build
-                $('#toggle-all-disable-items-build').click();
-                options.auto.build.items.workshop.max = 1;
-                kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
-                options.auto.build.items.ziggurat.max = 1;
-                kittenStorage.items['set-ziggurat-max'] = options.auto.build.items.ziggurat.max;
-                options.auto.build.items.chronosphere.max = 1;
-                kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
-                $('#toggle-workshop').click();
-                $('#toggle-ziggurat').click();
-                $('#toggle-chronosphere').click();
-                if (!autoall['build'].enabled) { $('#toggle-build').click(); }
-                // upgrade
-                $('#toggle-all-enable-items-upgrade').click();
-                $('#toggle-policies').click();
-                if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
-                // distribute
-                $('#toggle-all-disable-items-distribute').click();
-                $('#toggle-farmer').click();
-                $('#toggle-leader').click();
-                $('#toggle-leaderTrait-manager').click();
-                if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
+                switch (name) {
+                    case 'autohunt':
+                    case 'autoTransform':
+                    case 'autoCT':
+                    case 'skiptime':
+                    case 'autoReset':
+                        break;
+                    default:
+                        // build
+                        $('#toggle-all-disable-items-build').click();
+                        options.auto.build.items.workshop.max = 1;
+                        kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
+                        options.auto.build.items.chronosphere.max = 1;
+                        kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
+                        $('#toggle-workshop').click();
+                        $('#toggle-chronosphere').click();
+                        if (!autoall['build'].enabled) { $('#toggle-build').click(); }
+                        // upgrade
+                        $('#toggle-all-enable-items-upgrade').click();
+                        $('#toggle-policies').click();
+                        if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
+                        // distribute
+                        $('#toggle-all-disable-items-distribute').click();
+                        $('#toggle-farmer').click();
+                        $('#toggle-leader').click();
+                        $('#toggle-leaderTrait-manager').click();
+                        if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
+                        break;
+                }
                 imessage('status.sub.enable', [elementLabel]);
             } else if ((!input.is(':checked')) && option.enabled == true) {
                 option.enabled = false;
