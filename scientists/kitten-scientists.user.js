@@ -297,6 +297,21 @@ var run = function() {
             'act.sun.discover': '小猫宗教 {0} 方面获得演化',
             'act.sun.discovers': '小猫宗教 {0} 方面获得演化 {1} 次',
 
+            'ui.infinity': '无限流',
+            'ui.infinity.buildChronosphere': '修建传送仪',
+            'ui.infinity.cryoFix': '冷冻仓修复',
+            'ui.infinity.autoReset': '自动重置',
+            'ui.infinity.autohunt': '无限打猎',
+            'ui.infinity.autoTransform': '无限遗物',
+            'ui.infinity.autoCT': '无限奥秘',
+            'ui.infinity.skiptime': '燃烧时间水晶',
+            'ui.infinity.chronosphere': '传送仪：{0} 不足以再修建 {1} 个传送仪',
+            'ui.trigger.buildChronosphere.set': '输入一个新的 修建传送仪 触发值，大于等于 0 的整数。\n默认值 67 ，自动重置会强制检查数量。\n目前无自动调整，无限流前期使用需注意调整。\n可以稳定建造 666 以上传送仪时建议配合冷冻仓，\n使用 冷冻仓修复 功能，可同步获得大量业力。',
+            'ui.trigger.cryoFix.set': '输入一个新的 冷冻仓修复 触发值，大于等于 0 的整数。\n建议小于等于已拥有的冷冻仓数量，\n仅在消耗业力 ＜1 且未开启 神圣灭绝 时会自动建造新的冷冻仓。',
+            'ui.trigger.autohunt.set': '输入一个新的 无限打猎 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时打猎次数为不消耗喵力的最大数量。\n仅在毛皮、象牙、独角兽中有 0 时触发。',
+            'ui.trigger.autoTransform.set': '输入一个新的 无限遗物 触发值，取值范围为 0 到 1 的纯小数。\n设置为 0 时精炼次数为不消耗 时间水晶 的最大数量。\n遗物小于 ∞ 时触发。',
+            'ui.trigger.skiptime.set': '输入一个新的 燃烧时间水晶 触发值， 在 [0,2^62] 内的整数。\n其值为需要到达的游戏日历年，默认为 40K。\n游戏规则内 能到达的最大日历年为\n2^62 = 第4,611,686,018,427,388,000年，\n最大真实年为 2^53 = 第9,007,199,254,740,992年\n本功能需要 时间水晶 超过 1e100 才允许使用',
+            'ui.trigger.autoCT.set': '输入一个新的 无限奥秘 触发值，\n支持3个参数：-符号隔开数字参数。\n第一个数字：0-9，分别对应 10 个奥秘神学\n第二个数字：每轮升级次数（最大为 1000 ）\n第三个数字：需要达到的等级（最大 2^53）\n默认为空，必须自行设置\n只有拥有 ∞ 的时间水晶才能使用\n会自动清除精炼时间水晶产生的大量日志',
             'ui.items': '项目',
             'ui.disable.all': '全部禁用',
             'ui.enable.all': '全部启用',
@@ -541,6 +556,20 @@ var run = function() {
                 // Should any automation run at all?
                 enabled: false
             },
+            // 无限流 infinity
+            infinity: {
+                enabled: false,
+                allow: false,
+                items: {
+                    buildChronosphere:    {enabled: false, subTrigger: 67, doneMark: false},
+                    cryoFix:              {enabled: false, subTrigger: 0, doneMark: false},
+                    autohunt:             {enabled: false, subTrigger: 0},
+                    autoTransform:        {enabled: false, subTrigger: 0},
+                    autoCT:               {enabled: false, subTrigger: ''},
+                    skiptime:             {enabled: false, subTrigger: 4e4, doneMark: false},
+                    autoReset:            {enabled: false},
+                },
+            },
             // split form faith to make "Best Unicorn Building" easily
             unicorn: {
                 items: {
@@ -750,7 +779,7 @@ var run = function() {
                     temporalAccelerator: {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
                     temporalImpedance:   {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
                     ressourceRetrieval:  {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
-                    temporalPress:  {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
+                    temporalPress:       {require: false,          enabled: false, max:-1, variant: 'chrono', checkForReset: true, triggerForReset: -1},
 
                     // Void Space has variant void.
                     cryochambers:        {require: false,          enabled: false, max:-1, variant: 'void', checkForReset: true, triggerForReset: -1},
@@ -935,6 +964,17 @@ var run = function() {
         }
     };
 
+    // 无限流条件判断
+    if (game.resPool.get('timeCrystal').value > 1e8 &&
+        game.resPool.get('burnedParagon').value > 7e5 &&
+        game.resPool.get('unobtainium').value > 8e9 ||
+        game.resPool.get('timeCrystal').value > 1e100) {
+        options.auto.infinity.allow = true;
+    }
+    if (!options.auto.infinity.allow) {
+        options.auto.infinity.enabled = false;
+    }
+
     // GameLog Modification
     // ====================
 
@@ -1074,6 +1114,267 @@ var run = function() {
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
             if (refresh)                                                                    {game.ui.render();game.update();}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
+            // 防止合并冲突
+            var inf = options.auto.infinity;
+            var infItems = inf.items;
+            if (inf.enabled && infItems.skiptime.enabled && !infItems.skiptime.doneMark)    {this.skiptime();}
+            if (inf.enabled && infItems.autoCT.enabled)                                     {this.autoCT();}
+            if (inf.enabled && infItems.autoTransform.enabled)                              {this.autoTransform();}
+            if (inf.enabled && infItems.autohunt.enabled)                                   {this.autohunt();}
+            if (inf.enabled && infItems.buildChronosphere.enabled &&
+                !infItems.buildChronosphere.doneMark)                                       {this.buildChronosphere();}
+            if (inf.enabled && infItems.cryoFix.enabled && !infItems.cryoFix.doneMark)      {this.cryoFix();}
+            if (inf.enabled && infItems.autoReset.enabled)                                  {await this.infinityReset();}
+        },
+        autoCT: async function () {
+            if (game.resPool.get('timeCrystal').value !== Infinity) {
+                if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
+                message('无限奥秘：时间水晶太少');
+                return;
+            }
+            subTrigger = options.auto.infinity.items.autoCT.subTrigger.split('-')
+            if (subTrigger.length !== 3) {
+                if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
+                message('无限奥秘：触发值设置错误');
+                return;
+            }
+            var CT = game.religionTab.ctPanel.children[0].children[parseInt(subTrigger[0])];
+            if (!CT || !CT.model.visible) {
+                if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
+                message('无限奥秘：' + subTrigger[0] + ' 对应的奥秘神学未解锁。');
+                return;
+            }
+            if (CT.model.metadata.val >= parseInt(subTrigger[2])) {
+                if (options.auto.infinity.items.autoCT.enabled) { $('#toggle-autoCT').click(); }
+                message('无限奥秘：' + CT.model.metadata.label + ' 以达到 ' + CT.model.metadata.val);
+                return;
+            }
+            if (CT.model.metadata.upgrades) {
+                var cache = CT.model.metadata.upgrades;
+                delete CT.model.metadata.upgrades;
+            } // 删除 upgrade 属性减少卡顿
+            var refineTCBtn = game.religionTab.refineTCBtn;
+            var transformCount = Math.floor(Number.MAX_VALUE / 25);
+            var max = Math.min(parseInt(subTrigger[1]), parseInt(subTrigger[2]) - CT.model.metadata.val);
+            for (var i = 0, k = 0; i < max && k < 10000; k++) {
+                if (game.resPool.get('relic').value == Infinity) { i += CT.controller.build(CT.model, 1); }
+                refineTCBtn.controller._transform(refineTCBtn.model, transformCount);
+            }
+            $("#clearLogHref").click()
+            if (cache) { CT.model.metadata.upgrades = cache; }
+            storeForSummary(CT.model.metadata.label, i, 'faith');
+        },
+        skiptime: async function () {
+            if (game.resPool.get('timeCrystal').value < 1e100) {
+                if (options.auto.infinity.items.skiptime.enabled) { $('#toggle-skiptime').click(); }
+                message('燃烧时间水晶：时间水晶太少');
+                return;
+            }
+            if (!game.workshop.get('chronoforge').researched) { return; }
+            var year = game.calendar.year;
+            if (year >= Math.pow(2, 62)) {
+                options.auto.infinity.items.skiptime.doneMark = true;
+                message('燃烧时间水晶：游戏日历年以达到最大值');
+                return;
+            }
+            var shatter = game.timeTab.cfPanel.children[0].children[0];
+            if (game.time.heat <= game.getEffect("heatMax")) {
+                shatter.controller.doShatterAmt(shatter.model, 500);
+                return;
+            }
+            var willSkip = Math.min(options.auto.infinity.items.skiptime.subTrigger, Math.pow(2, 62));
+            willSkip -= year;
+            if (willSkip > 0) {
+                shatter.controller.doShatterAmt(shatter.model, willSkip);
+                storeForSummary('time.skip', willSkip);
+            } else {
+                options.auto.infinity.items.skiptime.doneMark = true;
+                message('燃烧时间水晶：游戏日历年以达到设定值');
+                return;
+            }
+        },
+        autohunt: async function () {
+            if (game.resPool.get('furs').value > 0 &&
+                game.resPool.get('ivory').value > 0 &&
+                game.resPool.get('unicorns').value > 0
+            ) { return; }
+            var huntTrigger = options.auto.infinity.items.autohunt.subTrigger;
+            if (game.resPool.get('manpower').value == Infinity) {
+                var huntCount = Math.floor(Number.MAX_VALUE / 100);
+            } else if (huntTrigger > 0) {
+                var huntCount = Math.floor(game.resPool.get('manpower').value * huntTrigger / 100);
+            } else {
+                var huntCount = Math.floor(game.resPool.get('manpower').value / 1e20);
+            }
+            if (huntCount) {
+                game.resPool.addResEvent('manpower', -huntCount * 100);
+                game.village.gainHuntRes(huntCount);
+            }
+        },
+        autoTransform: async function () {
+            if (game.resPool.get('relic').value == Infinity) { return; }
+            var timeCrystal = game.resPool.get('timeCrystal').value;
+            if (timeCrystal < 1e100) {
+                if (options.auto.infinity.items.autoTransform.enabled) { $('#toggle-autoTransform').click(); }
+                message('无限遗物：时间水晶太少');
+                return;
+            }
+            var refineTCBtn = game.religionTab.refineTCBtn;
+            if (refineTCBtn == undefined) { return; }
+            var transformTrigger = options.auto.infinity.items.autoTransform.subTrigger;
+            if (timeCrystal == Infinity) {
+                var transformCount = Math.floor(Number.MAX_VALUE / 25);
+            } else if (transformTrigger > 0) {
+                var transformCount = Math.floor(timeCrystal * transformTrigger / 25);
+            } else {
+                var transformCount = Math.floor(timeCrystal / 1e20);
+            }
+            refineTCBtn.controller._transform(refineTCBtn.model, transformCount)
+        },
+        cryoFix: async function () {
+            // 检查需要的功能是否全部开启
+            if (!game.workshop.get('chronoforge').researched || !game.workshop.get('turnSmoothly').researched) {
+                message('检查 时间锻造 和 时间波动 是否解锁');
+                return;
+            }
+            // 建造新的冷冻仓
+            var vsPanel = game.timeTab.vsPanel.children[0].children;
+            var cryo = game.time.getVSU('cryochambers');
+            var usedCryo = game.time.getVSU('usedCryochambers').on;
+            var cryoPanel = vsPanel[1].model;
+            var postApocalypse = gamePage.challenges.getChallenge('postApocalypse').on;
+            if (!cryo.val && options.auto.infinity.items.cryoFix.subTrigger > usedCryo) {
+                if (game.religion.getHGScalingBonus() == 1) {
+                    var buildCryo = options.auto.infinity.items.cryoFix.subTrigger - usedCryo;
+                    var canBuildCryo = Math.floor(Math.log(1 / cryoPanel.prices[0].val) / Math.log(cryo.priceRatio));
+                    var minCryo = Math.min(buildCryo, canBuildCryo);
+                    if (game.bld.get('chronosphere').on + postApocalypse < minCryo) {
+                        if (this.buildChronosphere(minCryo - postApocalypse) == undefined) { return; }
+                    }
+                    for (var i = 0; i < minCryo; i++) {
+                        vsPanel[1].controller.buyItem(cryoPanel, {}, function () { });
+                    }
+                } else { message('冷冻仓：已开启神圣灭绝，不新建冷冻仓'); }
+            }
+            // 准备传送仪（数量= 拥有冷冻仓数量 - 后启示录完成次数）
+            var cryochambers = cryo.val + usedCryo;
+            var chronosphereMax = cryochambers - postApocalypse;
+            if (this.buildChronosphere(chronosphereMax) == undefined) { return; }
+            // 跳时间获取时间通量
+            var shatter = game.timeTab.cfPanel.children[0].children[0];
+            var temporalFlux = game.resPool.get('temporalFlux').maxValue - game.resPool.get('temporalFlux').value;
+            if (temporalFlux > 0) {
+                var willSkip = Math.ceil(temporalFlux / chronosphereMax);
+                if (game.time.heat <= game.getEffect("heatMax")) { willSkip = Math.min(willSkip, 500); }
+                shatter.controller.doShatterAmt(shatter.model, willSkip);
+                storeForSummary('time.skip', willSkip);
+            }
+            // 修复冷冻仓
+            var maxbuy = Math.floor(game.resPool.get('temporalFlux').value / 3000);
+            for (var i = 0; i < Math.min(maxbuy, vsPanel[2].model.on); i++) {
+                vsPanel[0].controller.buyItem(vsPanel[0].model, {}, function () { });
+            }
+            storeForSummary('fix.cry', i);
+            // 判断条件
+            if (cryo.on == cryochambers && game.resPool.get('temporalFlux').maxValue == game.resPool.get('temporalFlux').value) {
+                if (game.village.sim.kittens.length < cryochambers) {
+                    message('缺少猫猫');
+                } else { options.auto.infinity.items.cryoFix.doneMark = true; }
+            }
+        },
+        buildChronosphere: function (chronosphereMax) {
+            chronosphereMax = chronosphereMax == undefined ? options.auto.infinity.items.buildChronosphere.subTrigger : chronosphereMax;
+            options.auto.build.items.chronosphere.max = chronosphereMax
+            if (game.bld.get('chronosphere').on < chronosphereMax) {
+                var chronosphere = chronosphereMax - game.bld.get('chronosphere').on;
+                var returnValue = this.readyChronosphereRes(chronosphere);
+                switch (returnValue) {
+                    case 'Infinity':
+                        options.auto.build.items.chronosphere.max = -1;
+                        return;
+                    case 'done':
+                        break;
+                    case 'manager':
+                        return; // 等待切换领袖
+                    case 'nagas':
+                        message('利维坦提前到来导致贸易标签无法解锁，请手动刷新界面');
+                        return;
+                    case 'manpower':
+                        message('传送仪：喵力不足以在打猎后和娜迦交易获得足够的蓝图');
+                        return;
+                    default:
+                        imessage('ui.infinity.chronosphere', [game.resPool.get(returnValue).title, chronosphere]);
+                        return;
+                }
+            }
+            if (chronosphereMax == undefined) {
+                options.auto.infinity.items.buildChronosphere.doneMark = true;
+            } else { return 'done'; }
+        },
+        readyChronosphereRes: function (chronosphere) {
+            var chronospherePrices = game.bld.getPrices('chronosphere', chronosphere);
+            var infCount = 0;
+            for (var i in chronospherePrices) { infCount += game.resPool.get(chronospherePrices[i].name).value == Infinity ? 1 : 0; }
+            if (infCount == chronospherePrices.length) { return 'Infinity'; }
+            if (game.village.leader.trait.name !== 'manager') {
+                $('#toggle-leaderTrait-manager').click();
+                return 'manager';
+            } // 切换管理者领袖
+            var race = game.diplomacy.get('nagas');
+            if (!race.unlocked) { return 'nagas'; }
+            for (var i in chronospherePrices) {
+                if (chronospherePrices[i].name === 'blueprint') {
+                    var tradeCount = (chronospherePrices[i].val - game.resPool.get('blueprint').value) * 10;
+                    if (tradeCount > 0) {
+                        if (game.resPool.get('ivory').value != Infinity) {
+                            var ivory = race.buys[0].val * tradeCount == Infinity ? 1e307 : race.buys[0].val * tradeCount - game.resPool.get('ivory').value;
+                            var hunterRatio = game.getEffect('hunterRatio') + game.village.getEffectLeader('manager', 0);
+                            var huntCount = ivory / hunterRatio;
+                            if (huntCount > 0) {
+                                if (game.resPool.get('manpower').value - huntCount * 100 - tradeCount * game.diplomacy.getManpowerCost() > 0) {
+                                    game.resPool.addResEvent('manpower', -huntCount * 100);
+                                    game.village.gainHuntRes(huntCount);
+                                } else { return 'manpower'; }
+                            }
+                        }
+                        game.diplomacy.tradeAll(race);
+                    }
+                    continue;
+                }
+                if (!(game.resPool.get(chronospherePrices[i].name).value / 10 > chronospherePrices[i].val)) { return chronospherePrices[i].name; }
+            } // 检查修建传送仪需要的资源，蓝图不足打猎后和娜迦交易，其他不足直接返回
+            return 'done';
+        },
+        infinityReset: async function () {
+            var items = options.auto.infinity.items;
+            var enabledCount = 0;
+            var doneCount = 0;
+            for (var itemName in items) {
+                if (items[itemName].doneMark == undefined) { continue; }
+                if (items[itemName].enabled) {
+                    enabledCount++;
+                    if (items[itemName].doneMark) { doneCount++ } else { return; }
+                }
+            }
+            if (doneCount != enabledCount) { return; }
+            if (!game.workshop.get('fluxCondensator').researched) {
+                message('通量冷凝器 未解锁不允许重置');
+                return;
+            }
+            if (game.time.getVSU('usedCryochambers').on) {
+                message('有 用过的冷冻仓 不允许重置');
+                return;
+            }
+            if (game.bld.get('chronosphere').on < options.auto.infinity.items.buildChronosphere.subTrigger) {
+                message('传送仪数量 < 修建传送仪触发值 不允许重置');
+                return;
+            }
+            // 所有启用的选项全部标记为完成
+            // 通量冷凝器 解锁
+            // 没有 用过的冷冻仓
+            // 传送仪数量 >= 修建传送仪触发值
+            // 满足以上条件才允许重置
+            game.resetAutomatic();
         },
         halfInterval: async function () {
             return new Promise(() => {
@@ -1846,7 +2147,7 @@ var run = function() {
             var trigger = options.auto.time.trigger;
 
             // Render the tab to make sure that the buttons actually exist in the DOM. Otherwise we can't click them.
-            //buildManager.manager.render();
+            buildManager.manager.render(); // 进行更新以显示时间波动升级
 
             var metaData = {};
             for (var name in builds) {
@@ -2259,7 +2560,7 @@ var run = function() {
                         }
                     }
 
-                    count = (game.religion.meta[1].meta[5].on) ? buildList[i].count : Math.ceil(buildList[i].count / 3);
+                    count = game.stats.statGroups[0].group[3].val > 1000 ? buildList[i].count : (game.religion.meta[1].meta[5].on) ? buildList[i].count : Math.ceil(buildList[i].count / 3);
 
                     buildManager.build(buildList[i].name || buildList[i].id, buildList[i].stage, count);
                     refreshRequired = 1;
@@ -3763,8 +4064,10 @@ var run = function() {
                 if (i === "manpower") {
                     var manpowerValue = Math.max(this.craftManager.getValueAvailable(i, true) - 100, 0);
                     var total = manpowerValue / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 } else {
                     var total = this.craftManager.getValueAvailable(i, limited, options.auto.trade.trigger) / materials[i];
+                    total = total == Infinity ? Number.MAX_VALUE / materials[i] : total;
                 }
 
                 amount = (amount === undefined || total < amount) ? total : amount;
@@ -4049,6 +4352,7 @@ var run = function() {
 
     var saveToKittenStorage = function () {
         kittenStorage.toggles = {
+            infinity: options.auto.infinity.enabled,
             build: options.auto.build.enabled,
             space: options.auto.space.enabled,
             craft: options.auto.craft.enabled,
@@ -4455,7 +4759,7 @@ var run = function() {
         });
 
         var disableall = $('<div/>', {
-            id: 'toggle-all-items-' + toggleName,
+            id: 'toggle-all-disable-items-' + toggleName,
             text: i18n('ui.disable.all'),
             css: {cursor: 'pointer',
                 display: 'inline-block',
@@ -4474,7 +4778,7 @@ var run = function() {
         list.append(disableall);
 
         var enableall = $('<div/>', {
-            id: 'toggle-all-items-' + toggleName,
+            id: 'toggle-all-enable-items-' + toggleName,
             text: i18n('ui.enable.all'),
             css: {cursor: 'pointer',
                 display: 'inline-block',
@@ -4617,6 +4921,18 @@ var run = function() {
                     } else {
                         imessage('status.auto.enable', [itext]);
                     }
+                    if (toggleName === 'infinity') {
+                        var autoall = options.auto;
+                        for (var i in autoall) {
+                            if (autoall[i].enabled && i !== 'infinity') { $('#toggle-' + i).click(); }
+                        } // 禁用所有功能
+                        $('#toggle-all-disable-items-infinity').click(); // 禁用所有无限流相关功能
+                        $('#toggle-all-disable-items-options').click(); // 禁用所有选项
+                        $('#toggle-all-enable-items-filter').click(); // 开启所有日志过滤
+                        $('#toggle-useWorkers').click(); // 开启Workers
+                        $('#toggle-options').click();
+                        $('#toggle-filter').click();
+                    }
                     saveToKittenStorage();
                 } else if ((!input.is(':checked')) && auto.enabled == true) {
                     auto.enabled = false;
@@ -4662,6 +4978,9 @@ var run = function() {
             // fill out list with toggle items
             for (var itemName in auto.items) {
                 switch (toggleName) {
+                    case 'infinity':
+                        list.append(getInfinityOption(itemName, auto.items[itemName]));
+                        break;
                     case 'trade':
                         list.append(getTradeOption(itemName, auto.items[itemName]));
                         break;
@@ -4682,10 +5001,8 @@ var run = function() {
                         break;
                     case 'build':
                     case 'faith':
-                    case 'space':
-                        list.append(getLimitedOption(itemName, auto.items[itemName]));
-                        break;
                     case 'time':
+                    case 'space':
                         list.append(getLimitedOption(itemName, auto.items[itemName]));
                         break;
                     default:
@@ -4806,6 +5123,139 @@ var run = function() {
         if (toggleName === 'craft') {element.append(resourcesList);} else if (toggleName === 'faith') {element.append(additionList);}
 
         if (auto.items) {element.append(toggle, list);}
+
+        return element;
+    };
+
+    var getInfinityOption = function (name, option) {
+        var iname = i18n('ui.infinity.' + name);
+        var element = getInfinityOptionOption(name, option, iname);
+
+        if (option.subTrigger !== undefined) {
+
+            var triggerButton = $('<div/>', {
+                id: 'set-' + name + '-subTrigger',
+                text: i18n('ui.trigger'),
+                title: option.subTrigger,
+                css: {
+                    cursor: 'pointer',
+                    display: 'inline-block',
+                    float: 'right',
+                    paddingRight: '5px',
+                    textShadow: '3px 3px 4px gray'
+                }
+            }).data('option', option);
+
+            triggerButton.on('click', function () {
+                var value;
+                engine.stop(false);
+                value = window.prompt(i18n('ui.trigger.' + name + '.set'), option.subTrigger);
+                if (options.auto.engine.enabled) {
+                    engine.start(false);
+                }
+
+                if (value !== null) {
+                    option.subTrigger = value.split('-').length == 1 ? parseFloat(value) : value;
+                    kittenStorage.items[triggerButton.attr('id')] = option.subTrigger;
+                    saveToKittenStorage();
+                    triggerButton[0].title = option.subTrigger;
+                }
+            });
+
+            element.append(triggerButton);
+        }
+
+        return element;
+    };
+
+    var getInfinityOptionOption = function (name, option, iname) {
+        var element = $('<li/>');
+        var elementLabel = iname;
+
+        var label = $('<label/>', {
+            'for': 'toggle-' + name,
+            text: elementLabel,
+            css: { display: 'inline-block', minWidth: '80px' }
+        });
+
+        var input = $('<input/>', {
+            id: 'toggle-' + name,
+            type: 'checkbox'
+        }).data('option', option);
+
+        if (option.enabled) {
+            input.prop('checked', true);
+        }
+
+        input.on('change', function () {
+            if (input.is(':checked') && option.enabled == false) {
+                option.enabled = true;
+                var autoall = options.auto;
+                // 各项目的单独设置
+                switch (name) {
+                    case 'cryoFix':
+                        if (autoall.infinity.items['buildChronosphere'].enabled) { $('#toggle-buildChronosphere').click(); }
+                        // time
+                        $('#toggle-all-disable-items-time').click();
+                        var temporalBattery = game.time.getCFU('temporalBattery');
+                        // 不消耗时间水晶，极限值在 1e17 左右，具体原理查看 IEEE 754
+                        var timeCrystal = game.resPool.get('timeCrystal').value / 1e20;
+                        timeCrystal = timeCrystal == Infinity ? Number.MAX_VALUE : timeCrystal;
+                        options.auto.time.items.temporalBattery.max =
+                            Math.floor(Math.log(timeCrystal / temporalBattery.prices[0].val) / Math.log(temporalBattery.priceRatio));
+                        kittenStorage.items['set-temporalBattery-max'] = options.auto.time.items.temporalBattery.max;
+                        options.auto.time.items.chronocontrol.max = 1;
+                        kittenStorage.items['set-chronocontrol-max'] = options.auto.time.items.chronocontrol.max;
+                        $('#toggle-temporalBattery').click();
+                        $('#toggle-chronocontrol').click();
+                        if (!autoall['time'].enabled) { $('#toggle-time').click(); }
+                        break;
+                    case 'buildChronosphere':
+                        if (autoall.infinity.items['cryoFix'].enabled) { $('#toggle-cryoFix').click(); }
+                        if (autoall['time'].enabled) { $('#toggle-time').click(); }
+                        break;
+                    default:
+                        break;
+                }
+                switch (name) {
+                    case 'autohunt':
+                    case 'autoTransform':
+                    case 'autoCT':
+                    case 'skiptime':
+                    case 'autoReset':
+                        break;
+                    default:
+                        // build
+                        $('#toggle-all-disable-items-build').click();
+                        options.auto.build.items.workshop.max = 1;
+                        kittenStorage.items['set-workshop-max'] = options.auto.build.items.workshop.max;
+                        options.auto.build.items.chronosphere.max = 1;
+                        kittenStorage.items['set-chronosphere-max'] = options.auto.build.items.chronosphere.max;
+                        $('#toggle-workshop').click();
+                        $('#toggle-chronosphere').click();
+                        if (!autoall['build'].enabled) { $('#toggle-build').click(); }
+                        // upgrade
+                        $('#toggle-all-enable-items-upgrade').click();
+                        $('#toggle-policies').click();
+                        if (!autoall['upgrade'].enabled) { $('#toggle-upgrade').click(); }
+                        // distribute
+                        $('#toggle-all-disable-items-distribute').click();
+                        $('#toggle-farmer').click();
+                        $('#toggle-leader').click();
+                        $('#toggle-leaderTrait-manager').click();
+                        if (!autoall['distribute'].enabled) { $('#toggle-distribute').click(); }
+                        break;
+                }
+                imessage('status.sub.enable', [elementLabel]);
+            } else if ((!input.is(':checked')) && option.enabled == true) {
+                option.enabled = false;
+                imessage('status.sub.disable', [elementLabel]);
+            }
+            kittenStorage.items[input.attr('id')] = option.enabled;
+            saveToKittenStorage();
+        });
+
+        element.append(input, label);
 
         return element;
     };
@@ -5976,6 +6426,7 @@ var run = function() {
     optionsElement.append(optionsTitleElement);
 
     optionsListElement.append(getToggle('engine'));
+    if (options.auto.infinity.allow) { optionsListElement.append(getToggle('infinity')); }
     optionsListElement.append(getToggle('build'));
     optionsListElement.append(getToggle('space'));
     optionsListElement.append(getToggle('craft'));
@@ -6160,6 +6611,14 @@ var run = function() {
 
     var engine = new Engine();
     var toggleEngine = $('#toggle-engine');
+
+    if (localStorage['cbc.kitten-scientists'] != undefined &&
+        localStorage['cbc.kitten-scientists'] != null &&
+        JSON.parse(localStorage['cbc.kitten-scientists']).toggles.infinity &&
+        options.auto.infinity.allow) {
+        if (!options.auto.engine.enabled) { toggleEngine.click(); }
+        engine.start();
+    }
 
     toggleEngine.on('change', function () {
         if (toggleEngine.is(':checked')) {
