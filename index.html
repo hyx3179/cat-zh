@@ -782,7 +782,7 @@
 				localStorage['zh.ks.enable'] = 'enable';
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$("#set-ks-enable").attr("checked", true);
-				var srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.js?v=";
+				var srcScientists = "scientists/kitten-scientists.user.js?v=";
 				document.body.appendChild(document.createElement('script')).src = srcScientists + new Date().getDate() + ksVision;
 			};
 			var disableKS = function() {
@@ -847,7 +847,7 @@
 					}, 2500);
 				} else {
 					// NummonInit();
-					var srcNummon = "https://petercheney.gitee.io/nummoncalc/NummonCalc.js?v="
+					var srcNummon = "nummoncalc/NummonCalc.js?v="
 					document.body.appendChild(document.createElement('script')).src = srcNummon + new Date().getDate() + ksVision;
 					if (typeof google_tag_data == 'undefined') {
 						document.body.appendChild(document.createElement('script')).src =' lib/google.js';
