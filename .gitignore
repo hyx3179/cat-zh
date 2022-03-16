@@ -3,4 +3,6 @@ yarn-error.log
 build.version.json
 chs.js
 chscore.js
-kitten-scientists.user.js
+load/node/*
+load/tmp/*
+/.vs
