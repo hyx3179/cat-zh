@@ -467,6 +467,9 @@ var run = function() {
             'summary.temporalAccelerator': '小猫担心卡顿打开了时空加速器的自动化',
             'summary.reactor': '小猫向反应堆投入了铀开始发光呐',
             'summary.steamworks': '小猫向蒸汽工房加了煤开始排蒸汽呐',
+            'summary.breweryOn': '节日开始了，小猫开启了 {0} 个酿酒厂庆祝节日',
+            'summary.breweryOff': '节日结束了，小猫担心浪费资源关闭了 {0} 个酿酒厂',
+            'summary.brewery': '小猫根据节日调整了 {0} 次酿酒厂',
             'summary.festival': '举办了 {0} 次节日',
             'summary.stars': '观测了 {0} 颗流星',
             'summary.praise': '通过赞美太阳积累了 {0} 虔诚',
@@ -879,7 +882,8 @@ var run = function() {
                     //_steamworks:        {enabled: true,                   misc: true, label: i18n('option.steamworks')},
                     saves:              {enabled: false,                   misc: true, label: '导出配置文件'},
                     donate:             {enabled: true,                   misc: true, label: '显示捐赠原作者图标'},
-                    useWorkers:         {enabled: false,                  misc: true, label: i18n('option.useWorkers')}
+                    useWorkers:         {enabled: false,                  misc: true, label: i18n('option.useWorkers')},
+                    //autoScientists:     {enabled: false,                  misc: true, label: '自动开启珂学家'}
                 }
             },
             distribute: {
@@ -1061,7 +1065,7 @@ var run = function() {
             if (subOptions.enabled && subOptions.items.festival.enabled)                    {this.holdFestival();}
             if (options.auto.build.enabled)                                                 {refresh += this.build();}
             if (options.auto.space.enabled)                                                 {refresh += this.space();}
-            if (options.auto.timeCtrl.enabled)                                              {this.timeCtrl();}
+            if (options.auto.timeCtrl.enabled)                                              {refresh += this.timeCtrl();}
             if (options.auto.craft.enabled)                                                 {this.craft();}
             if (subOptions.enabled && subOptions.items.hunt.enabled)                        {this.setHunt();}
             if (options.auto.trade.enabled)                                                 {this.trade();}
@@ -1072,7 +1076,7 @@ var run = function() {
             if (subOptions.enabled && subOptions.items.promote.enabled)                     {this.promote();}
             if (options.auto.distribute.enabled)                                            {this.distribute();}
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
-            if (refresh)                                                                    {game.ui.render();game.update();}
+            if (refresh > 0)                                                                {game.ui.render();game.resPool.update();}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
         },
         halfInterval: async function () {
@@ -1310,9 +1314,9 @@ var run = function() {
                 var tf = game.resPool.get('temporalFlux');
                 if (tf.value >= Math.max(tf.maxValue * optionVals.accelerateTime.subTrigger, 1)) {
                     game.time.isAccelerated = true;
-                    engine.stop();
+                    engine.stop(false);
                     if (options.auto.engine.enabled) {
-                        engine.start();
+                        engine.start(false);
                     }
                     iactivity('act.accelerate', [], 'ks-accelerate');
                     storeForSummary('accelerate', 1);
@@ -1420,6 +1424,7 @@ var run = function() {
                     if (!willSkip) {return;}
                     iactivity('act.time.skip', [willSkip], 'ks-timeSkip');
                     storeForSummary('time.skip', willSkip);
+                    return -100;
                 }
             }
         },
@@ -1753,7 +1758,7 @@ var run = function() {
             }
             // Praise
             var transformTier = 0.525 * Math.log(game.religion.faithRatio) + 3.45;
-            var expectSolarRevolutionRatio = Math.min(0.0005 * Math.pow(Math.E, 0.66 * transformTier), 0.5) * 10;
+            var expectSolarRevolutionRatio = Math.min(0.0005 * Math.pow(Math.E, 0.66 * transformTier), 0.75) * 10;
             // 太阳革命加速恢复到期望值
             if (game.religion.meta[1].meta[5].on && PraiseSubTrigger == 0.98 && game.religion.getSolarRevolutionRatio() < expectSolarRevolutionRatio) {
                 PraiseSubTrigger = 0;
@@ -1777,6 +1782,7 @@ var run = function() {
                 storeForSummary('praise', worshipInc);
                 iactivity('act.praise', [game.getDisplayValueExt(resourceFaith.value), game.getDisplayValueExt(worshipInc)], 'ks-praise');
                 game.religion.praise();
+                refreshRequired += 1;
             }
             return refreshRequired;
         },
@@ -2351,13 +2357,13 @@ var run = function() {
             if (game.resPool.hasRes(price)) {
                 game.resPool.payPrices(price);
                 game.village.holdFestival(1);
-            }
 
-            storeForSummary('festival', 1);
-            if (game.calendar.festivalDays > 400) {
-                iactivity('festival.extend', [], 'ks-festival');
-            } else {
-                iactivity('festival.hold', [], 'ks-festival');
+                storeForSummary('festival', 1);
+                if (game.calendar.festivalDays > 400) {
+                    iactivity('festival.extend', [], 'ks-festival');
+                } else {
+                    iactivity('festival.hold', [], 'ks-festival');
+                }
             }
         },
         observeStars: function () {
@@ -2613,7 +2619,7 @@ var run = function() {
                 // 自动打开蒸汽工房
                 var st = game.bld.getBuildingExt('steamworks').meta;
                 var ma = game.bld.getBuildingExt('magneto').meta;
-                if (st.val && st.on == 0 && ma.val > 6 && ma.on > 6) {
+                if (st.val && st.on !== st.val && ma.on > 7) {
                     var stButton = buildManager.getBuildButton('steamworks');
                     stButton.controller.onAll(stButton.model);
                     iactivity('summary.steamworks');
@@ -2622,7 +2628,7 @@ var run = function() {
                 // 自动打开反应堆
                 var re = game.bld.getBuildingExt('reactor').meta;
                 var ur = game.getResourcePerTick("uranium",true);
-                if (re.val && re.on == 0 && ur > 0) {
+                if (re.val && re.on !== re.val && ur > 0) {
                     var reButton = buildManager.getBuildButton('reactor');
                     reButton.controller.onAll(reButton.model);
                     iactivity('summary.reactor');
@@ -2649,6 +2655,23 @@ var run = function() {
                         oilWell.isAutomationEnabled = false;
                         iactivity('summary.pumpjack', [1]);
                         storeForSummary('pumpjack', 1);
+                    }
+                }
+                // 自动开关酿酒厂
+                var brewery = game.bld.get('brewery');
+                var breweryButton = buildManager.getBuildButton('brewery');
+                if (breweryButton) {
+                    if (game.calendar.festivalDays) {
+                        let off = brewery.val - brewery.on;
+                        if (off) {
+                            breweryButton.controller.onAll(breweryButton.model);
+                            iactivity('summary.breweryOn', [off]);
+                            storeForSummary('brewery');
+                        }
+                    } else if (brewery.on) {
+                        iactivity('summary.breweryOff', [brewery.on]);
+                        breweryButton.controller.offAll(breweryButton.model);
+                        storeForSummary('brewery');
                     }
                 }
             }
@@ -6207,6 +6230,18 @@ var run = function() {
         };
     }
     saveToKittenStorage();
+
+    /*var autoOpen = function() {
+    if (options.auto.options.items.autoScientists.enabled) {
+        if (!options.auto.engine.enabled) { 
+            if (options.auto.engine.countdown == 15) {
+                toggleEngine.click(); 
+            } else {
+                options.auto.engine.countdown = (options.auto.engine.countdown); 
+                autoOpen();
+            }
+        }
+    }*/
 
 };
 
