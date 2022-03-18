@@ -6635,14 +6635,6 @@ var run = function() {
     var engine = new Engine();
     var toggleEngine = $('#toggle-engine');
 
-    if (localStorage['cbc.kitten-scientists'] != undefined &&
-        localStorage['cbc.kitten-scientists'] != null &&
-        JSON.parse(localStorage['cbc.kitten-scientists']).toggles.infinity &&
-        options.auto.infinity.allow) {
-        if (!options.auto.engine.enabled) { toggleEngine.click(); }
-        engine.start();
-    }
-
     toggleEngine.on('change', function () {
         if (toggleEngine.is(':checked')) {
             options.auto.engine.enabled = true;
@@ -6689,6 +6681,10 @@ var run = function() {
         };
     }
     saveToKittenStorage();
+    
+    if (options.auto.infinity.enabled && options.auto.infinity.allow) {
+        if (!options.auto.engine.enabled) { toggleEngine.click(); }
+    }
 
     /*var autoOpen = function() {
     if (options.auto.options.items.autoScientists.enabled) {
