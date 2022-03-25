@@ -20,9 +20,8 @@ var kg_version = "小猫珂学家版本1.5.0";
 var address = '1HDV6VEnXH9m8PJuT4eQD7v8jRnucbneaq';
 
 // Game will be referenced in loadTest function
-var game = null;
-var i18ng = null;
-var lang = 'en';
+//var game = null;
+var lang = (localStorage["com.nuclearunicorn.kittengame.language"] == 'zh') ? 'zh' : 'en';
 
 var run = function() {
 
@@ -293,7 +292,7 @@ var run = function() {
             'build.embassies': '在 {1} 设立了 {0} 个大使馆',
 
             'act.praise': '赞美太阳! 转化 {0} 信仰为 {1} 虔诚',
-            'act.praise.msg': '小猫加速赞美太阳，只到太阳革命加成大于 {0}',
+            'act.praise.msg': '小猫加速赞美太阳，直到太阳革命加成大于 {0}',
             'act.sun.discover': '小猫宗教 {0} 方面获得演化',
             'act.sun.discovers': '小猫宗教 {0} 方面获得演化 {1} 次',
 
@@ -324,7 +323,7 @@ var run = function() {
             'ui.upgradesLimit': '过滤',
             'ui.trigger.shipOverride.set': '输入一个新的 强制贸易船 触发值，\n贸易船数量低于触发条件时会无视工艺的贸易船限制启用。',
             'ui.trigger.missions.set': '输入一个新的 探索星球 触发值,取值范围为 0 到 13 的整数。\n分别对应13颗星球。',
-            'ui.trigger.crypto.set': '输入一个新的 {0} 触发值，\n支持3个参数：-符号隔开数字参数\n第一个数字：当遗物数量大于触发值才会进行黑币交易\n第二个数字：买入的最高价\n第三个数字：卖出最低的价格。\n默认10000-881-1060',
+            'ui.trigger.crypto.set': '输入一个新的 {0} 触发值，\n支持3个参数：-符号隔开数字参数\n第一个数字：当遗物数量大于触发值才会进行黑币交易\n第二个数字：买入的最高价（超过这价格就不会买了）\n第三个数字：卖出最低的价格。（低于这价格就不会卖出）\n默认10000-881-1060',
             'ui.engine': '启用小猫珂学家',
             'ui.build': '营火',
             'ui.space': '太空',
@@ -349,7 +348,7 @@ var run = function() {
             'ui.upgrade.policies.load': '读取',
             'ui.upgrade.policies.show': '列表',
 
-            'ui.faith.addtion': '附加项目',
+            'ui.faith.addtion': '附加选项',
             'option.faith.best.unicorn': '自动最效率独角兽建筑',
             'option.faith.best.unicorn.desc': '自动献祭独角兽，并会建造最佳独角兽建筑',
 
@@ -384,7 +383,7 @@ var run = function() {
 
             'trade.limited': '贸易获得数量大于产量时才与 {0} 贸易，次数自动限制',
             'trade.limitedTitle': '根据产量和贸易获得数量',
-            'trade.unlimited': '仅到达触发条件与 {0} 的 贸易',
+            'trade.unlimited': '{1}与 {0} 的 贸易',
             'trade.seasons': '季节',
             'trade.season.enable': '启用在 {1} 与 {0} 的贸易',
             'trade.season.disable': '停止在 {1} 与 {0} 的贸易',
@@ -395,7 +394,7 @@ var run = function() {
 
             'craft.limited': '限制下：额外每2秒制作 {0}，数量AI自动（根据工艺制作效率、资源数量）',
             'craft.limitedTitle': '根据原材料和目标材料的数量',
-            'craft.unlimited': '触发资源：{1}，满足触发资源的触发条件才会制作 {0}',
+            'craft.unlimited': '触发资源：{1}{0}',
             'craft.winterCatnip': '因寒冬猫薄荷产量低于0，故取消使用猫薄荷',
 
             'distribute.limited': '分配 {0} 受限于最大值',
@@ -415,7 +414,7 @@ var run = function() {
             'filter.promote': '提拔领袖',
             'summary.promote': '提拔领袖 {0} 次',
 
-            'ui.trigger.useWorkers.alert': '珂学家将会在后台满速运行，注意这会消耗更多性能。\n电脑不好、内存≤ 8G的建议禁用\n需满足浏览器支持且游戏选项的web worker启用。\n确认后会自动重新勾选启用珂学家',
+            'ui.trigger.useWorkers.alert': '比如天文事件没观测全是因为后台慢速运行\n勾选将会在后台满速运行，注意会导致使用内存增多。\n电脑不好、内存≤ 8G的建议禁用\n需满足浏览器支持且游戏选项的web worker启用。\n确认后会自动重新勾选启用珂学家',
             'ui.timeCtrl': '时间操纵',
             'option.accelerate': '光阴似箭',
             'act.accelerate': '固有时制御，二倍速!',
@@ -460,6 +459,9 @@ var run = function() {
             'summary.time.reset.title': '过去 {0} 个时间线的总结',
             'summary.time.reset.content': '获得 {0} 业.<br>获得 {1} 领导力.',
             'ui.close': '关闭',
+
+            'auto.countdown': '{0} 秒后将会自动启用珂学家',
+            'auto.tip': '你可以通过取消 "首次自启珂学家" 以取消此次自动开启',
 
             'option.fix.cry': '修复冷冻仓',
             'act.fix.cry': '小猫修复了 {0} 个冷冻仓',
@@ -514,7 +516,7 @@ var run = function() {
     var i18n = function(key, args) {
         // i18n('$xx') mean load string from game
         // i18n('xx') mean load string from ks
-        if (key[0] == "$") {return i18ng(key.slice(1));}
+        if (key[0] == "$") {return $I(key.slice(1));}
         var value = i18nData[lang][key];
         if (typeof value === 'undefined') {
             value = i18nData['en'][key];
@@ -548,6 +550,9 @@ var run = function() {
 
         //猫薄荷日志
         catnipMsg: true,
+
+        //倒计时
+        countdown: 120,
 
         // The default consume rate.
         consume: 0.6,
@@ -684,7 +689,7 @@ var run = function() {
                     calciner:       {require: 'titanium',    enabled: false, max:-1, checkForReset: true, triggerForReset: -1},
                     reactor:        {require: 'titanium',    enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
                     accelerator:    {require: 'titanium',    enabled: false, max:-1, checkForReset: true, triggerForReset: -1},
-                    steamworks:     {require: false,         enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
+                    steamworks:     {require: false,         enabled: true, max:-1, checkForReset: true, triggerForReset: -1, auto: false},
                     magneto:        {require: false,         enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
 
                     // science
@@ -704,7 +709,7 @@ var run = function() {
                     ziggurat:       {require: false,         enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
                     chronosphere:   {require: 'unobtainium', enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
                     aiCore:         {require: false,         enabled: false,max:-1,  checkForReset: true, triggerForReset: -1},
-                    brewery:        {require: false,         enabled: false,max:-1,  checkForReset: true, triggerForReset: -1},
+                    brewery:        {require: false,         enabled: false,max:-1,  checkForReset: true, triggerForReset: -1, auto: false},
 
                     // storage
                     barn:           {require: 'wood',        enabled: true, max:15, checkForReset: true, triggerForReset: -1},
@@ -912,7 +917,7 @@ var run = function() {
                     saves:              {enabled: false,                   misc: true, label: '导出配置文件'},
                     donate:             {enabled: true,                   misc: true, label: '显示捐赠原作者图标'},
                     useWorkers:         {enabled: false,                  misc: true, label: i18n('option.useWorkers')},
-                    //autoScientists:     {enabled: false,                  misc: true, label: '自动开启珂学家'}
+                    autoScientists:     {enabled: false,                  misc: true, label: '首次自启珂学家'}
                 }
             },
             distribute: {
@@ -924,7 +929,7 @@ var run = function() {
                     woodcutter: {enabled: true, max: 30, limited: true},
                     farmer:     {enabled: true, max: 10, limited: true},
                     scholar:    {enabled: true, max: 10, limited: true},
-                    hunter:     {enabled: true, max: 10, limited: false},
+                    hunter:     {enabled: true, max: 15, limited: true},
                     miner:      {enabled: true, max: 30, limited: true},
                     priest:     {enabled: true, max: 3, limited: false},
                     geologist:  {enabled: true, max: 50, limited: true},
@@ -957,7 +962,7 @@ var run = function() {
                 }
             },
             resources: {
-                furs:        {enabled: true,  stock: 750, checkForReset: false, stockForReset: Infinity},
+                furs:        {enabled: true,  stock: 100, checkForReset: false, stockForReset: Infinity},
                 timeCrystal: {enabled: false, stock: 0,    checkForReset: true,  stockForReset: 500000}
             },
             policies: [],
@@ -986,6 +991,10 @@ var run = function() {
     game.console.maxMessages = 1000;
 
     var printoutput = function (args) {
+        if (game.console.messages.length >= 999) {
+            game.clearLog();
+        }
+        
         if (options.auto.filter.enabled) {
             for (var filt in options.auto.filter.items) {
                 var filter = options.auto.filter.items[filt];
@@ -1066,6 +1075,7 @@ var run = function() {
         villageManager: undefined,
         cacheManager: undefined,
         loop: undefined,
+        huntId: undefined,
         start: function (msg = true) {
             options.interval = Math.ceil (100 / game.getTicksPerSecondUI()) * 100;
             if (game.isWebWorkerSupported() && game.useWorkers && options.auto.options.items.useWorkers.enabled) {
@@ -1116,7 +1126,7 @@ var run = function() {
             if (subOptions.enabled && subOptions.items.promote.enabled)                     {this.promote();}
             if (options.auto.distribute.enabled)                                            {this.distribute();}
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
-            if (refresh > 0)                                                                {game.ui.render();game.resPool.update();}
+            if (refresh > 0)                                                                {game.ui.render();/*game.resPool.update();*/}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
             // 防止合并冲突
             var inf = options.auto.infinity;
@@ -1382,8 +1392,8 @@ var run = function() {
         },
         halfInterval: async function () {
             return new Promise(() => {
-                setTimeout(() => {
-                    this.hunt();
+                this.huntId = setTimeout(() => {
+                    engine.hunt();
                 }, Math.floor(options.interval / 2));
             });
         },
@@ -1760,10 +1770,10 @@ var run = function() {
                 if (optionsTheocracy || game.science.getPolicy('theocracy').researched) {leaderJobName = "priest";}
                 var distributeJob = game.village.getJob(leaderJobName);
                 if (game.village.leader == null || !(game.village.leader.job == leaderJobName && game.village.leader.trait.name == traitName)) {
-                    var traitKittens = game.village.sim.kittens.filter(kitten => kitten.trait.name == traitName);
+                    let traitKittens = game.village.sim.kittens.filter(kitten => kitten.trait.name == traitName);
                     if (traitKittens.length != 0) {
                         if (distributeJob.unlocked && distributeJob.value < game.village.getJobLimit(leaderJobName)) {
-                            var correctLeaderKitten = traitKittens.sort(function(a, b) {return b.rank - a.rank != 0 ? b.rank - a.rank : b.exp - a.exp;})[0];
+                            let correctLeaderKitten = traitKittens.sort(function(a, b) {return b.rank - a.rank != 0 ? b.rank - a.rank : b.exp - a.exp;})[0];
                             if (distributeJob.value >= distributeItem[leaderJobName].max && distributeItem[leaderJobName].limited && distributeJob.value) {
                                 game.village.sim.removeJob(leaderJobName, 1);
                             }
@@ -2083,7 +2093,7 @@ var run = function() {
                 storeForSummary('praise', worshipInc);
                 iactivity('act.praise', [game.getDisplayValueExt(resourceFaith.value), game.getDisplayValueExt(worshipInc)], 'ks-praise');
                 game.religion.praise();
-                refreshRequired += 1;
+                //refreshRequired += 1;
             }
             return refreshRequired;
         },
@@ -2504,7 +2514,7 @@ var run = function() {
                 // 解锁磁电机才会造蒸汽工房
                 var steamworksMeta = game.bld.getBuildingExt('steamworks').meta;
                 var steamW = builds['steamworks'];
-                if (!game.challenges.isActive("pacifism") && !game.bld.getBuildingExt('magneto').meta.unlocked) {
+                if (!game.challenges.isActive("pacifism") && !game.bld.getBuildingExt('magneto').meta.val) {
                     if (!steamW.max) {
                         steamW.auto = steamW.max;
                         steamW.max = 0;
@@ -2617,7 +2627,6 @@ var run = function() {
                 var craft = crafts[name];
                 var current = !craft.max ? false : manager.getResource(name);
                 var require = !craft.require ? false : manager.getResource(craft.require);
-                var season = game.calendar.season;
                 var amount = 0;
                 if (!game.bld.getBuildingExt('workshop').meta.on && name !== "wood") {continue;}
                 // Ensure that we have reached our cap
@@ -2628,8 +2637,10 @@ var run = function() {
                     amount = manager.getLowestCraftAmount(name, craft.limited, craft.limRat, true);
                 } else if (craft.limited) {
                     amount = manager.getLowestCraftAmount(name, craft.limited, craft.limRat, false);
+                    let ratio = game.getResCraftRatio();
+                    amount *= Math.max(Math.min(Math.log(ratio), 1), 0.25);
                 }
-                if (amount > 0) {
+                if (amount >= 1) {
                     manager.craft(name, amount);
                 }
             }
@@ -2675,6 +2686,7 @@ var run = function() {
             }
         },
         hunt: function () {
+            clearTimeout(this.huntId);
             var manpower = this.craftManager.getResource('manpower');
             if (manpower.value < 100 || game.challenges.isActive("pacifism")) {return;}
 
@@ -2705,8 +2717,9 @@ var run = function() {
             var gold = craftManager.getResource('gold');
             var trades = [];
             var requireTrigger = options.auto.trade.trigger;
+            let tradeRender = options.auto.trade.render;
 
-            if (options.auto.trade.render) {
+            if (tradeRender) {
                 tradeManager.manager.render();
             }
 
@@ -2726,7 +2739,7 @@ var run = function() {
                 var button = tradeManager.getTradeButton(race.name);
 
                 if (!button) {
-                    options.auto.trade.render = true;
+                    tradeRender = true;
                     continue;
                 }
 
@@ -2904,7 +2917,7 @@ var run = function() {
             // fix Cryochamber
             if (optionVals.fixCry.enabled && game.time.getVSU("usedCryochambers").val > 0) {
                 var fixed = 0;
-                var btn = this.timeManager.manager.tab.vsPanel.children[0].children[0]; //check?
+                var btn = this.game.timeTab.vsPanel.children[0].children[0]; //check?
                 // buyItem will check resources
                 while (btn.controller.buyItem(btn.model, {}, function() {})) {
                     fixed += 1;
@@ -2979,21 +2992,23 @@ var run = function() {
             return refreshRequired;
         },
         skipCtrlRes: function () {
-            if (options.auto.timeCtrl.items.timeSkip.craft) {return;}
+            let addCraft = options.auto.timeCtrl.items.timeSkip;
+            if (addCraft.craft) {return;}
             var resList = ['catnip', 'wood', 'minerals', 'coal', 'iron', 'oil', 'uranium', 'science'];
             var name = '';
             for (var i = 0; i < resList.length; i++) {
                 var res = game.resPool.resourceMap[resList[i]];
-                if (!options.auto.resources[res.name]) {
-                    options.auto.resources[res.name] = {};
-                    options.auto.resources[res.name].enabled = true;
-                    options.auto.resources[res.name].stock = 0;
+                let resource = options.auto.resources[res.name];
+                if (!resource) {
+                    resource = {};
+                    resource.enabled = true;
+                    resource.stock = 0;
                     $('#toggle-list-resources').append(addNewResourceOption(res.name, res.title, false));
                 }
-                options.auto.resources[res.name].consume = 1;
+                resource.consume = 1;
                 name += res.title + '，';
             }
-            options.auto.timeCtrl.items.timeSkip.craft = true;
+            addCraft.craft = true;
             iactivity('summary.resource', [name]);
             storeForSummary('resource');
         },
@@ -3019,15 +3034,16 @@ var run = function() {
                 catnipTick = ((game.resPool.get('catnip').perTickCached - catnipTick) * (1 + solarRevolutionAdterAdore) / solarRevolutionRatio) + catnipTick+game.globalEffectsCached.catnipPerTickCon;
             }
             if (catnipTick < 0) {
+                let optionFaith = options.auto.faith;
                 // 次元超越猫薄荷
-                if (value && options.auto.faith.transcendCatnip < 10) {
+                if (value && optionFaith.transcendCatnip < 10) {
                     iactivity('transcend.catnip');
-                    options.auto.faith.transcendCatnip += 1;
+                    optionFaith.transcendCatnip += 1;
                 }
                 // 赞美群星猫薄荷
                 if (!value && options.auto.faith.adoreCatnip < 10) {
                     iactivity('adore.catnip');
-                    options.auto.faith.adoreCatnip += 1;
+                    optionFaith.adoreCatnip += 1;
                 }
             }
             
@@ -3139,7 +3155,9 @@ var run = function() {
     TabManager.prototype = {
         tab: undefined,
         render: function () {
-            if (this.tab && game.ui.activeTabId !== this.tab.tabId) {this.tab.render();}
+            if (this.tab && game.ui.activeTabId !== this.tab.tabId) {
+                this.tab.render();
+            }
 
             return this;
         },
@@ -3588,7 +3606,7 @@ var run = function() {
             // good with a maximum value.
             if (res.maxValue > 0 && amount > (res.maxValue - res.value)) {amount = res.maxValue - res.value;}
 
-            return Math.floor(amount);
+            return amount;
         },
         getMaterials: function (name) {
             var materials = {};
@@ -3843,7 +3861,7 @@ var run = function() {
 
             if (countList.length === 0) {return;}
 
-            var tempPool = new Object();
+            let tempPool = new Object();
             for (var res in game.resPool.resources) {
                 tempPool[game.resPool.resources[res].name] = game.resPool.resources[res].value;
             }
@@ -4062,7 +4080,8 @@ var run = function() {
                 var shipCount = game.resPool.get("ship").value;
                 var zebraRelationModifierTitanium = game.getEffect("zebraRelationModifier") * game.bld.getBuildingExt("tradepost").meta.effects["tradeRatio"];
                 var titanProb = Math.min(0.15 + shipCount * 0.0035, 1);
-                output["titanium"] = (1.5 + shipCount * 0.03) * (1 + zebraRelationModifierTitanium) * titanProb * successRat;
+                let modifier = (shipCount < 230) ? Math.log(shipCount) * shipCount * 0.00084 - 0.01: 1;
+                output["titanium"] = (1.5 + shipCount * 0.03) * (1 + zebraRelationModifierTitanium) * titanProb * successRat * modifier;
             }
 
             var spiceChance = (race.embassyPrices) ? 0.35 * (1 + 0.01 * race.embassyLevel) : 0.35;
@@ -4197,7 +4216,7 @@ var run = function() {
 
             for (var i = 0; i < cache.length; i++) {
                 var oldData = cache[i];
-                if (cache.length > 10000) {
+                if (cache.length > 999) {
                     var oldMaterials = oldData['materials'];
                     for (var mat in oldMaterials) {
                         if (!cacheSum[mat]) {cacheSum[mat] = 0;}
@@ -4276,6 +4295,7 @@ var run = function() {
         + 'height: 92%;'
         + 'width: 19%;'
         + 'font-size: 12px;'
+		+ 'font-family: monospace,Microsoft YaHei,Microsoft SanSerf,微软雅黑;'
         + '}');
 
     addRule('body #gamePageContainer #game #rightColumn {'
@@ -5038,73 +5058,6 @@ var run = function() {
             button.on('click', function () {
                 list.toggle();
             });
-
-            // Add resource controls for crafting, sort of a hack
-            if (toggleName === 'craft') {
-                var resources = $('<div/>', {
-                    id: 'toggle-resource-controls',
-                    text: i18n('ui.craft.resources'),
-                    css: {cursor: 'pointer',
-                        display: 'inline-block',
-                        float: 'right',
-                        paddingRight: '5px',
-                        textShadow: '3px 3px 4px gray'},
-                });
-
-                var resourcesList = getResourceOptions();
-
-                // When we click the items button, make sure we clear resources
-                button.on('click', function () {
-                    resourcesList.toggle(false);
-                });
-
-                resources.on('click', function () {
-                    list.toggle(false);
-                    resourcesList.toggle();
-                });
-
-                element.append(resources);
-            }
-
-            // Add additional controls for faith, sort of a hack again
-            if (toggleName === 'faith') {
-                var addition = $('<div/>', {
-                    id: 'toggle-addition-controls',
-                    text: i18n('ui.faith.addtion'),
-                    title: "太阳教团的自动化项目",
-                    css: {cursor: 'pointer',
-                        display: 'inline-block',
-                        float: 'right',
-                        paddingRight: '5px',
-                        textShadow: '3px 3px 4px gray'},
-                });
-
-                var additionList = getAdditionOptions();
-
-                button.on('click', function () {
-                    additionList.toggle(false);
-                });
-
-                addition.on('click', function () {
-                    list.toggle(false);
-                    additionList.toggle();
-                });
-
-                element.append(addition);
-
-                // disable auto best unicorn building when unicorn building was disable
-                for (var unicornName in options.auto.unicorn.items) {
-                    var ub = list.children().children('#toggle-' + unicornName);
-                    ub.on('change', function() {
-                        if (!$(event.target).is(':checked')) {
-                            var b = $('#toggle-bestUnicornBuilding');
-                            b.prop('checked', false);
-                            b.trigger('change');
-                        }
-                    });
-                }
-            }
-
         }
 
         if (auto.trigger !== undefined) {
@@ -5143,7 +5096,73 @@ var run = function() {
             element.append(triggerButton);
         }
 
-        if (toggleName === 'craft') {element.append(resourcesList);} else if (toggleName === 'faith') {element.append(additionList);}
+        if (toggleName === 'craft') {
+            // Add resource controls for crafting, sort of a hack
+            var resources = $('<div/>', {
+                id: 'toggle-resource-controls',
+                text: i18n('ui.craft.resources'),
+                css: {cursor: 'pointer',
+                    display: 'inline-block',
+                    float: 'right',
+                    paddingRight: '5px',
+                    textShadow: '3px 3px 4px gray'},
+            });
+                        
+            var resourcesList = getResourceOptions();
+                        
+            // When we click the items button, make sure we clear resources
+            button.on('click', function () {
+                resourcesList.toggle(false);
+            });
+                        
+            resources.on('click', function () {
+                list.toggle(false);
+                resourcesList.toggle();
+            });
+                        
+            element.append(resources);
+            element.append(resourcesList);
+        } else if (toggleName === 'faith') {
+            // Add additional controls for faith, sort of a hack again
+            var addition = $('<div/>', {
+                id: 'toggle-addition-controls',
+                text: i18n('ui.faith.addtion'),
+                title: "太阳教团的自动化项目",
+                css: {cursor: 'pointer',
+                    display: 'inline-block',
+                    float: 'right',
+                    paddingRight: '5px',
+                    textShadow: '2px 2px 5px gray'
+                    },
+            });
+        
+            var additionList = getAdditionOptions();
+        
+            button.on('click', function () {
+                additionList.toggle(false);
+            });
+        
+            addition.on('click', function () {
+                list.toggle(false);
+                additionList.toggle();
+            });
+        
+            element.append(addition);
+        
+            // disable auto best unicorn building when unicorn building was disable
+            for (var unicornName in options.auto.unicorn.items) {
+                var ub = list.children().children('#toggle-' + unicornName);
+                ub.on('change', function() {
+                    if (!$(event.target).is(':checked')) {
+                        var b = $('#toggle-bestUnicornBuilding');
+                        b.prop('checked', false);
+                        b.trigger('change');
+                    }
+                });
+            }
+
+            element.append(additionList);
+        }
 
         if (auto.items) {element.append(toggle, list);}
 
@@ -5311,7 +5330,8 @@ var run = function() {
                 imessage('trade.limited', [iname]);
             } else if ((!input.is(':checked')) && option.limited == true) {
                 option.limited = false;
-                imessage('trade.unlimited', [iname]);
+                let require = (option.require === false) ? '资源满足单次贸易条件就会' : '需同时满足资源黄金和' + game.resPool.get(option.require).title + '的触发条件才';
+                imessage('trade.unlimited', [iname, require]);
             }
             kittenStorage.items[input.attr('id')] = option.limited;
             saveToKittenStorage();
@@ -5734,7 +5754,7 @@ var run = function() {
                 imessage('craft.limited', [iname]);
             } else if ((!input.is(':checked')) && option.limited == true) {
                 option.limited = false;
-                let require = (option.require) ? game.resPool.resourceMap[option.require].title : '无(资源足够就会制作)';
+                let require = (option.require) ? game.resPool.resourceMap[option.require].title + '满足触发资源的触发条件才会制作，' : '无，当资源满足制作条件就会制作';
                 imessage('craft.unlimited', [iname, require]);
             }
             kittenStorage.items[input.attr('id')] = option.limited;
@@ -6686,32 +6706,44 @@ var run = function() {
         if (!options.auto.engine.enabled) { toggleEngine.click(); }
     }
 
-    /*var autoOpen = function() {
-    if (options.auto.options.items.autoScientists.enabled) {
-        if (!options.auto.engine.enabled) { 
-            if (options.auto.engine.countdown == 15) {
-                toggleEngine.click(); 
-            } else {
-                options.auto.engine.countdown = (options.auto.engine.countdown); 
-                autoOpen();
-            }
+
+    var autoOpen = function() {
+        if (!options.auto.engine.enabled && options.auto.options.items.autoScientists.enabled) {
+                let countdown = (options.countdown); 
+                if (countdown == 0) {
+                    toggleEngine.click();
+                    clearInterval(autoOpenTime);
+                    imessage('reset.after');
+                } else if (countdown > 10) {
+                    if (countdown % 60 == 0) {
+                        imessage('auto.tip');
+                    }
+                    if (countdown % 10 == 0) {
+                        iactivity('auto.countdown', [countdown]);
+                    }
+                    options.countdown -= 1;
+                } else if (countdown < 11) {
+                    imessage('reset.countdown.' + countdown);
+                    options.countdown -= 1;
+                }
+        } else {
+            clearInterval(autoOpenTime);
         }
-    }*/
+    };
+    var autoOpenTime = setInterval(autoOpen, 1000);
 
 };
 
 var loadTest = function() {
-    if (typeof gamePage === 'undefined') {
+    if (typeof gamePage === 'undefined' || typeof i18nLang === 'undefined') {
         // Test if kittens game is already loaded or wait 2s and try again
         setTimeout(function(){
             loadTest();
         }, 2000);
     } else {
         // Kittens loaded, run Kitten Scientist's Automation Engine
-        game = gamePage;
-        i18ng = $I;
-        lang = localStorage['com.nuclearunicorn.kittengame.language'] ? localStorage['com.nuclearunicorn.kittengame.language'] : lang;
         run();
+        loadTest = run = null;
     }
 };
 
