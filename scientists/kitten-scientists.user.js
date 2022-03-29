@@ -271,6 +271,7 @@ var run = function() {
             'blackcoin.sell': '小猫抛售 {1} 黑币，套现了 {0} 遗物',
             'act.observe': '小猫珂学家观测到一次天文现象',
             'act.hunt': '派出 {0} 波小猫去打猎',
+            'act.hunt.unicorn': '小猫急着给独角兽配种',
             'act.build': '小猫建造了一个 {0}',
             'act.builds': '小猫建造了 {1} 个新的 {0}',
             'act.craft': '小猫制作了 {0} {1}',
@@ -703,7 +704,7 @@ var run = function() {
                     broadcastTower: {require: 'titanium',    enabled: true, max:-1, stage: 1, name: 'amphitheatre', checkForReset: true, triggerForReset: -1},
                     tradepost:      {require: 'gold',        enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
                     chapel:         {require: 'minerals',    enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
-                    temple:         {require: 'gold',        enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
+                    temple:         {require: 'gold',        enabled: true, max:-1, checkForReset: true, triggerForReset: -1, auto: false},
                     mint:           {require: 'gold',         enabled: true,max:100,  checkForReset: true, triggerForReset: -1},
                     // unicornPasture: {require: false,         enabled: true},
                     ziggurat:       {require: false,         enabled: true, max:-1, checkForReset: true, triggerForReset: -1},
@@ -860,7 +861,6 @@ var run = function() {
                 // Trades can be limited to only happen during specific seasons. This is because trades with certain races
                 // are more effective during specific seasons.
                 // The *allowcapped* property allows us to trade even if the sold resources are at their cap.
-                render: false,
                 items: {
                     dragons:    {enabled: false,  require: 'titanium',    allowcapped: false,    limited: true,
                         summer:  true,  autumn:  true,  winter:  true,          spring:      true},
@@ -905,7 +905,7 @@ var run = function() {
                 items: {
                     observe:            {enabled: true,                    misc: true, label: i18n('option.observe')},
                     festival:           {enabled: true,                    misc: true, label: i18n('option.festival')},
-                    shipOverride:       {enabled: true,  subTrigger: 160,  misc: true, label: i18n('option.shipOverride')},
+                    shipOverride:       {enabled: true,  subTrigger: 170,  misc: true, label: i18n('option.shipOverride')},
                     autofeed:           {enabled: true,                    misc: true, label: i18n('option.autofeed')},
                     hunt:               {enabled: true, subTrigger: 0.98, require: 'manpower', misc: true, label: i18n('option.hunt')},
                     promote:            {enabled: true,                    misc: true, label: i18n('option.promote')},
@@ -927,7 +927,7 @@ var run = function() {
                     // dynamic priority. distribute to the job which have lowest (job.val / job.max) value.
                     // if all jobs reach the max, then distribute kittens to unlimited job.
                     woodcutter: {enabled: true, max: 30, limited: true},
-                    farmer:     {enabled: true, max: 10, limited: true},
+                    farmer:     {enabled: true, max: 1, limited: true},
                     scholar:    {enabled: true, max: 10, limited: true},
                     hunter:     {enabled: true, max: 15, limited: true},
                     miner:      {enabled: true, max: 30, limited: true},
@@ -1123,8 +1123,8 @@ var run = function() {
             if (options.auto.time.enabled)                                                  {refresh += this.chrono();}
             if (subOptions.enabled && subOptions.items.crypto.enabled)                      {this.crypto();}
             if (subOptions.enabled && subOptions.items.autofeed.enabled)                    {this.autofeed();}
-            if (subOptions.enabled && subOptions.items.promote.enabled)                     {this.promote();}
             if (options.auto.distribute.enabled)                                            {this.distribute();}
+            if (subOptions.enabled && subOptions.items.promote.enabled)                     {this.promote();}
             if (subOptions.enabled)                                                         {refresh += this.miscOptions();}
             if (refresh > 0)                                                                {game.ui.render();/*game.resPool.update();*/}
             if (options.auto.timeCtrl.enabled && options.auto.timeCtrl.items.reset.enabled) {await this.reset();}
@@ -1643,7 +1643,7 @@ var run = function() {
             // Combust time crystal
             TimeSkip:
             if (optionVals.timeSkip.enabled && game.workshop.get('chronoforge').researched) {
-                var timeCrystal = game.resPool.get('timeCrystal');
+                var timeCrystal = game.resPool.get('timeCrystal') - this.craftManager.getValueAvailable('timeCrystal', true);
 
                 var currentCycle = game.calendar.cycle;
                 var currentYear = game.calendar.year;
@@ -1740,15 +1740,20 @@ var run = function() {
             }
         },
         promote: function () {
-            if (game.science.get('civil').researched && game.village.leader != null) {
-                var leader = game.village.leader;
+            let leader = game.village.leader;
+            if (game.science.get('civil').researched && leader) {
+                let optionDistribute = options.auto.distribute;
+                let optionLeader = optionDistribute.items.leader;
+                if (optionDistribute.enabled && optionLeader.enabled && leader.job != optionLeader.leaderJob) {
+                    return;
+                }
+
                 var rank = leader.rank;
-                var gold = this.craftManager.getResource('gold');
-                var goldStock = this.craftManager.getStock('gold');
+                let gold = this.craftManager.getValueAvailable('gold', true);
 
                 // game.village.sim.goldToPromote will check gold
                 // game.village.sim.promote check both gold and exp
-                if (game.village.sim.goldToPromote(rank, rank + 1, gold - goldStock)[0] && game.village.sim.promote(leader, rank + 1) == 1) {
+                if (game.village.sim.goldToPromote(rank, rank + 1, gold)[0] && game.village.sim.promote(leader, rank + 1) == 1) {
                     iactivity('act.promote', [rank + 1], 'ks-promote');
                     gamePage.tabs[1].censusPanel.census.renderGovernment(gamePage.tabs[1].censusPanel.census);
                     gamePage.tabs[1].censusPanel.census.update();
@@ -1792,10 +1797,10 @@ var run = function() {
             var freeKittens = game.village.getFreeKittens();
             if (!freeKittens) {return;}
 
-            var pastures = (game.bld.getBuildingExt('pasture').meta.stage === 0) ? game.bld.getBuildingExt('pasture').meta.val : 0;
-            var aqueducts = (game.bld.getBuildingExt('aqueduct').meta.stage === 0) ? game.bld.getBuildingExt('aqueduct').meta.val : 0;
+            let agriculture = game.science.get("agriculture").researched;
+            var catnipRatio = (game.resPool.get("catnip").value <= game.resPool.get("catnip").maxValue);
             var catnipValue = game.resPool.get("catnip").value - (1700 * game.village.happiness * game.resPool.get("kittens").value);
-            if (this.craftManager.getPotentialCatnip(false, pastures, aqueducts) < 0 && game.science.get("agriculture").researched && catnipValue < 0 && game.resPool.get("catnip").value <= game.resPool.get("catnip").maxValue) {
+            if (this.craftManager.getPotentialCatnip(false) <= 0 && agriculture && catnipValue <= 0 && catnipRatio) {
                 game.village.assignJob(game.village.getJob("farmer"), 1);
                 iactivity('act.distribute.catnip', [], 'ks-distribute');
                 iactivity('act.distribute', [i18n('$village.job.' + "farmer")], 'ks-distribute');
@@ -1807,15 +1812,21 @@ var run = function() {
             var jobName = '';
             var minRatio = Infinity;
             var currentRatio = 0;
-            for (var i in game.village.jobs) {
-                var name = game.village.jobs[i].name;
+            for (var i = game.village.jobs.length - 1; i >= 0; i--) {
                 var unlocked = game.village.jobs[i].unlocked;
+                if (!unlocked) {continue;}
+
+                var name = game.village.jobs[i].name;
                 var enabled = options.auto.distribute.items[name].enabled;
+                if (!enabled) {continue;}
+
                 var maxGame = game.village.getJobLimit(name);
-                var maxKS = (options.auto.distribute.items[name].max === -1) ? Number.MAX_VALUE : options.auto.distribute.items[name].max;
                 var val = game.village.jobs[i].value;
+                if (val >= maxGame) {continue;}
+
+                var maxKS = (options.auto.distribute.items[name].max === -1) ? Number.MAX_VALUE : options.auto.distribute.items[name].max;
                 var limited = options.auto.distribute.items[name].limited;
-                if (unlocked && enabled && val < maxGame && (!limited || val < maxKS)) {
+                if (!limited || val < maxKS) {
                     currentRatio = val / maxKS;
                     if (currentRatio < minRatio) {
                         minRatio = currentRatio;
@@ -1954,7 +1965,9 @@ var run = function() {
 
             var resourceFaith = craftManager.getResource('faith');
             var rate = resourceFaith.value / resourceFaith.maxValue;
-            var transcendenceReached = game.religion.getRU("transcendence").on;
+
+            let transcendenceMeta = game.religion.getRU("transcendence");
+            var transcendenceReached = transcendenceMeta.on;
             var tt = transcendenceReached ? game.religion.transcendenceTier : 0;
 
             // After Adore epiphany
@@ -2046,11 +2059,19 @@ var run = function() {
                         }
                     }
                 }
+
+                // 打开超越按钮
+                let transcendStorage = (game.resPool.isStorageLimited(transcendenceMeta.prices));
+                let transcendenceOption = options.auto.faith.items.transcendence;
+                if (!transcendenceOption.enabled && game.religion.fiath > transcendenceMeta.faith && autoAdoreEnabled && transcendStorage) {
+                    transcendenceOption.enabled = true;
+                    printoutput(['小猫贴心得无视超越按钮禁用','ks-default', options.activitycolor]);
+                }
+
                 // Adore
                 var lastFaith = option.adore.lastFaith;
                 var BooleanForLastFaith = (!lastFaith || worship > lastFaith * 0.75 || tt > 11);
-                var tier = (!game.religion.transcendenceTier || tt);
-                var moonBoolean = game.space.meta[0].meta[1].on;
+                var tier = (!game.religion.faithRatio || transcendenceReached);
                 var booleanForAdore = (solarRevolutionAdterAdore >= triggerSolarRevolution && worship >= 1e5 && BooleanForLastFaith && moonBoolean);
                 if ((autoAdoreEnabled && apocripha && booleanForAdore && tier && this.catnipForReligion() > 0) || forceStep) {
                     if (tt < 12) {
@@ -2067,6 +2088,7 @@ var run = function() {
                     storeForSummary('adore', epiphanyInc);
                 }
             }
+
             // Praise
             var transformTier = 0.525 * Math.log(game.religion.faithRatio) + 3.45;
             var expectSolarRevolutionRatio = Math.min(0.0005 * Math.pow(Math.E, 0.66 * transformTier), 0.75) * 10;
@@ -2536,6 +2558,21 @@ var run = function() {
                     Brewery.auto = null;
                 }
 
+                // 神学前最多只造 1个神殿
+                let theology = game.science.meta[0].meta[16].researched;
+                let temple = builds['temple'];
+                if (!theology) {
+                    if (!temple.auto) {
+                        temple.auto = temple.max;
+                        temple.max = (game.prestige.getPerk('renaissance').researched) ? 0 : 1;
+                    }
+                } else {
+                    if (temple.auto) {
+                        temple.max = temple.auto;
+                        temple.auto = null;
+                    }
+                }
+
                 var important = {
                     amphitheatre:builds['amphitheatre'],
                     workshop:builds['workshop'],
@@ -2628,6 +2665,7 @@ var run = function() {
                 var current = !craft.max ? false : manager.getResource(name);
                 var require = !craft.require ? false : manager.getResource(craft.require);
                 var amount = 0;
+                if (!craft.enabled) {continue;}
                 if (!game.bld.getBuildingExt('workshop').meta.on && name !== "wood") {continue;}
                 // Ensure that we have reached our cap
                 if (current && current.value > craft.max) {continue;}
@@ -2690,6 +2728,19 @@ var run = function() {
             var manpower = this.craftManager.getResource('manpower');
             if (manpower.value < 100 || game.challenges.isActive("pacifism")) {return;}
 
+            // 无独角兽牧场 强制打猎
+            let unicornValue = game.resPool.resourceMap['unicorns'].value;
+            let unicorn = game.achievements.get('unicornConspiracy').unlocked || unicornValue;
+            let unicornPasture = game.bld.getBuildingExt('unicornPasture').meta.val;
+            if (!unicornPasture && unicorn && manpower.value > 700 && unicornValue < 3) {
+                let count = 7;
+                game.resPool.addResEvent("manpower", -count * 100);
+                game.village.gainHuntRes(count);
+                storeForSummary('hunt', count);
+                iactivity('act.hunt.unicorn');
+                iactivity('act.hunt', [count], 'ks-hunt');
+            }
+
             if (options.auto.options.items.hunt.subTrigger <= manpower.value / manpower.maxValue) {
                 // No way to send only some hunters. Thus, we hunt with everything
                 var huntCount = Math.floor(manpower.value / 100);
@@ -2717,11 +2768,6 @@ var run = function() {
             var gold = craftManager.getResource('gold');
             var trades = [];
             var requireTrigger = options.auto.trade.trigger;
-            let tradeRender = options.auto.trade.render;
-
-            if (tradeRender) {
-                tradeManager.manager.render();
-            }
 
             if (!tradeManager.singleTradePossible(undefined)) {return;}
 
@@ -2739,7 +2785,7 @@ var run = function() {
                 var button = tradeManager.getTradeButton(race.name);
 
                 if (!button) {
-                    tradeRender = true;
+                    tradeManager.manager.render();
                     continue;
                 }
 
@@ -2754,8 +2800,15 @@ var run = function() {
 
                 // If we have enough to trigger the check, then attempt to trade
                 var prof = tradeManager.getProfitability(name);
-                var sloar = game.religion.meta[1].meta[5].on || game.challenges.isActive("atheism") || gold.value >= 450;
-                if (trade.limited && prof && sloar) {
+
+                // 优先太阳革命
+                let sloar = game.religion.meta[1].meta[5].on || game.challenges.isActive("atheism") || gold.value > 500;
+
+                // 有采矿钻和登红月后优先点出超越和赞美群星
+                let transcendence = (game.religion.getRU("transcendence").on || !options.auto.faith.items.transcendence.enabled);
+                let apocripha = (game.religion.getRU('apocripha').on || !options.auto.faith.items.apocripha.enabled);
+                let miningDrillMoon = (transcendence && apocripha) || !game.space.meta[0].meta[1].on || !game.workshop.meta[0].meta[58].researched;
+                if (trade.limited && prof && sloar && miningDrillMoon) {
                     trades.push(name);
                 } else if ((!require || requireTrigger <= require.value / require.maxValue) && requireTrigger <= gold.value / gold.maxValue) {
                     trades.push(name);
@@ -3524,10 +3577,9 @@ var run = function() {
         },
         canCraft: function (name, amount) {
             var craft = this.getCraft(name);
-            var enabled = options.auto.craft.items[name].enabled;
             var result = false;
 
-            if (craft.unlocked && enabled) {
+            if (craft.unlocked) {
                 result = true;
 
                 var prices = game.workshop.getCraftPrice(craft);
@@ -3555,7 +3607,7 @@ var run = function() {
         },
         getLowestCraftAmount: function (name, limited, limRat, aboveTrigger) {
             var amount = Number.MAX_VALUE;
-            var plateMax = Number.MAX_VALUE;
+            var autoMax = Number.MAX_VALUE;
             var materials = this.getMaterials(name);
 
             var craft = this.getCraft(name);
@@ -3577,15 +3629,25 @@ var run = function() {
                 if (game.getResourcePerTick('coal', true) > 0) {
                     if (this.getValueAvailable('plate') / this.getValueAvailable('steel') > ((ratio + 1) / 125) / ((steelRatio + 1) / 100)) {
                         var ironInTime = ((this.getResource('coal').maxValue * trigger - this.getValue('coal')) / game.getResourcePerTick('coal', true)) * Math.max(game.getResourcePerTick('iron', true), 0);
-                        plateMax = (this.getValueAvailable('iron') - Math.max(this.getResource('coal').maxValue * trigger - ironInTime,0)) / 125;
+                        autoMax = (this.getValueAvailable('iron') - Math.max(this.getResource('coal').maxValue * trigger - ironInTime,0)) / 125;
                     }
                 }
             }
 
-            var res = this.getResource(name);
+            // 减少贸易船的合成
+            let res = game.resPool.resourceMap[name];
+            if (name === 'ship' && limited) {
+                let shipLimit = 5 * game.bld.get("reactor").on + 225;
+                let shipValue = res.value;
+                let titaniumMax = res.maxValue;
+                limRat = (shipValue > shipLimit * 0.75) ? 0.45 : limRat;
+                //limRat = (shipValue > shipLimit) ? 0.35 + 0.1 * (Math.log(shipLimit) / Math.log(shipValue) : limRat;
+                limRat = (0.03 * shipValue > titaniumMax) ? 0.03 : limRat;
+            }
 
             for (var i in materials) {
                 var delta = undefined;
+                let resValue = this.getValueAvailable(name, true);
                 if (! limited || (this.getResource(i).maxValue > 0 && aboveTrigger) || (name === 'ship' && optionVal && (this.getResource('ship').value < optionShipVal)) ) {
                     // If there is a storage limit, we can just use everything returned by getValueAvailable, since the regulation happens there
                     delta = this.getValueAvailable(i) / materials[i];
@@ -3594,10 +3656,10 @@ var run = function() {
                     // Currently this determines the amount of resources that can be crafted such that base materials are proportionally distributed across limited resources.
                     // This base material distribution is governed by limRat "limited ratio" which defaults to 0.5, corresponding to half of the possible components being further crafted.
                     // If this were another value, such as 0.75, then if you had 10000 beams and 0 scaffolds, 7500 of the beams would be crafted into scaffolds.
-                    delta = limRat * ((this.getValueAvailable(i, true) + (materials[i] / (1 + ratio)) * this.getValueAvailable(res.name, true)) / materials[i]) - (this.getValueAvailable(res.name, true) / (1 + ratio));
+                    delta = limRat * ((this.getValueAvailable(i, true) + (materials[i] / (1 + ratio)) * resValue) / materials[i]) - (resValue / (1 + ratio));
                 }
 
-                amount = Math.min(delta,amount,plateMax);
+                amount = Math.min(delta, amount, autoMax);
             }
 
             // If we have a maximum value, ensure that we don't produce more than
@@ -3746,8 +3808,8 @@ var run = function() {
             }
             var vilProd = (game.village.getResProduction().catnip) ? game.village.getResProduction().catnip * (1 + game.getEffect('catnipJobRatio')) : 0;
             var baseProd = fieldProd + vilProd;
-            
-            if (baseProd) {
+
+            if (aqueducts != undefined) {
                 var hydroponics = game.space.getBuilding('hydroponics');
                 var hydroponicsEffect = hydroponics.effects['catnipRatio'];
                 baseProd *= 1 + game.bld.getBuildingExt('aqueduct').meta.stages[0].effects['catnipRatio'] * aqueducts + hydroponicsEffect * hydroponics.val;
@@ -3770,7 +3832,7 @@ var run = function() {
 
             var baseDemand = game.village.getResConsumption()['catnip'];
             var uniPastures = game.bld.getBuildingExt('unicornPasture').meta.val;
-            if (pastures) {
+            if (pastures != undefined) {
                 baseDemand *= 1 + (game.getLimitedDR(pastures * -0.005 + uniPastures * -0.0015, 1.0));
             } else {
                 baseDemand *= 1 + game.getEffect("catnipDemandRatio");
@@ -4295,7 +4357,7 @@ var run = function() {
         + 'height: 92%;'
         + 'width: 19%;'
         + 'font-size: 12px;'
-		+ 'font-family: monospace,Microsoft YaHei,Microsoft SanSerf,微软雅黑;'
+        + 'font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,Helvetica,Arial,PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif;'
         + '}');
 
     addRule('body #gamePageContainer #game #rightColumn {'
@@ -6511,6 +6573,9 @@ var run = function() {
     };
 
     var displayActivitySummary = function () {
+        if (game.console.messages.length > 900) {
+            game.clearLog();
+        }
 
         for (var i in activitySummary.other) {
             if (activitySummary.other[i]) {isummary('summary.' + i , [game.getDisplayValueExt(activitySummary.other[i])]);}
