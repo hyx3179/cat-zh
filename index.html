@@ -781,7 +781,7 @@
 			//            科学家1.5.0
 			var ksVision = 0;
 
-			$.getJSON("https://hyx3179.github.io/scientists/ks.version.json?=" + now)
+			$.getJSON(location.origin + '/' + "scientists/ks.version.json?=" + now)
 				.then(function (json) {
 					ksVision = json.ksVision;
 				});
@@ -832,8 +832,8 @@
 			var nummonLoad = function() {
 				if (typeof gamePage !== "undefined") {
 					// NummonInit();
-					var srcNummon = 'https://petercheney.gitee.io/nummoncalc/NummonCalc.js?v=';
-					document.body.appendChild(document.createElement('script')).src = srcNummon + new Date().getDate() + ksVision;
+					var srcNummon = location.origin + '/' + 'nummoncalc/NummonCalc.js?v=';
+					document.body.appendChild(document.createElement('script')).src = srcNummon + buildRevision;
 					clearInterval(numId);
 					numId = nummonLoad = srcNummon = null;
 				}
