@@ -1,26 +1,23 @@
-const KGVision = '706'
-const Subfolder = '/cat-zh'
-const HOSTNAME_WHITELIST = [
-	self.location.hostname,
-	'cdn.jsdelivr.net',
-	'cdn.staticfile.org',
-	'fonts.googleapis.com',
-	'fonts.gstatic.com',
-	'lf3-cdn-tos.bytecdntp.com',
-	//'p.qlogo.cn',
-	'www.googletagmanager.com',
+// const KGVision = '706'
+// const Subfolder = '/cat-zh'
+// const KSfolder = '/scientists'
+const HOSTNAME_BLACKLIST = [
+	'hm.baidu.com',
+	'p.qlogo.cn',
+	'kittensgame.com',
+	'www.google-analytics.com',
 ]
 const NO_CACHE_LIST = [
 	Subfolder + '/server.json',
 	Subfolder + '/build.version.json',
-	'/scientists/ks.version.json',
+	KSfolder + '/ks.version.json',
 ]
 const KS_LIST = [
-	'/scientists/kitten-scientists.user.js',
-	'/scientists/ks.version.json',
+	KSfolder + '/kitten-scientists.user.js',
+	KSfolder + '/ks.version.json',
 ]
 
-const getRequest = (req, cors) => {
+const getRequest = (req) => {
 	var url = new URL(req.url)
 	if (url.hostname !== self.location.hostname) {
 		var newReq = new Request(url.href, { mode: 'cors' })
@@ -51,7 +48,7 @@ self.addEventListener('activate', event => {
 // 请求处理
 self.addEventListener('fetch', event => {
 	// 跳过一些 cross-origin （跨域）请求
-	if (HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1) {
+	if (HOSTNAME_BLACKLIST.indexOf(new URL(event.request.url).hostname) == -1) {
 		// 珂学家相关单开 cache 空间方便更新
 		if (KS_LIST.indexOf(new URL(event.request.url).pathname) > -1) {
 			var cacheName = 'scientists'
