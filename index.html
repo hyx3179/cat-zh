@@ -10,18 +10,23 @@
 		})();
 	</script>
 	<head>
+		<script>
+			if (typeof navigator.serviceWorker !== 'undefined') {
+				navigator.serviceWorker.register('sw.js')
+			}
+		</script>
 		<meta charset="utf-8">
 		<meta http-equiv="Cache-Control" content="private, no-cache, no-store">
 
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<script>
+		<!--<script>
 			if (window.location.pathname && window.location.pathname.indexOf('//') === -1) {
 				if (typeof navigator.serviceWorker !== 'undefined') {
 					navigator.serviceWorker.register('serviceWorker.js');
 				}
 			}
-		</script>
+		</script>-->
 
 		<link rel="shortcut icon" href="res/favicon.gif" type="image/x-icon">
 
@@ -88,7 +93,6 @@
 			var version = "1492";
 
 			var buildRevision = 0;
-			var ksVision = 0;
 
 			var loadingProgress = 0,
 				progressMax = 0;
@@ -205,7 +209,6 @@
 
 				var def = $.getJSON("build.version.json?=" + now).then(function(json) {
 					buildRevision = json.buildRevision;
-					ksVision = json.ksVision;
 					loadedTheme.length > 0 && loadTheme(uiSettings.theme);
 					console.log("build revison is" + buildRevision);
 					$("#versionLink").html(displayedVersion + ".r" + buildRevision);
@@ -384,7 +387,8 @@
 					<a id="wipe-link" href="#" onclick="wipe();">Wipe</a> |
 					<a id="getTheApp-link" href="#" onclick="gamePage.ui.displayAppDialog();" style="font-weight: bold; color:#666;">Get the app</a> |
 					<a target="_blank" onclick='changelog();'>Ver <span id="versionLink">?.?.?.?</span></a>
-					<a href="#" id="newVersion" onclick="gamePage.reload();" title="有新版本 !" style="display:none">↻</a>
+					<a href="#" id="newVersion" onclick="gamePage.reload();" title="有新版本 !&#10请在刷新后关闭网页重新打开!!" style="display:none">↻</a>
+					<a href="#" id="newKSVersion" title="珂学家有新版本 !" style="display:none">↻</a>
 				</div>
 			</div>
 
@@ -551,6 +555,7 @@
 
 			<div id="optionsDiv" style="display: none;" class="dialog help">
 				<a id="optionsDialogClose" href="#" class="close" onclick="gamePage.closeOptions()" style="position: absolute; top: 10px; right: 15px;">close</a>
+				<a id="forceRefresh" href="#" title="强制刷新" style="position: absolute; top: 9px; right: 60px; font-size: 21px;">↻</a>
 
 				<label id="optionLanguage" for="languageSelector">Language:</label>
 				<select id="languageSelector" onchange="gamePage.ui.updateLanguage()">
@@ -769,8 +774,27 @@
 		</div>
 
 		<script type="text/javascript">
+			$("#forceRefresh").on('click', function () {
+				game.save();
+				caches.delete(buildRevision.toString());
+				window.location.reload();
+			});
+			$("#newKSVersion").on('click', function () {
+				game.save();
+				caches.delete('scientists');
+				window.location.reload();
+			});
+		</script>
+		<script type="text/javascript">
 			// 猫猫科学家 hyx3179 无限自用修改
 			var ksLabel = $("#ks-label")[0];
+			var ksVision = 0;
+
+			$.getJSON("https://hyx3179.github.io/scientists/ks.version.json?=" + now)
+				.then(function (json) {
+					ksVision = json.ksVision;
+				});
+
 			var enableKS = function() {
 				localStorage['zh.ks.enable'] = 'enable';
 				var ksLabel = $("#ks-label")[0];
