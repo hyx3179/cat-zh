@@ -65,6 +65,7 @@
 
 			var version = "1493";
 			var buildRevision = 0;
+			var swRevision = 0;
 
 			var loadingProgress = 0,
 				progressMax = 0;
@@ -183,6 +184,7 @@
 
 				var def = $.getJSON("build.version.json?="+now).then(function(json){
 					buildRevision = json.buildRevision;
+					swRevision = json.swRevision;
 					loadedTheme.length > 0 && loadTheme(uiSettings.theme);
 					console.log("build revison is" + buildRevision);
 					$("#versionLink").html(displayedVersion + ".r" + buildRevision);
@@ -726,7 +728,7 @@
 		<script type="text/javascript">
 			$("#forceRefresh").on('click', function () {
 				game.save();
-				caches.delete(buildRevision.toString());
+				caches.delete('cat-' + swRevision);
 				window.location.reload();
 			});
 			$("#newKSVersion").on('click', function () {
