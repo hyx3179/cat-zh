@@ -8,8 +8,12 @@ console.log("Incrementing build number...");
 var buildRevision = fs.readFileSync(buildFile)
 buildRevision = JSON.parse(buildRevision).buildRevision;
 
-var swRevision = fs.readFileSync(publicFile)
-swRevision = JSON.parse(swRevision).swRevision;
+try {
+	var swRevision = fs.readFileSync(publicFile)
+	swRevision = JSON.parse(swRevision).swRevision;
+} catch (err) {
+	swRevision = 0
+}
 swRevision = swRevision ? swRevision : 0
 
 var metadata = { buildRevision: buildRevision, swRevision: swRevision + 1 }
