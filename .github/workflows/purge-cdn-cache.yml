@@ -1,0 +1,23 @@
+name: Purge CDN Cache
+
+on:
+  workflow_run:
+    workflows: [Deploy Pages]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          fetch-depth: 2
+
+      - name: Purge jsDelivr Cache
+        run: |
+          fileList=`git log --pretty=format:"" --name-only -1`
+          for file in $fileList; do curl https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@gh-pages/$file; done;
+          curl https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@gh-pages/
