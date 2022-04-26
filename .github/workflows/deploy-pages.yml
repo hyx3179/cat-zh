@@ -1,14 +1,14 @@
-name: GitHub Pages
+name: Deploy Pages
 
 on:
-  #push:
-  #  branches:
-  #    - master-hyx3179
+  push:
+    branches:
+      - master-hyx3179
   workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:

@@ -1,7 +1,7 @@
 #!/bin/bash
 getCompiler() {
 	if ! [ -f "./compiler.jar" ]; then
-		wget https://repo1.maven.org/maven2/com/google/javascript/closure-compiler/v20220405/closure-compiler-v20220405.jar -O ./compiler.jar
+		wget -q https://repo1.maven.org/maven2/com/google/javascript/closure-compiler/v20220405/closure-compiler-v20220405.jar -O ./compiler.jar
 	fi
 }
 build() {
@@ -20,6 +20,7 @@ build() {
 		java -jar ./compiler.jar --js ./"$file" --js_output_file ./public/"$file"
 	done
 	rm ./public/generate-buildver.js
+	rm ./public/serviceWorker.js
 	while IFS= read -r -d '' file; do
 		java -jar ./compiler.jar --js "$file" --js_output_file ./public/"$file"
 	done < <(find ./js -type f -print0)
@@ -39,7 +40,7 @@ build() {
 	cp ./updateLog.html ./public
 
 	echo "Generate build version"
-	wget https://hyx3179.github.io/cat-zh/build.version.json -O ./public/build.version.json
+	wget -q https://hyx3179.github.io/cat-zh/build.version.json -O ./public/build.version.json
 	node generate-buildver.js
 	csplit -q -f sw- ./sw.js /--------------------------/
 	cat sw-01 >>sw-GitHub.js
