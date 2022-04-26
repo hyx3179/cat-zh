@@ -3,7 +3,8 @@
 
 	<head>
 		<script>
-			if (typeof navigator.serviceWorker !== 'undefined') {
+			if (typeof navigator.serviceWorker !== 'undefined' &&
+				location.pathname.indexOf('//') == -1) {
 				navigator.serviceWorker.register('sw.js')
 			}
 		</script>
@@ -729,11 +730,6 @@
 			$("#forceRefresh").on('click', function () {
 				game.save();
 				caches.delete('cat-' + swRevision);
-				window.location.reload();
-			});
-			$("#newKSVersion").on('click', function () {
-				game.save();
-				caches.delete('scientists');
 				window.location.reload();
 			});
 		</script>
