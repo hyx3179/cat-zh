@@ -11,7 +11,8 @@
 	</script>
 	<head>
 		<script>
-			if (typeof navigator.serviceWorker !== 'undefined') {
+			if (typeof navigator.serviceWorker !== 'undefined' &&
+				location.pathname.indexOf('//') == -1) {
 				navigator.serviceWorker.register('sw.js')
 			}
 		</script>
@@ -390,7 +391,6 @@
 					<a id="getTheApp-link" href="#" onclick="gamePage.ui.displayAppDialog();" style="font-weight: bold; color:#666;">Get the app</a> |
 					<a target="_blank" onclick='changelog();'>Ver <span id="versionLink">?.?.?.?</span></a>
 					<a href="#" id="newVersion" onclick="gamePage.reload();" title="有新版本 !&#10请在刷新后关闭网页重新打开!!" style="display:none">↻</a>
-					<a href="#" id="newKSVersion" title="珂学家有新版本 !" style="display:none">↻</a>
 				</div>
 			</div>
 
@@ -779,11 +779,6 @@
 			$("#forceRefresh").on('click', function () {
 				game.save();
 				caches.delete('cat-' + swRevision);
-				window.location.reload();
-			});
-			$("#newKSVersion").on('click', function () {
-				game.save();
-				caches.delete('scientists');
 				window.location.reload();
 			});
 		</script>
