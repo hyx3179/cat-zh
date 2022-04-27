@@ -145,7 +145,7 @@
 				$("<link />")
 					.attr("rel", "stylesheet")
 					.attr("type", "text/css")
-					.attr("href", "res/theme_" + themeId + ".css?_=" + 1)
+					.attr("href", "res/theme_" + themeId + ".css?_=" + buildRevision)
 					.appendTo($("head"));
 			}
 
@@ -198,20 +198,20 @@
 				console.log("Loading...");
 
 				//------ preload theme id ---------
+				var loadedTheme = [];
 				var uiData = LCstorage["com.nuclearunicorn.kittengame.ui"];
 				var uiSettings = uiData && JSON.parse(uiData);
 				if (uiSettings) {
 					if (uiSettings.theme) {
 						$("body").addClass("scheme_" + uiSettings.theme);
-						uiSettings.loadedTheme = [uiSettings.theme];
-						loadTheme(uiSettings.theme);
+						loadedTheme.push(uiSettings.theme);
 					}
 				}
 
 				$("#schemeToggle").on('change', function () {
 					let theme = $('#schemeToggle').val();
-					if (uiSettings && uiSettings.loadedTheme && $.inArray(theme, uiSettings.loadedTheme) == -1) {
-						uiSettings.loadedTheme.push(theme);
+					if (loadedTheme.indexOf(theme) == -1) {
+						loadedTheme.push(theme);
 						loadTheme(theme);
 					}
 					gamePage.toggleScheme(theme);
@@ -220,6 +220,7 @@
 				var def = $.getJSON("build.version.json?=" + now).then(function(json) {
 					buildRevision = json.buildRevision;
 					swRevision = json.swRevision;
+					loadedTheme.length > 0 && loadTheme(uiSettings.theme);
 					console.log("build revison is" + buildRevision);
 					$("#versionLink").html(displayedVersion + ".r" + buildRevision);
 				});
