@@ -43,13 +43,11 @@ build() {
 	wget -q https://hyx3179.github.io/cat-zh/build.version.json -O ./public/build.version.json
 	node generate-buildver.js
 	csplit -q -f sw- ./sw.js /--------------------------/
-	cat sw-01 >>sw-GitHub.js
-	java -jar ./compiler.jar --js ./sw-GitHub.js --js_output_file ./public/sw.js
-	cat sw-01 >>sw-Netlify.js
+	cat sw-01 >>sw-public.js
+	java -jar ./compiler.jar --js ./sw-public.js --js_output_file ./public/sw.js
 
 	mkdir ./public_Netlify
 	cp -r ./public ./public_Netlify/cat-zh
-	java -jar ./compiler.jar --js ./sw-Netlify.js --js_output_file ./public_Netlify/cat-zh/sw.js
 	echo -e '/*\n  Access-Control-Allow-Origin: *' >./public_Netlify/_headers
 	echo -e '/  /cat-zh/\n/NummonCalc/*  https://nummoncalc-hyx3179.netlify.app/:splat  200\n/scientists/*  https://scientists-hyx3179.netlify.app/:splat  200' >./public_Netlify/_redirects
 }
