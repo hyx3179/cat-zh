@@ -10,15 +10,12 @@
 		'www.google-analytics.com',
 	]
 	const host = location.host
-
-	var ADDRESS = [
+	const CDN = 'https://cdn.jsdelivr.net/gh/hyx3179/%%@%Revision%/'
+	const ADDRESS = [
+		//'http://localhost:8080/%%/',
 		'https://hyx3179.github.io/%%/',
-		'https://cdn.jsdelivr.net/gh/hyx3179/%%@gh-pages/',
 		'https://cat-zh-hyx3179.netlify.app/%%/',
 	]
-	if (ADDRESS.toString().indexOf(host) == -1) {
-		ADDRESS.push(location.origin + '/%%/')
-	}
 
 	// 获取请求
 	const getRequest = (url) => {
@@ -30,14 +27,21 @@
 			reqList.push(newReq)
 		} else {
 			// 重组 url 排除 '//+' 并添加其他解析地址
-			var pathList = url.pathname.split('/').filter(path => path.length > 0)
+			let pathList = url.pathname.split('/').filter(path => path.length > 0)
 			for (let i in ADDRESS) {
 				let pathCopy = [...pathList]
 				let address = ADDRESS[i].replace(/%%/, pathCopy.shift())
-				pathCopy = pathCopy.join('/')
-				if (ADDRESS[i].indexOf('jsdelivr') > 1 && !pathCopy) { continue }
 				let cors = address.indexOf(host) == -1 ? 'cors' : 'no-cors'
-				reqList.push(new Request(address + pathCopy + url.search, { mode: cors }))
+				reqList.push(new Request(address + pathCopy.join('/') + url.search, { mode: cors }))
+			}
+			if (pathList.length > 1 && pathList.indexOf('ks.version.json') == -1) {
+				let address = CDN.replace(/%%/, pathList.shift())
+				if (address.indexOf('scientists') > 1) {
+					address = address.replace(/%Revision%/, '0.' + url.search.split('=')[1])
+				} else {
+					address = address.replace(/%Revision%/, '0.' + swRevision)
+				}
+				reqList.push(new Request(address + pathList.join('/') + url.search, { mode: 'cors' }))
 			}
 		}
 		return reqList
@@ -62,6 +66,7 @@
 	// 安装：加载 index 到 cache
 	addEventListener('install', event => {
 		event.waitUntil(caches.open(cacheStorage).then(cache => cache.add('/cat-zh/')));
+		//skipWaiting()
 	});
 
 	// 激活：删除之前的 cache
