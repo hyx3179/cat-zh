@@ -1,58 +1,61 @@
 var KGPInterval;
 
-$(function(){
+$(function () {
 	initKGP();
 });
 
-function initKGP(){
-	KGPInterval = setInterval(function(){
-		initKGPLeftColumn();
-	}, 100);
+function initKGP() {
+	if (localStorage['zh.kgp.enable'] === 'enable' && !KGPInterval) {
+		KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
+	} else {
+		if (KGPInterval) {
+			clearInterval(KGPInterval);
+			KGPInterval = undefined;
+			initKGPLeftColumn(false);
+		}
+	}
 }
 
-function initKGPLeftColumn(){
-
+function initKGPLeftColumn(enable = true) {
 	var $column = $('#leftColumnViewport');
 	var $rows = $column.find('.res-row');
 
-	$rows.each(function(index, item){
+	$rows.each(function (index, item) {
+
+		if (!enable) {
+			item.removeAttribute('style');
+			return;
+		}
 
 		var $row = $(item);
-		
+
 		// #5
-		if(!$row.hasClass('resource_kittens')){
+		if (!$row.hasClass('resource_kittens')) {
 
 			var maxAmount = getAmountLeftColumn($row.find('.maxRes'));
-
 			var currentAmount = getAmountLeftColumn($row.find('.resAmount'));
 
-			if(maxAmount > 0 && currentAmount > 0)
-			{
+			if (maxAmount > 0 && currentAmount > 0) {
 				var percentage = (100 * currentAmount) / maxAmount;// #1
 
 				$row.css('background-repeat', 'no-repeat');
 				$row.css('background-position', 'bottom left');
 				$row.css('background-size', percentage + '% 1px');// #3
 
-				if(percentage > 95)
-				{
+				if (percentage > 95) {
 					$row.css('background-image', 'linear-gradient(0, red, red)');
+				} else if (percentage > 75) {
+					$row.css('background-image', 'linear-gradient(0, orange, orange)');
+				} else {
+					$row.css('background-image', 'linear-gradient(0, green, green)');
 				}
-				else if(percentage > 75)
-				{
-                        	        $row.css('background-image', 'linear-gradient(0, orange, orange)');
-	                        }
-        	                else
-                	        {
-                        	        $row.css('background-image', 'linear-gradient(0, green, green)');
-	                        }
 			}
 		}
 	});
 }
 
-function getAmountLeftColumn($cell){
-	if($cell.length === 0)
+function getAmountLeftColumn($cell) {
+	if ($cell.length === 0)
 		return 0;
 
 	var cellContent = $cell.text().replace('/', '');
@@ -60,27 +63,27 @@ function getAmountLeftColumn($cell){
 	return getAmountFromFormatted(cellContent);
 }
 
-function getAmountFromFormatted(formatted){
+function getAmountFromFormatted(formatted) {
 	var unit = formatted.slice(-1);
 
 	var noUnit = !isNaN(Number(unit));// #4
 
 	var amount = noUnit ? Number(formatted) : Number(formatted.substring(0, formatted.length - 1));
 
-	if(noUnit)
+	if (noUnit)
 		return amount;
-	
-	switch(unit){
+
+	switch (unit) {
 		case 'K':
-			return amount*1e3;
+			return amount * 1e3;
 		case 'M':
-			return amount*1e6;
-        case 'G':
-			return amount*1e9;
-        case 'T':
-			return amount*1e12;
-        case 'P':
-			return amount*1e15;
+			return amount * 1e6;
+		case 'G':
+			return amount * 1e9;
+		case 'T':
+			return amount * 1e12;
+		case 'P':
+			return amount * 1e15;
 		default:
 			return 0;
 	}

@@ -186,7 +186,10 @@
 					"js/math",
 					"game",
 
-					"js/toolbar"
+					"js/toolbar",
+
+					// 加载进度条
+					"KGP",
 				];
 				progressMax = modules.length + 3;
 				console.log("Loading...");
@@ -616,7 +619,7 @@
 				<!-- [<a href="https://gitee.com/likexia/cbc-kitten-scientists" target="_blank" style="color:blue;text-decoration:none;" title="点击查看">教程</a>] -->
 				<br>
 				<input id="set-kgp-enable" type="checkbox">
-				<label id="kgp-label" for="set-kgp-enable">启用资源进度条</label>
+				<label id="kgp-label" for="set-kgp-enable">资源进度条</label>
 				<br>
 				<input id="autoSaveReset" type="checkbox" onclick="gamePage.opts['autoSaveReset'] = $('#autoSaveReset')[0].checked;">
 				<label id="optionAutoSaveReset" for="autoSaveReset">重置游戏自动备份存档<em>（需要在浏览器设置下载保存位置！）</em></label>
@@ -811,28 +814,14 @@
 				}
 			});
 
-			var enableKGP = function() {
-				localStorage['zh.kgp.enable'] = 'enable';
-				$("#kgp-label").text("资源进度条已启动");
-				$("#set-kgp-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'KGP.js?v=2';
-			};
-			var disableKGP = function() {
-				localStorage['zh.kgp.enable'] = 'disable';
-				$("#kgp-label").text("资源进度条将在页面刷新后关闭");
-				$("#set-kgp-enable").attr("checked", false);
-			};
-
 			if (localStorage['zh.kgp.enable'] === 'enable') {
-				enableKGP();
+				$("#set-kgp-enable").attr("checked", true)
 			}
 			$("#set-kgp-enable").on('change', function() {
-				if (localStorage['zh.kgp.enable'] === 'enable') {
-					disableKGP();
-					alert("请在保存游戏后刷新页面");
-				} else {
-					enableKGP();
-				}
+				localStorage['zh.kgp.enable']
+					? localStorage.removeItem('zh.kgp.enable')
+					: localStorage.setItem('zh.kgp.enable', 'enable');
+				initKGP();
 			});
 
 			var nummonLoad = function() {
