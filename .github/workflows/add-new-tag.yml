@@ -1,0 +1,28 @@
+name: Add New tag
+
+on:
+  workflow_run:
+    workflows: [Deploy Pages]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+
+      - name: Add New tag
+        run: |
+          wget -q https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O ./jq
+          chmod +x ./jq
+          swRevision=`cat build.version.json | ./jq '.swRevision'`
+          tagName=0.$swRevision
+          echo $tagName
+          git config --global user.name hyx3179
+          git config --global user.email hyx3179@gmail.com
+          git tag -a $tagName -m $tagName
+          git push origin $tagName
