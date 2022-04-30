@@ -184,7 +184,11 @@
 					"js/math",
 					"game",
 
-					"js/toolbar"
+					"js/toolbar",
+
+					// 加载 概览 和 进度条
+					"../NummonCalc/NummonCalc",
+					"KGP",
 				];
 				progressMax = modules.length + 3;
 				console.log("Loading...");
@@ -884,7 +888,7 @@
 				}
 			});
 
-			var nummonLoad = function() {
+/*			var nummonLoad = function() {
 				if (typeof gamePage !== "undefined") {
 					// NummonInit();
 					var srcNummon = location.origin + '/' + 'NummonCalc/NummonCalc.js?v=';
@@ -893,7 +897,7 @@
 					numId = nummonLoad = srcNummon = null;
 				}
 			};
-			var numId = setInterval(nummonLoad, 2000);
+			var numId = setInterval(nummonLoad, 2000);*/
 
 			var paragonWebsite = function() {
 				if (typeof gamePage !== "undefined") {
