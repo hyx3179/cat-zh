@@ -791,9 +791,10 @@
 			var ksLabel = $("#ks-label")[0];
 			var ksVision = 0;
 
-			$.getJSON(location.origin + '/' + "scientists/ks.version.json?=" + now)
+			$.getJSON("../scientists/ks.version.json?=" + now)
 				.then(function (json) {
-					ksVision = json.ksVision;
+					var srcScientists = '../scientists/kitten-scientists.user.js?v=';
+					document.body.appendChild(document.createElement('script')).src = srcScientists + json.ksVision;
 				});
 
 			var enableKS = function() {
@@ -802,10 +803,10 @@
 				ksLabel.innerText = "可爱的猫猫科学家为您服务";
 				ksLabel.style.color = 'red';
 				$('#ks-options').show();
-				window.ks();
+				//window.ks();
 			};
 
-			var ks = function() {
+/*			var ks = function() {
 				if (ksVision && window.run === undefined && window.timeKS !== true) {
 					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
 					let a = document.createElement('script');
@@ -819,7 +820,7 @@
 					document.body.appendChild(a);
 				}
 			};
-			var timeKS;
+			var timeKS;*/
 			if (localStorage['zh.ks.enable'] === 'enable') {
 				timeKS = setTimeout('ks()', 1200);
 				$("#set-ks-enable").prop("checked", true);
