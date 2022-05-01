@@ -777,11 +777,10 @@
 		</script>
 		<script type="text/javascript">
 			//            科学家1.5.0
-			var ksVision = 0;
-
-			$.getJSON(location.origin + '/' + "scientists/ks.version.json?=" + now)
+			$.getJSON("../scientists/ks.version.json?=" + now)
 				.then(function (json) {
-					ksVision = json.ksVision;
+					var srcScientists = '../scientists/kitten-scientists.user.js?v=';
+					document.body.appendChild(document.createElement('script')).src = srcScientists + json.ksVision;
 				});
 
 			var enableKS = function() {
@@ -789,16 +788,6 @@
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$('#ks-options').show();
 			};
-			
-		   var ks = function() {
-				if (ksVision) {
-					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
-					document.body.appendChild(document.createElement('script')).src = srcScientists + ksVision;
-				} else {
-					setTimeout(() => ks(), 500);
-				}
-			};
-			ks();
 
 			if (localStorage['zh.ks.enable'] === 'enable') {
 				$("#set-ks-enable").attr("checked", true);
