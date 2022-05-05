@@ -1,7 +1,6 @@
 var fs = require("fs");
 var buildFile = "build.version.json"
 var publicFile = "./public/build.version.json"
-var public = "sw-public.js"
 
 console.log("Incrementing build number...");
 var buildRevision = fs.readFileSync(buildFile)
@@ -20,4 +19,4 @@ fs.writeFile(publicFile, JSON.stringify(metadata), err => { if (err) throw err; 
 console.log(`Current build number: ${metadata.swRevision}`);
 
 var str = "(function () {const swRevision = " + metadata.swRevision
-fs.writeFile(public, str, err => { if (err) throw err; })
+fs.writeFile("sw-public.js", str, err => { if (err) throw err; })
