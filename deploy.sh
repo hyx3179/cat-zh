@@ -15,12 +15,9 @@ build() {
 	cp -r ./res ./public/res
 
 	echo "Handling JavaScript"
-	for file in ./*.js; do
-		[[ -e "$file" ]] || break
+	for file in KGP.js config.js core.js game.js i18n.js; do
 		java -jar ./compiler.jar --js ./"$file" --js_output_file ./public/"$file"
 	done
-	rm ./public/generate-buildver.js
-	rm ./public/serviceWorker.js
 	while IFS= read -r -d '' file; do
 		java -jar ./compiler.jar --js "$file" --js_output_file ./public/"$file"
 	done < <(find ./js -type f -print0)
@@ -28,9 +25,6 @@ build() {
 	for i in react.min.js jQuery.js dojo.xd.js lz-string.js system.js; do
 		cp ./lib/$i ./public/lib/
 	done
-	mkdir ./public/chs
-	cp ./chs/kf.css ./public/chs
-	java -jar ./compiler.jar --js ./chs/kf.js --js_output_file ./public/chs/kf.js
 
 	echo "Handling other files"
 	cp ./changelog.html ./public
