@@ -113,6 +113,10 @@ self.addEventListener('fetch', function(event) {
 						});
 					});
 					return responseFetch;
+				}).catch(() => {
+					if (response) {
+						return response;
+					}
 				});
 			})
 		);
