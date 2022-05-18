@@ -4314,7 +4314,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.timer.updateScheduledEvents();
         //var fpsElement;
 
-		if (this.isPaused){
+		if (this.isPaused || this.loadingSave){
 			return;
 		}
 
