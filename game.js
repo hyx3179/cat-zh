@@ -2464,6 +2464,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		}
 
 		this.ui.load();
+		this.village.updateResourceProduction();
 		this.updateCaches();
 
 		return success;
@@ -4314,7 +4315,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.timer.updateScheduledEvents();
         //var fpsElement;
 
-		if (this.isPaused || this.loadingSave){
+		if (this.isPaused){
 			return;
 		}
 

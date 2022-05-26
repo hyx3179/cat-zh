@@ -170,7 +170,8 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
         }
 
         //populate cached per tickValues
-		this.game.upgrade();
+		this.game.calculateAllEffects();
+		this.game.village.updateResourceProduction();
         this.game.resPool.update();
         this.game.updateResources();
         var resourceLimits = this.game.resPool.fastforward(daysOffset);
