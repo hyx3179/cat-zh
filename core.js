@@ -2032,6 +2032,7 @@ dojo.declare("com.nuclearunicorn.game.ui.BuildingStackableBtnController", com.nu
 				liberty.calculateEffects(liberty, this.game);
 				var zebraOutpostMeta = this.game.bld.getBuildingExt("zebraOutpost").meta;
 				zebraOutpostMeta.calculateEffects(zebraOutpostMeta, this.game);
+				zebraOutpostMeta.jammed = false;
 				this.game.diplomacy.onLeavingIW();
 			}
 

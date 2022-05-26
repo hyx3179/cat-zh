@@ -338,7 +338,11 @@ dojo.declare("com.nuclearunicorn.game.Calendar", null, {
 				}
 			}
 		}
-
+		if(building_name == "sattelite"){	
+			this.game.upgrade({
+				buildings: ["observatory"]
+			});
+		}
 		return effects;
 	},
 
