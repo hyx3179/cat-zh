@@ -2350,6 +2350,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 
 	load: function(){
+		this.loadingSave = true;
 		var data = LCstorage["com.nuclearunicorn.kittengame.savedata"];
 		this.resetState();
 		if (!data){
@@ -2466,6 +2467,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.ui.load();
 		this.village.updateResourceProduction();
 		this.updateCaches();
+		this.loadingSave = false;
 
 		return success;
 	},
