@@ -804,11 +804,6 @@
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$('#ks-options').show();
 			};
-
-			if (localStorage['zh.ks.enable'] === 'enable') {
-				$("#set-ks-enable").attr("checked", true);
-				enableKS();
-			}
 			$("#set-ks-enable").on('change', function() {
 				if (localStorage['zh.ks.enable'] === 'enable') {
 					localStorage.setItem('zh.ks.enable', 'disable');
@@ -821,6 +816,15 @@
 				}
 				enableKS();
 			});
+			var ks = function () {
+				if ($("#ks-options").length > 0) {
+					$("#set-ks-enable").attr("checked", true);
+					enableKS();
+				} else {
+					setTimeout(() => ks(), 500);
+				}
+			};
+			if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
 
 			if (localStorage['zh.kgp.enable'] === 'enable') {
 				$("#set-kgp-enable").attr("checked", true)
