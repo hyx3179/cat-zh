@@ -807,6 +807,16 @@
 				//window.ks();
 			};
 
+			var ks = function () {
+				if ($("#ks-options").length > 0) {
+					$("#set-ks-enable").attr("checked", true);
+					enableKS();
+				} else {
+					setTimeout(() => ks(), 500);
+				}
+			};
+			if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
+
 /*			var ks = function() {
 				if (ksVision && window.run === undefined && window.timeKS !== true) {
 					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
@@ -821,22 +831,22 @@
 					document.body.appendChild(a);
 				}
 			};
-			var timeKS;*/
+			var timeKS;
 			if (localStorage['zh.ks.enable'] === 'enable') {
 				timeKS = setTimeout('ks()', 1200);
 				$("#set-ks-enable").prop("checked", true);
 				ksLabel.innerText = "可爱的猫猫科学家为您服务";
 				ksLabel.style.color = 'red';
-			}
+			}*/
 			$("#set-ks-enable").on('change', function() {
 				if (localStorage['zh.ks.enable'] === 'enable') {
-					if (timeKS) {
+					//if (timeKS) {
 						localStorage.setItem('zh.ks.enable', 'disable');
 						let engine = $('#toggle-engine');
 						engine.is(':checked') ? engine.click() : false;
 						$('#ks-options').hide();
 						ksLabel.innerText = "启用小猫珂学家";
-					}
+					//}
 				} else {
 					if (localStorage['zh.ks.enable']) {
 						enableKS();
