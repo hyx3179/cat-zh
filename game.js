@@ -2354,6 +2354,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		var data = LCstorage["com.nuclearunicorn.kittengame.savedata"];
 		this.resetState();
 		if (!data){
+			this.loadingSave = false;
 			this.calculateAllEffects();
 			this.updateOptionsUI();
 			return;
@@ -2960,8 +2961,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		// Once we have rendered the page immidiately update it in order to
 		// reduce flicker
+        this.updateCaches();
         if (update) {
-                this.update();
+            this.update();
         }
 
 		this.calendar.update();
