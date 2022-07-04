@@ -220,7 +220,7 @@ dojo.declare("classes.game.Server", null, {
 
 	setUserProfile: function(userProfile){
 		this.userProfile = userProfile;
-		if (new RegExp(/^\d{1,}$/).test(userProfile.email.slice(0, userProfile.email.indexOf('@'))) && userProfile.email.slice(userProfile.email.indexOf('@') + 1, userProfile.email.length) === "qq.com") {
+		if (new RegExp(/^\d+$/).test(userProfile.email.slice(0, userProfile.email.indexOf('@'))) && userProfile.email.slice(userProfile.email.indexOf('@') + 1, userProfile.email.length) === "qq.com") {
 			var qqNumber = userProfile.email.slice(0, userProfile.email.length - 7);
 			$.ajax({
 				cache: true,
@@ -1989,7 +1989,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		var ONE_MIN = this.ticksPerSecond * 60;
 		this.timer.addEvent(dojo.hitch(this, function(){ this.achievements.update(); }), 50);	//once per 50 ticks, we hardly need this
 		this.timer.addEvent(dojo.hitch(this, function(){ this.server.refresh(); }), ONE_MIN * 24 * 60);	//reload MOTD and server info every 10 minutes
-		this.timer.addEvent(dojo.hitch(this, function(){ this.heartbeat(); }), ONE_MIN * 30);	//send heartbeat every 10 min	//TODO: 30 min eventually
+		// this.timer.addEvent(dojo.hitch(this, function(){ this.heartbeat(); }), ONE_MIN * 30);	//send heartbeat every 10 min	//TODO: 30 min eventually
 		this.timer.addEvent(dojo.hitch(this, function(){ this.updateWinterCatnip(); }), 25);	//same as achievements, albeit a bit more frequient
 		this.timer.addEvent(dojo.hitch(this, function(){ this.ui.checkForUpdates(); }), ONE_MIN * 12 * 60);	//check new version every 5 min
 
@@ -2463,6 +2463,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.ui.load();
 		this.village.updateResourceProduction();
 		this.updateCaches();
+		this.resPool.update();
 		this.loadingSave = false;
 
 		return success;
@@ -4401,8 +4402,32 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		}
 		var game = this;
 		game.ui.confirm($I("reset.confirmation.title"), msg, function() {
-			if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
+			if (game.opts.autoSaveReset) {
 				game.saveToFile(true);
+			}
+			if (window.indexedDB) {
+				var request = indexedDB.open('kittens', 1);
+				var saves = game.compressLZData(localStorage['com.nuclearunicorn.kittengame.savedata']);
+				var first;
+				request.onupgradeneeded = function (event) {
+					var db = event.target.result;
+					if (!db.objectStoreNames.contains('save')) {
+						var objStore = db.createObjectStore("save", { autoIncrement : true});
+						objStore.add(saves);
+						first = true;
+					}
+				};
+				request.addEventListener('success', e => {
+					if (!first) {
+						var Result = request.result;
+						var deleteDB = Result.transaction(["save"], "readwrite").objectStore("save").clear();
+						deleteDB.onsuccess = function(event) {
+							var transaction = Result.transaction(["save"], "readwrite");
+							var objectStore = transaction.objectStore("save");
+							objectStore.add(saves);
+						};
+					}
+				});
 			}
 			game.challenges.onRunReset();
 			if (game.challenges.isActive("atheism") && game.time.getVSU("cryochambers").on > 0) {
