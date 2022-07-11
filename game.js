@@ -291,10 +291,10 @@ dojo.declare("classes.game.Server", null, {
 	 * @param {*} handler - onDone callback handler
 	 */
 	_xhr: function(url, method, data, handler){
-		$.ajax({
-			cache: false,
-			type: method || "GET",
-			dataType: "JSON",
+		return $.ajax({
+            cache: false,
+            type: method || "GET",
+            dataType: "JSON",
 			url: this.getServerUrl() + url,
             crossDomain: true,
 			xhrFields: {
@@ -323,20 +323,7 @@ dojo.declare("classes.game.Server", null, {
 
 	syncSaveData: function(){
 		var self = this;
-        /*this._xhr("/kgnet/save/", "GET", {}, function(resp){
-        	self.saveData = resp;
-        });*/
-		$.ajax({
-			cache: false,
-			type: "GET",
-			dataType: "JSON",
-			url: this.getServerUrl() + "/kgnet/save/",
-			xhrFields: {
-				withCredentials: true
-			},
-            crossDomain: true,
-			data: "{}"
-		}).done(function(resp){
+		return this._xhr("/kgnet/save/", "GET", {}, function(resp){
 			self.saveData = resp;
 		}).fail(function(err) {
 			game.msg('获取存档信息失败，即将打开同步存档教程', "important");

@@ -342,6 +342,7 @@ WLoginForm = React.createClass({
         return {
             login: null,
             password: null,
+            error: null,
             isLoading: false
         }
     },
@@ -404,6 +405,9 @@ WLoginForm = React.createClass({
 						},
 					}, "注册"),
                     $r("span", {paddingTop:"10px"}, "存档自动存在浏览器的缓存里，不换端无需云存档")
+                ]),
+                this.state.error && $r("div", {className: "row"}, [
+                    $r("span", {className:"error"}, this.state.error)
                 ])
             ]
         )
@@ -445,13 +449,23 @@ WLoginForm = React.createClass({
             if (resp.id){
                 self.props.game.server.setUserProfile(resp);
             }
-		}).always(function(){
+		}).fail(function(resp, status){
+            console.error("something went wrong, resp:", resp, status)
+            self.setState({error: resp.responseText})
+        }).always(function(){
             self.setState({isLoading: false});
         });
     }
 });
 
 WCloudSaveRecord = React.createClass({
+
+    getInitialState: function(){
+        return {
+            showActions: false,
+            isEditable: false
+        }
+    },
 
     bytesToSize(bytes) {
         var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -471,7 +485,25 @@ WCloudSaveRecord = React.createClass({
 
         return $r("div", {className:"save-record"}, [
             $r("div", {className:"save-record-cell"},
-                $r("a", { }, guid.substring(guid.length-4, guid.length)),
+                this.state.isEditable ? 
+                    $r("input", {
+                        onClick: function(e){
+                            e.stopPropagation();
+                        },
+                        onKeyDown: function(e){
+                            console.log("foo");
+                            //TODO: set save label
+                        }
+                     }) :
+                    $r("a", { 
+                        onClick: function(e){
+                            e.stopPropagation();
+                            self.setState({
+                                isEditable: !self.state.isEditable
+                            })
+                        }
+                    }, guid.substring(guid.length-4, guid.length))
+                ,
                 isActiveSave ? "[" + $I("ui.kgnet.save.current") + "]" : ""
             ),
             $r("div", {className:"save-record-cell"},
@@ -504,12 +536,38 @@ WCloudSaveRecord = React.createClass({
                     });
 					game.ui.render();
                 }}, $I("ui.kgnet.save.load")),
-                
+            $r("a", {
+                className: "link",
+                onClick: function(e){
+                    e.stopPropagation();
+                    self.setState({
+                        showActions: !self.state.showActions
+                    })
+                }
+            }, ".."),
+            this.state.showActions &&
+                $r("a", {
+                    onClick: function(e){
+                        e.stopPropagation();
+                        self.setState({
+                            isEditable: !self.state.isEditable
+                        })
+                }}, "待更新"
+            ),
+            this.state.showActions &&
+                // $r("a", {}, "archive")
+                $r("a", {}, "待更新")
         ]);
     }
 })
 
 WCloudSaves = React.createClass({
+
+    getInitialState: function(){
+        return {
+            isLoading: false
+        }
+    },
 
     render: function(){
         var self = this;
@@ -565,11 +623,17 @@ WCloudSaves = React.createClass({
                         title: "更新存档信息。这是安全按钮不会改变任何数据。",
                         onClick: function(e){
                             e.stopPropagation();
-                            game.server.syncSaveData();
+                            self.setState({isLoading: true})
+                            game.server.syncSaveData().always(function(){
+                                self.setState({isLoading: false})
+                            })
                         }
-                    }, $I("ui.kgnet.sync")),
-                    $r("span", {paddingTop:"10px"}, (saveData && saveData.length) ? "" : $I("ui.kgnet.instructional")),
-					$r("span", {paddingTop:"10px"}, (saveData && saveData.length) ? $I("ui.kgnet.test") : "")
+                    }, 
+                        // (this.state.isLoading && "[loading..]"),
+                        (this.state.isLoading && "[加载中..]"),
+                        $I("ui.kgnet.sync")
+                    ),
+                    $r("span", {paddingTop:"10px"}, (saveData && saveData.length) ? $I("ui.kgnet.test") : $I("ui.kgnet.instructional")),
                 ])
             ])
         ])

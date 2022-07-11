@@ -1124,7 +1124,7 @@ dojo.declare("classes.ui.time.ShatterTCBtnController", com.nuclearunicorn.game.u
         this.game.time.heat += amt * factor;
         //this.game.time.shatter(amt);
         if(this.game.time.testShatter == 1) {this.game.time.shatterInGroupCycles(amt);}
-        //else if(this.game.time.testShatter == 2) {this.game.time.shatterInCycles(amt);}
+        else if(this.game.time.testShatter == 2) {this.game.time.shatterInCycles(amt);}
         //shatterInCycles is deprecated
         else {this.game.time.shatter(amt);}
     },
