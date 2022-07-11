@@ -463,7 +463,8 @@ WCloudSaveRecord = React.createClass({
     getInitialState: function(){
         return {
             showActions: false,
-            isEditable: false
+            isEditable: false,
+            label: this.props.save.label
         }
     },
 
@@ -490,9 +491,17 @@ WCloudSaveRecord = React.createClass({
                         onClick: function(e){
                             e.stopPropagation();
                         },
-                        onKeyDown: function(e){
+                        onKeyPress: function(e){
                             console.log("foo");
                             //TODO: set save label
+                            if(e.key === 'Enter'){
+                                game.server.pushSaveMetadata({
+                                    label: self.state.label
+                                });
+                                self.setState({
+                                    isEditable: false
+                                });
+                            }
                         }
                      }) :
                     $r("a", { 
@@ -502,7 +511,7 @@ WCloudSaveRecord = React.createClass({
                                 isEditable: !self.state.isEditable
                             })
                         }
-                    }, guid.substring(guid.length-4, guid.length))
+                    }, save.label || guid.substring(guid.length-4, guid.length))
                 ,
                 isActiveSave ? "[" + $I("ui.kgnet.save.current") + "]" : ""
             ),
@@ -529,7 +538,7 @@ WCloudSaveRecord = React.createClass({
             $r("a", {
                 className: "link",
                 title: "下载并加载云存档（你当前的存档会丢失）",
-                    onClick: function(e){
+                onClick: function(e){
                     e.stopPropagation();
                     game.ui.confirm("加载", "这会覆盖本地的存档。 确定/取消", function(){
                         game.server.loadSave(save.guid);
@@ -552,7 +561,7 @@ WCloudSaveRecord = React.createClass({
                         self.setState({
                             isEditable: !self.state.isEditable
                         })
-                }}, "待更新"
+                }}, "编辑"
             ),
             this.state.showActions &&
                 // $r("a", {}, "archive")
