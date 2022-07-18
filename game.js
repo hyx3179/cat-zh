@@ -296,7 +296,6 @@ dojo.declare("classes.game.Server", null, {
             type: method || "GET",
             dataType: "JSON",
 			url: this.getServerUrl() + url,
-            crossDomain: true,
 			xhrFields: {
 				withCredentials: true
 			},
@@ -2638,12 +2637,20 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			}
 
 			this.loadingSave = true;
+			var beforeLoadScheme = this.colorScheme;
 			this.load();
 			this.loadingSave = false;
 			this.msg($I("save.import.msg"));
 
 			this.render();
-
+			var Scheme = this.colorScheme;
+			if (Scheme && Scheme != beforeLoadScheme) {
+				$("<link />")
+					.attr("rel", "stylesheet")
+					.attr("type", "text/css")
+					.attr("href", "res/theme_" + Scheme + ".css?_=" + buildRevision)
+					.appendTo($("head"));
+			}
             callback();
         } catch (e) {
             console.log("Couldn't import the save of the game:", e.stack);

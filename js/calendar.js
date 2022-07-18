@@ -338,9 +338,9 @@ dojo.declare("com.nuclearunicorn.game.Calendar", null, {
 				}
 			}
 		}
-		if(building_name == "sattelite"){	
+		if(building_name == "sattelite"){
 			this.game.upgrade({
-				buildings: ["observatory"]
+				buildings: ["pasture", "observatory"],
 			});
 		}
 		return effects;
@@ -945,7 +945,9 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 */
 		// Apply cycleEffect for the newYears
 		this.game.upgrade({
-			spaceBuilding: this.game.space.spaceBuildingsMap
+			buildings: ["pasture", "observatory"],
+			spaceBuilding: this.game.space.spaceBuildingsMap,
+			policies: ["authocracy"]
 		});
 
 		var resPool = this.game.resPool;
@@ -968,7 +970,7 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 			}
 		}
 
-		this.game.upgrade({policies: ["authocracy"]});
+		// this.game.upgrade({policies: ["authocracy"]});
 
 		if (updateUI) {
 			this.game.ui.render();
@@ -1023,7 +1025,9 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 
 		// Apply cycleEffect for the newYear
 		this.game.upgrade({
-			spaceBuilding: this.game.space.spaceBuildingsMap
+			buildings: ["pasture", "observatory"],
+			spaceBuilding: this.game.space.spaceBuildingsMap,
+			policies: ["authocracy"]
 		});
 
 		var resPool = this.game.resPool;
@@ -1045,7 +1049,7 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 			}
 		}
 
-		this.game.upgrade({policies: ["authocracy"]});
+		// this.game.upgrade({policies: ["authocracy"]});
 		
 		if (updateUI) {
 			this.game.ui.render();

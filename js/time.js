@@ -573,9 +573,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
         }
 
         // Apply seasonEffect for the newSeason
-		game.upgrade({
-			buildings: ["pasture"]
-		});
+		// game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     /* shatterInCycles does this:
     1) indepenently calculates space travel
@@ -662,9 +662,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
             game.challenges.researchChallenge("1000Years");
         }
 		// Apply seasonEffect for the newSeason
-		this.game.upgrade({
-			buildings: ["pasture"]
-		});
+		// this.game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     /*
     shatterInGroupCycles does this:
@@ -820,9 +820,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
             game.challenges.researchChallenge("1000Years");
         }
         // Apply seasonEffect for the newSeason
-		this.game.upgrade({
-			buildings: ["pasture"]
-		});
+		// this.game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     compareShatterTime: function(shatters, times, ignoreOldFunction, ignoreShatterInCycles, ignoreGroupCycles){
         if(!ignoreOldFunction){

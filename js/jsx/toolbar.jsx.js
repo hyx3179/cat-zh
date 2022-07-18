@@ -436,6 +436,7 @@ WLoginForm = React.createClass({
         $.ajax({
             cache: false,
             type: "POST",
+            dataType: "JSON",
             data: {
                 email: this.state.login,
                 password: this.state.password
@@ -490,6 +491,11 @@ WCloudSaveRecord = React.createClass({
                     $r("input", {
                         onClick: function(e){
                             e.stopPropagation();
+                        },
+                        onChange: function(e){
+                            self.setState({
+                                label: e.target.value
+                            });
                         },
                         onKeyPress: function(e){
                             console.log("foo");
@@ -564,7 +570,7 @@ WCloudSaveRecord = React.createClass({
                         self.setState({
                             isEditable: !self.state.isEditable
                         })
-                }}, "编辑"
+                }}, "更名"
             ),
             this.state.showActions &&
                 // $r("a", {}, "archive")
