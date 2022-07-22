@@ -176,7 +176,10 @@
 					"js/math",
 					"game",
 
-					"js/toolbar"
+					"js/toolbar",
+
+					// 加载进度条
+					"KGP",
 				];
 				progressMax = modules.length + 3;
 				console.log("Loading...");
@@ -601,7 +604,7 @@
 				<!-- [<a href="https://gitee.com/likexia/cbc-kitten-scientists" target="_blank" style="color:blue;text-decoration:none;" title="点击查看">教程</a>] -->
 				<br>
 				<input id="set-kgp-enable" type="checkbox">
-				<label id="kgp-label" for="set-kgp-enable">启用资源进度条</label>
+				<label id="kgp-label" for="set-kgp-enable">资源进度条</label>
 				<br>
 				<input id="autoSaveReset" type="checkbox" onclick="gamePage.opts['autoSaveReset'] = $('#autoSaveReset')[0].checked;">
 				<label id="optionAutoSaveReset" for="autoSaveReset">重置游戏自动备份存档<em>（需要在浏览器设置下载保存位置！）</em></label>
@@ -761,63 +764,44 @@
 			var enableKS = function() {
 				localStorage['zh.ks.enable'] = 'enable';
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
-				$("#set-ks-enable").attr("checked", true);
-				var srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
-				document.body.appendChild(document.createElement('script')).src = srcScientists + new Date().getDate() + ksVision;
-			};
-			var disableKS = function() {
-				localStorage['zh.ks.enable'] = 'disable';
-				$("#ks-label").text("小猫科学家将在页面刷新后关闭");
-				$("#set-ks-enable").attr("checked", false);
+				$('#ks-options').show();
 			};
 			
 		   var ks = function() {
 				if (ksVision) {
-					if (localStorage['zh.ks.enable'] === 'enable') {
-						enableKS();
-					}
+					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
+					document.body.appendChild(document.createElement('script')).src = srcScientists + ksVision;
 				} else {
-					setTimeout(function() {
-						ks();
-					}, 500);
+					setTimeout(() => ks(), 500);
 				}
 			};
 			ks();
 
+			if (localStorage['zh.ks.enable'] === 'enable') {
+				$("#set-ks-enable").attr("checked", true);
+				enableKS();
+			}
 			$("#set-ks-enable").on('change', function() {
 				if (localStorage['zh.ks.enable'] === 'enable') {
-					disableKS();
-					alert("请在保存游戏后刷新页面");
+					localStorage.setItem('zh.ks.enable', 'disable');
+					$('#toggle-engine').is(':checked') ? $('#toggle-engine').click() : false;
+					$('#ks-options').hide();
+					$("#ks-label").text("启用小猫珂学家");
+					return;
 				} else if (!localStorage['zh.ks.enable']) {
 					alert("第一次使用珂学家请点击说明书链接并参考\n\n太阳教团在附加项目里\n\n珂学家设置请根据自身实际情况调整，并不能做到满足所有人\n挂机推荐工艺项目默认设置能勾平衡尽量勾平衡\n文化、钛、科学爆仓属于正常现象\n还有问题或者建议，可以在猫国群找Cheney");
-					enableKS();
-				} else {
-					enableKS();
 				}
+				enableKS();
 			});
 
-			var enableKGP = function() {
-				localStorage['zh.kgp.enable'] = 'enable';
-				$("#kgp-label").text("资源进度条已启动");
-				$("#set-kgp-enable").attr("checked", true);
-				document.body.appendChild(document.createElement('script')).src = 'KGP.js?v=2';
-			};
-			var disableKGP = function() {
-				localStorage['zh.kgp.enable'] = 'disable';
-				$("#kgp-label").text("资源进度条将在页面刷新后关闭");
-				$("#set-kgp-enable").attr("checked", false);
-			};
-
 			if (localStorage['zh.kgp.enable'] === 'enable') {
-				enableKGP();
+				$("#set-kgp-enable").attr("checked", true)
 			}
 			$("#set-kgp-enable").on('change', function() {
-				if (localStorage['zh.kgp.enable'] === 'enable') {
-					disableKGP();
-					alert("请在保存游戏后刷新页面");
-				} else {
-					enableKGP();
-				}
+				localStorage['zh.kgp.enable']
+					? localStorage.removeItem('zh.kgp.enable')
+					: localStorage.setItem('zh.kgp.enable', 'enable');
+				initKGP();
 			});
 
 			var nummonLoad = function() {
