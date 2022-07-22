@@ -170,6 +170,8 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
         }
 
         //populate cached per tickValues
+		this.game.calculateAllEffects();
+		this.game.village.updateResourceProduction();
         this.game.resPool.update();
         this.game.updateResources();
         var resourceLimits = this.game.resPool.fastforward(daysOffset);
@@ -571,9 +573,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
         }
 
         // Apply seasonEffect for the newSeason
-		game.upgrade({
-			buildings: ["pasture"]
-		});
+		// game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     /* shatterInCycles does this:
     1) indepenently calculates space travel
@@ -660,9 +662,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
             game.challenges.researchChallenge("1000Years");
         }
 		// Apply seasonEffect for the newSeason
-		this.game.upgrade({
-			buildings: ["pasture"]
-		});
+		// this.game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     /*
     shatterInGroupCycles does this:
@@ -818,9 +820,9 @@ dojo.declare("classes.managers.TimeManager", com.nuclearunicorn.core.TabManager,
             game.challenges.researchChallenge("1000Years");
         }
         // Apply seasonEffect for the newSeason
-		this.game.upgrade({
-			buildings: ["pasture"]
-		});
+		// this.game.upgrade({
+		// 	buildings: ["pasture"]
+		// });
     },
     compareShatterTime: function(shatters, times, ignoreOldFunction, ignoreShatterInCycles, ignoreGroupCycles){
         if(!ignoreOldFunction){
@@ -1122,7 +1124,7 @@ dojo.declare("classes.ui.time.ShatterTCBtnController", com.nuclearunicorn.game.u
         this.game.time.heat += amt * factor;
         //this.game.time.shatter(amt);
         if(this.game.time.testShatter == 1) {this.game.time.shatterInGroupCycles(amt);}
-        //else if(this.game.time.testShatter == 2) {this.game.time.shatterInCycles(amt);}
+        else if(this.game.time.testShatter == 2) {this.game.time.shatterInCycles(amt);}
         //shatterInCycles is deprecated
         else {this.game.time.shatter(amt);}
     },
@@ -1372,15 +1374,15 @@ dojo.declare("classes.ui.ResetWgt", [mixin.IChildrenAware, mixin.IGameAware], {
 
         var msg = $I("time.reset.instructional");
 
-        var kittens = this.game.resPool.get("kittens").value;
-        var stripe = 5;
-        var karmaPointsPresent = this.game.getUnlimitedDR(this.game.karmaKittens, stripe);
-        var karmaPointsAfter = this.game.getUnlimitedDR(this.game.karmaKittens + this.game._getKarmaKittens(kittens), stripe);
-		var karmaPoints = Math.floor((karmaPointsAfter - karmaPointsPresent) * 100) / 100;
-
-
 		var _prestige = this.game.getResetPrestige();
 		var paragonPoints = _prestige.paragonPoints;
+		var karmaKittens = _prestige.karmaKittens;
+
+        var stripe = 5;
+        var karmaPointsPresent = this.game.getUnlimitedDR(this.game.karmaKittens, stripe);
+        var karmaPointsAfter = this.game.getUnlimitedDR(karmaKittens, stripe);
+		var karmaPoints = Math.floor((karmaPointsAfter - karmaPointsPresent) * 100) / 100;
+
 
 
         msg += "<br>" + $I("time.reset.karma") + ": " + karmaPoints;

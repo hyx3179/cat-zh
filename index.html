@@ -45,21 +45,11 @@
 		<!-- <script src="lib/system.js?v=_2"></script> -->
 		<script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/systemjs/0.21.6/system.js"></script>
 		<script>
-			if (typeof React === 'undefined') {
-				document.write(decodeURI('%3Cscript%20src=%22lib/react.min.js%22%3E%3C/script%3E'));
-			}
-			if (typeof jQuery === 'undefined') {
-					document.write(decodeURI('%3Cscript%20src=%22lib/jQuery.js%22%3E%3C/script%3E'));
-				}
-			if (typeof dojo === 'undefined') {
-				document.write(decodeURI('%3Cscript%20src=%22lib/dojo.xd.js%22%3E%3C/script%3E'));
-			}
-			if (typeof LZString === 'undefined') {
-				document.write(decodeURI('%3Cscript%20src=%22lib/lz-string.js%22%3E%3C/script%3E'));
-			}
-			if (typeof SystemJS == 'undefined') {
-				document.write(decodeURI('%3Cscript%20src=%22lib/system.js%22%3E%3C/script%3E'));
-			}
+			if (typeof React === 'undefined') {document.write(decodeURI('%3Cscript%20src=%22lib/react.min.js%22%3E%3C/script%3E'));}
+			if (typeof jQuery === 'undefined') {document.write(decodeURI('%3Cscript%20src=%22lib/jQuery.js%22%3E%3C/script%3E'));}
+			if (typeof dojo === 'undefined') {document.write(decodeURI('%3Cscript%20src=%22lib/dojo.xd.js%22%3E%3C/script%3E'));}
+			if (typeof LZString === 'undefined') {document.write(decodeURI('%3Cscript%20src=%22lib/lz-string.js%22%3E%3C/script%3E'));}
+			if (typeof SystemJS === 'undefined') {document.write(decodeURI('%3Cscript%20src=%22lib/system.js%22%3E%3C/script%3E'));}
 		</script>
 		<!-- <script async src="lib/google.js"></script> -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-0QBDX221PR"></script>
@@ -74,7 +64,7 @@
 
 		<script type="text/javascript">
 			var now = Date.now();
-			$("<link />").attr("rel", "stylesheet").attr("type", "text/css").attr("href", "res/default.css?v=" + 2).appendTo($("head"));
+			$("<link />").attr("rel", "stylesheet").attr("type", "text/css").attr("href", "res/default.css?v=" + new Date().getMonth()).appendTo($("head"));
 		</script>
 
 		<script>
@@ -339,12 +329,7 @@
 			function wipe() {
 				gamePage.wipe();
 			}
-			// we don't need no css, let the dynamic height be. be, dynamic height, be.
-			function resetGameLogHeight() {
-				$("#devPanel").outerHeight($("#footerLinks").position().top - $("#gameLog").offset().top);
-			}
-			$(resetGameLogHeight);
-			$(window).resize(resetGameLogHeight);
+
 		</script>
 
 		<title>Kittens Game - a Dark Souls of incremental gaming</title>
@@ -406,7 +391,7 @@
 					<span id="devModeButton" style="display: none;"><a href="#" id="devBtn" onclick="dev();">DEV</a> |</span>
 					<a id="wipe-link" href="#" onclick="wipe();">Wipe</a> |
 					<a id="getTheApp-link" href="#" onclick="gamePage.ui.displayAppDialog();" style="font-weight: bold; color:#666;">Get the app</a> |
-					<a href="changelog.html" target="_blank">Ver <span id="versionLink">?.?.?.?</span></a>
+					<a target="_blank" onclick='changelog();'>Ver <span id="versionLink">?.?.?.?</span></a>
 					<a href="#" id="newVersion" onclick="gamePage.reload();" title="有新版本 !" style="display:none">↻</a>
 				</div>
 			</div>
@@ -463,7 +448,7 @@
 					</div>
 					<div class="right-tab-header">
 						<a id="logLink" href="#" class="active" onclick="gamePage.ui.hideChat();">Log</a>
-						<a id="chatLink" class="chatLink" href="//shang.qq.com/wpa/qunwpa?idkey=2b9f0b27b1aabbce582429184ec05344fa384f59bf410f44071f42b271866338" target="_blank" title="点击加入猫薄荷同好会QQ群：499256691">聊天</a>
+						<a id="chatLink" class="chatLink" href="//shang.qq.com/wpa/qunwpa?idkey=2b9f0b27b1aabbce582429184ec05344fa384f59bf410f44071f42b271866338" target="_blank" title="点击加入猫薄荷同好会QQ群：499256691（答案：猫国建设者）">聊天</a>
 					</div>
 					<div id="observeButton"></div>
 					<div class="right-tab" id="rightTabLog">
@@ -697,10 +682,10 @@
 
 			<div id="importDiv" style="display: none" class="dialog help">
 				<div id="importWarning">Warning! Importing data will overwrite your current game data.</div>
-				<input id="importFile" type="file" value="选择存档文件"></input>
+				<input id="importFile" type="file" value="选择存档文件"/>
 				<input id="doFileImportButton" type="button" value="使用文件导入" onclick="readText();" style="margin-top: 10px;">
 				<br>
-				<span>注意：推荐导出txt传递，QQ和微信发送字母数字有长度限制</span>
+				<span>上面选择文件后点击使用文件导入，下面是粘贴存档后点击导入</span>
 				<h1 id="importFromText">Text Import:</h1>
 				<!-- <input id="importFromDropbox" type="button" onclick="gamePage.saveImportDropbox();" value="Dropbox (Beta)"> -->
 				<br>
@@ -764,8 +749,8 @@
 			</div>
 
 			<div id="footerLinks" class="links-block">
-				<a href="https://petercheney.gitee.io/baike/?file=%E9%A6%96%E9%A1%B5" target="_blank" title="猫国百科全书">百科（中文wiki）</a> |
-				<a class="chatLink" href="//shang.qq.com/wpa/qunwpa?idkey=2b9f0b27b1aabbce582429184ec05344fa384f59bf410f44071f42b271866338" target="_blank" title="点击加入猫薄荷同好会QQ群：499256691">Q群</a> |
+				<a href="https://petercheney.gitee.io/baike/?file=%E9%A6%96%E9%A1%B5" target="_blank" title="猫国百科全书">百科</a> |
+				<a class="chatLink" href="//shang.qq.com/wpa/qunwpa?idkey=2b9f0b27b1aabbce582429184ec05344fa384f59bf410f44071f42b271866338" target="_blank" title="点击加入猫薄荷同好会QQ群：499256691，答案：猫国建设者">Q群</a> |
 				<!-- <a href="http://kittensgame.tumblr.com" target="_blank">tumblr</a> | -->
 				<!-- <a href="#" onclick="$('#helpDiv').toggle();">help</a> | -->
 				<a href="#" onclick="$('#creditsDiv').toggle();">人员</a> |
@@ -784,7 +769,7 @@
 			
 		   var ks = function() {
 				if (ksVision) {
-					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.js?v=";
+					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
 					document.body.appendChild(document.createElement('script')).src = srcScientists + ksVision;
 				} else {
 					setTimeout(() => ks(), 500);
@@ -804,7 +789,7 @@
 					$("#ks-label").text("启用小猫珂学家");
 					return;
 				} else if (!localStorage['zh.ks.enable']) {
-					alert("第一次使用珂学家请点击说明书链接并参考\n触发条件为该项目的触发资源的 当前资源 / 资源上限 达到多少时会触发珂学家的该项目\n太阳教团在附加项目里\n\n珂学家设置请根据自身实际情况调整，并不能做到满足所有人\n挂机推荐工艺项目默认设置能勾限制尽量勾限制\n文化、钛、科学爆仓属于正常现象\n还有问题或者建议，可以在猫国群找Cheney");
+					alert("第一次使用珂学家请点击说明书链接并参考\n\n太阳教团在附加项目里\n\n珂学家设置请根据自身实际情况调整，并不能做到满足所有人\n挂机推荐工艺项目默认设置能勾平衡尽量勾平衡\n文化、钛、科学爆仓属于正常现象\n还有问题或者建议，可以在猫国群找Cheney");
 				}
 				enableKS();
 			});
@@ -829,9 +814,7 @@
 				}
 			};
 			var numId = setInterval(nummonLoad, 2500);
-		</script>
 
-		<script type="text/javascript">
 			var paragonWebsite = function() {
 				if (typeof gamePage !== "undefined") {
 					var b = game.prestige.getParagonStorageRatio();
@@ -855,8 +838,7 @@
 				}
 			};
 			var id = setInterval(paragonWebsite, 10000);
-		</script>
-		<script type="text/javascript">
+
 			function readText() {
 				var file = document.getElementById("importFile").files[0];
 				if (!file) {
@@ -870,6 +852,9 @@
 				$('#importDiv').hide();
 				reader = null;
 			}
+			function changelog() {
+				window.open(`changelog.html?v=` + buildRevision);
+			};
 		</script>
 	</body>
 

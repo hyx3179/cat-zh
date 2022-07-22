@@ -119,7 +119,7 @@ WToolbarHappiness = React.createClass({
         tooltip += "* " + $I("village.happiness.penalty.base") + ": -" + this.game.getDisplayValueExt(unhappiness, false, false, 0) + "%<br>";
 		tooltip += "* " + $I("village.happiness.penalty.mitigated") + ": " + this.game.getDisplayValueExt(-unhappinessReduction, false, false, 0) + "%<br>";
         tooltip += $I("village.happiness.environment") + ": " + this.game.getDisplayValueExt(environmentEffect, false, false, 0) + "%<br>";
-        var overpopulation = this.game.village.getKittens() - this.game.village.maxKittens;
+        var overpopulation = this.game.village.getOverpopulation();
         if (overpopulation > 0){
             tooltip += $I("village.happiness.overpopulation") + ": -" + overpopulation * 2 + "%<br>";
         }
@@ -234,10 +234,10 @@ WToolbarPollution = React.createClass({
         var polLvl = game.bld.getPollutionLevel();
         var polLvlShow = game.bld.getPollutionLevel(pollution * 2);
         if (polLvl >= 4){
-            message += $I("pollution.level1") + "<br/>" + $I("pollution.level2") + "<br/>" + $I("pollution.level3", [game.getDisplayValueExt(game.villageTab.getVillageTitle(), false, false, 0)]) + "<br/>" + $I("pollution.level4");
+            message += $I("pollution.level1") + "<br/>" + $I("pollution.level2") + "<br/>" + $I("pollution.level3", [game.villageTab.getVillageTitle()]) + "<br/>" + $I("pollution.level4");
         }
         else if (polLvlShow == 3 || polLvl == 3){
-            message += $I("pollution.level1") + "<br/>" + $I("pollution.level2") + "<br/>" + $I("pollution.level3", [game.getDisplayValueExt(game.villageTab.getVillageTitle(), false, false, 0)]);
+            message += $I("pollution.level1") + "<br/>" + $I("pollution.level2") + "<br/>" + $I("pollution.level3", [game.villageTab.getVillageTitle()]);
         }
         else if (polLvlShow == 2){
             message += $I("pollution.level1") + "<br/>" + $I("pollution.level2");
@@ -342,6 +342,7 @@ WLoginForm = React.createClass({
         return {
             login: null,
             password: null,
+            error: null,
             isLoading: false
         }
     },
@@ -401,8 +402,12 @@ WLoginForm = React.createClass({
                         onClick: function(e){
                             e.stopPropagation();
                             game.ui.showDialog("registerDiv");
-                    }}, "注册"),
+						},
+					}, "注册"),
                     $r("span", {paddingTop:"10px"}, "存档自动存在浏览器的缓存里，不换端无需云存档")
+                ]),
+                this.state.error && $r("div", {className: "row"}, [
+                    $r("span", {className:"error"}, this.state.error)
                 ])
             ]
         )
@@ -445,13 +450,24 @@ WLoginForm = React.createClass({
             if (resp.id){
                 self.props.game.server.setUserProfile(resp);
             }
-		}).always(function(){
+		}).fail(function(resp, status){
+            console.error("something went wrong, resp:", resp, status)
+            self.setState({error: resp.responseText})
+        }).always(function(){
             self.setState({isLoading: false});
         });
     }
 });
 
 WCloudSaveRecord = React.createClass({
+
+    getInitialState: function(){
+        return {
+            showActions: false,
+            isEditable: false,
+            label: this.props.save.label
+        }
+    },
 
     bytesToSize(bytes) {
         var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -471,7 +487,41 @@ WCloudSaveRecord = React.createClass({
 
         return $r("div", {className:"save-record"}, [
             $r("div", {className:"save-record-cell"},
-                $r("a", { }, guid.substring(guid.length-4, guid.length)),
+                this.state.isEditable ? 
+                    $r("input", {
+                        onClick: function(e){
+                            e.stopPropagation();
+                        },
+                        onChange: function(e){
+                            self.setState({
+                                label: e.target.value
+                            });
+                        },
+                        onKeyPress: function(e){
+                            console.log("foo");
+                            //TODO: set save label
+                            if(e.key === 'Enter'){
+                                game.server.pushSaveMetadata(
+                                    save.guid,
+                                    {
+                                        label: self.state.label
+                                    }
+                                );
+                                self.setState({
+                                    isEditable: false
+                                });
+                            }
+                        }
+                     }) :
+                    $r("a", { 
+                        onClick: function(e){
+                            e.stopPropagation();
+                            self.setState({
+                                isEditable: !self.state.isEditable
+                            })
+                        }
+                    }, save.label || guid.substring(guid.length-4, guid.length))
+                ,
                 isActiveSave ? "[" + $I("ui.kgnet.save.current") + "]" : ""
             ),
             $r("div", {className:"save-record-cell"},
@@ -497,18 +547,45 @@ WCloudSaveRecord = React.createClass({
             $r("a", {
                 className: "link",
                 title: "下载并加载云存档（你当前的存档会丢失）",
-                    onClick: function(e){
+                onClick: function(e){
                     e.stopPropagation();
                     game.ui.confirm("加载", "这会覆盖本地的存档。 确定/取消", function(){
                         game.server.loadSave(save.guid);
                     });
+					game.ui.render();
                 }}, $I("ui.kgnet.save.load")),
-                
+            $r("a", {
+                className: "link",
+                onClick: function(e){
+                    e.stopPropagation();
+                    self.setState({
+                        showActions: !self.state.showActions
+                    })
+                }
+            }, ".."),
+            this.state.showActions &&
+                $r("a", {
+                    onClick: function(e){
+                        e.stopPropagation();
+                        self.setState({
+                            isEditable: !self.state.isEditable
+                        })
+                }}, "更名"
+            ),
+            this.state.showActions &&
+                // $r("a", {}, "archive")
+                $r("a", {}, "待更新")
         ]);
     }
 })
 
 WCloudSaves = React.createClass({
+
+    getInitialState: function(){
+        return {
+            isLoading: false
+        }
+    },
 
     render: function(){
         var self = this;
@@ -564,10 +641,17 @@ WCloudSaves = React.createClass({
                         title: "更新存档信息。这是安全按钮不会改变任何数据。",
                         onClick: function(e){
                             e.stopPropagation();
-                            game.server.syncSaveData();
+                            self.setState({isLoading: true})
+                            game.server.syncSaveData().always(function(){
+                                self.setState({isLoading: false})
+                            })
                         }
-                    }, $I("ui.kgnet.sync")),
-                    $r("span", {paddingTop:"10px"}, (saveData && saveData.length) ? "" : $I("ui.kgnet.instructional"))
+                    }, 
+                        // (this.state.isLoading && "[loading..]"),
+                        (this.state.isLoading && "[加载中..]"),
+                        $I("ui.kgnet.sync")
+                    ),
+                    $r("span", {paddingTop:"10px"}, (saveData && saveData.length) ? $I("ui.kgnet.test") : $I("ui.kgnet.instructional")),
                 ])
             ])
         ])

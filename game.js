@@ -220,7 +220,7 @@ dojo.declare("classes.game.Server", null, {
 
 	setUserProfile: function(userProfile){
 		this.userProfile = userProfile;
-		if (new RegExp(/^\d{1,}$/).test(userProfile.email.slice(0, userProfile.email.indexOf('@'))) && userProfile.email.slice(userProfile.email.indexOf('@') + 1, userProfile.email.length) === "qq.com") {
+		if (new RegExp(/^\d+$/).test(userProfile.email.slice(0, userProfile.email.indexOf('@'))) && userProfile.email.slice(userProfile.email.indexOf('@') + 1, userProfile.email.length) === "qq.com") {
 			var qqNumber = userProfile.email.slice(0, userProfile.email.length - 7);
 			$.ajax({
 				cache: true,
@@ -291,12 +291,11 @@ dojo.declare("classes.game.Server", null, {
 	 * @param {*} handler - onDone callback handler
 	 */
 	_xhr: function(url, method, data, handler){
-		$.ajax({
-			cache: false,
-			type: method || "GET",
-			dataType: "JSON",
+		return $.ajax({
+            cache: false,
+            type: method || "GET",
+            dataType: "JSON",
 			url: this.getServerUrl() + url,
-            crossDomain: true,
 			xhrFields: {
 				withCredentials: true
 			},
@@ -323,20 +322,7 @@ dojo.declare("classes.game.Server", null, {
 
 	syncSaveData: function(){
 		var self = this;
-        /*this._xhr("/kgnet/save/", "GET", {}, function(resp){
-        	self.saveData = resp;
-        });*/
-		$.ajax({
-			cache: false,
-			type: "GET",
-			dataType: "JSON",
-			url: this.getServerUrl() + "/kgnet/save/",
-			xhrFields: {
-				withCredentials: true
-			},
-            crossDomain: true,
-			data: "{}"
-		}).done(function(resp){
+		return this._xhr("/kgnet/save/", "GET", {}, function(resp){
 			self.saveData = resp;
 		}).fail(function(err) {
 			game.msg('获取存档信息失败，即将打开同步存档教程', "important");
@@ -394,6 +380,26 @@ dojo.declare("classes.game.Server", null, {
 			console.log("save successful?");
 			self.saveData = resp;
 			self.game.msg($I("save.export.msg"));
+		});
+	},
+
+	/**
+	 * 
+	 * @param {*} metadata 
+	 * {
+	 * 	archived?: boolean;
+	 *  label?: string
+	 * }
+	 */
+	pushSaveMetadata: function(guid, metadata){
+		this._xhr("/kgnet/save/update/", "POST", 
+		{
+			//pre-parsing guid to avoid checking it on the backend side
+			guid: guid,
+			metadata: metadata
+		}, 
+		function(resp){
+			self.saveData = resp;
 		});
 	},
 
@@ -1060,11 +1066,6 @@ dojo.declare("com.nuclearunicorn.game.EffectsManager", null, {
                 type: "ratio"
             },
 
-            "shatterYearBoost" :  {
-                title: $I("effectsMgr.statics.shatterYearBoost.title"),
-                type: "fixed"
-            },
-
             "rrRatio" :  {
                 title: $I("effectsMgr.statics.rrRatio.title"),
                 type: "ratio"
@@ -1722,6 +1723,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	telemetry: null,
 	server: null,
 	math: null,
+	loadingSave: false, //while save is being imported we should ignore production from buildings for one tick; hack
 
 	//global cache
 	globalEffectsCached: {},
@@ -1993,7 +1995,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		var ONE_MIN = this.ticksPerSecond * 60;
 		this.timer.addEvent(dojo.hitch(this, function(){ this.achievements.update(); }), 50);	//once per 50 ticks, we hardly need this
 		this.timer.addEvent(dojo.hitch(this, function(){ this.server.refresh(); }), ONE_MIN * 24 * 60);	//reload MOTD and server info every 10 minutes
-		this.timer.addEvent(dojo.hitch(this, function(){ this.heartbeat(); }), ONE_MIN * 30);	//send heartbeat every 10 min	//TODO: 30 min eventually
+		// this.timer.addEvent(dojo.hitch(this, function(){ this.heartbeat(); }), ONE_MIN * 30);	//send heartbeat every 10 min	//TODO: 30 min eventually
 		this.timer.addEvent(dojo.hitch(this, function(){ this.updateWinterCatnip(); }), 25);	//same as achievements, albeit a bit more frequient
 		this.timer.addEvent(dojo.hitch(this, function(){ this.ui.checkForUpdates(); }), ONE_MIN * 12 * 60);	//check new version every 5 min
 
@@ -2349,9 +2351,11 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 
 	load: function(){
+		this.loadingSave = true;
 		var data = LCstorage["com.nuclearunicorn.kittengame.savedata"];
 		this.resetState();
 		if (!data){
+			this.loadingSave = false;
 			this.calculateAllEffects();
 			this.updateOptionsUI();
 			return;
@@ -2463,7 +2467,10 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		}
 
 		this.ui.load();
+		this.village.updateResourceProduction();
 		this.updateCaches();
+		this.resPool.update();
+		this.loadingSave = false;
 
 		return success;
 	},
@@ -2629,11 +2636,21 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				throw "Integrity check failure";
 			}
 
+			this.loadingSave = true;
+			var beforeLoadScheme = this.colorScheme;
 			this.load();
+			this.loadingSave = false;
 			this.msg($I("save.import.msg"));
 
 			this.render();
-
+			var Scheme = this.colorScheme;
+			if (Scheme && Scheme != beforeLoadScheme) {
+				$("<link />")
+					.attr("rel", "stylesheet")
+					.attr("type", "text/css")
+					.attr("href", "res/theme_" + Scheme + ".css?_=" + buildRevision)
+					.appendTo($("head"));
+			}
             callback();
         } catch (e) {
             console.log("Couldn't import the save of the game:", e.stack);
@@ -2954,8 +2971,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		// Once we have rendered the page immidiately update it in order to
 		// reduce flicker
+        this.updateCaches();
         if (update) {
-                this.update();
+            this.update();
         }
 
 		this.calendar.update();
@@ -3594,14 +3612,26 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		stack.push({
 			name: $I("res.stack.buildings"),
 			type: "perDay",
-			value: this.getEffect(res.name + "PerDay")
+			value: this.getEffect(res.name + "PerDay") - this.religion.pactsManager.getSiphonedCorruption(1)
 		});
 		if(resName == "necrocorn"){
-			stack.push({
+			var corruptionStack = [];
+			corruptionStack.push({
 				name: $I("res.stack.corruptionPerDay"),
 				type: "perDay",
 				value: this.religion.getCorruptionPerTick() * this.calendar.ticksPerDay
 			});
+			corruptionStack.push({
+				name: $I("res.stack.corruptionPerDayProduction"),
+				type: "perDay",
+				value: this.religion.getCorruptionPerTickProduction() * this.calendar.ticksPerDay
+			});
+			corruptionStack.push({
+				name: $I("res.stack.corruptionPerDaySiphoned"),
+				type: "perDay",
+				value: - this.religion.pactsManager.getSiphonedCorruption(1)
+			});
+			stack.push(corruptionStack);
 				// TIME extra-compare
 			stack.push({
 				name: $I("res.stack.time"),
@@ -3808,8 +3838,8 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 	getResourcePerDay: function(resName){
 		if(resName == "necrocorn"){
-			return this.religion.pactsManager.getNecrocornDeficitConsumptionModifier() * this.getEffect(resName + "PerDay") +
-			this.religion.getCorruptionPerTick() * this.calendar.ticksPerDay;
+			return (this.religion.pactsManager.getNecrocornDeficitConsumptionModifier() * this.getEffect(resName + "PerDay") + this.religion.pactsManager.getSiphonedCorruption(1) +
+			this.religion.getCorruptionPerTick() * this.calendar.ticksPerDay);
 		}
 		return this.getEffect(resName + "PerDay");
 	},
@@ -3868,6 +3898,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				|| this.workshop.getEffectEngineer(resRef.name) != 0
 				|| this.getResourcePerDay(resRef.name) != 0
 				|| this.getResourceOnYearProduction(resRef.name) != 0
+				|| (resRef.name == "kittens" && this.village.sim.kittens.length < this.village.sim.maxKittens)
 			){
 
 				tooltip.innerHTML = this.getDetailedResMap(resRef);
@@ -3910,7 +3941,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			}
 			if(res.name == "necrocorn"){
 				var toNextNecrocorn = (1 - this.religion.corruption)/(this.religion.getCorruptionPerTick() * 5 * (1 + this.timeAccelerationRatio()));
-				resString += "<br>" + $I("res.toNextNecrocorn") + ": " + this.toDisplaySeconds(toNextNecrocorn.toFixed());
+				if(toNextNecrocorn > 0){
+					resString += "<br>" + $I("res.toNextNecrocorn") + ": " + this.toDisplaySeconds(toNextNecrocorn.toFixed());
+				}
 			}
 			return resString;
 		}else if(res.calculateOnYear){
@@ -3920,6 +3953,13 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				if (this.opts.usePercentageResourceValues){
 					resString += "<br> " + $I("res.netGain") + ": " + this.getDisplayValueExt(resPerYear, true, true);
 				}
+			return resString;
+		}
+		if(res.name == "kittens"){
+			var nextKittenProgress = this.village.sim.nextKittenProgress;
+			var kittensPerTick = this.village.calculateKittensPerTick();
+			var resString =  " [" + ( nextKittenProgress * 100 ).toFixed()  + "%]";
+			resString += "<br>" + $I("res.toNextKitten") + " " + this.toDisplaySeconds((1 - nextKittenProgress)/kittensPerTick);
 			return resString;
 		}
 		var resStack = this.getResourcePerTickStack(res.name),
@@ -4390,6 +4430,33 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		}
 		var game = this;
 		game.ui.confirm($I("reset.confirmation.title"), msg, function() {
+			if (game.opts.autoSaveReset) {
+				game.saveToFile(true);
+			}
+			if (window.indexedDB) {
+				var request = indexedDB.open('kittens', 1);
+				var saves = game.compressLZData(localStorage['com.nuclearunicorn.kittengame.savedata']);
+				var first;
+				request.onupgradeneeded = function (event) {
+					var db = event.target.result;
+					if (!db.objectStoreNames.contains('save')) {
+						var objStore = db.createObjectStore("save", { autoIncrement : true});
+						objStore.add(saves);
+						first = true;
+					}
+				};
+				request.addEventListener('success', e => {
+					if (!first) {
+						var Result = request.result;
+						var deleteDB = Result.transaction(["save"], "readwrite").objectStore("save").clear();
+						deleteDB.onsuccess = function(event) {
+							var transaction = Result.transaction(["save"], "readwrite");
+							var objectStore = transaction.objectStore("save");
+							objectStore.add(saves);
+						};
+					}
+				});
+			}
 			game.challenges.onRunReset();
 			if (game.challenges.isActive("atheism") && game.time.getVSU("cryochambers").on > 0) {
 				game.challenges.getChallenge("atheism").researched = true;
@@ -4409,9 +4476,6 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 
 	resetAutomatic: function() {
-		if (game.opts.autoSaveReset != undefined && game.opts.autoSaveReset) {
-					game.saveToFile(true);
-		}
 		this.timer.scheduleEvent(dojo.hitch(this, function(){
 			this._resetInternal();
 			this.mobileSaveOnPause = false;
@@ -4652,17 +4716,6 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		var cryochambers = this.time.getVSU("cryochambers").on;
 
 		var cathPollution = 0;
-		if(this.challenges.getChallenge("postApocalypse").pending){
-			if(cryochambers > 0){
-				var catnip = this.resPool.get("catnip");
-				if (!catnip){
-					catnip = this.resPool.createResource("catnip");
-				}
-				catnip.value = cryochambers * 1000 * (1 + this.resPool.get("karma").value/100);
-				newResources.push(catnip);
-			}
-			cathPollution = (this.challenges.getChallenge("postApocalypse").on + cryochambers) * 1e+8 + 1e+11;
-		}
 
 		if (cryochambers > 0) {
 			this.village.sim.sortKittensByExp();
@@ -4671,8 +4724,27 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				delete newKittens[i].job;
 				delete newKittens[i].engineerSpeciality;
 			}
+			var usedCryochambers_reset = this.time.filterMetadata([this.time.getVSU("usedCryochambers")], ["name", "val", "on"]);
+			usedCryochambers_reset[0]["val"] = cryochambers;
+			usedCryochambers_reset[0]["on"] = cryochambers;
+		}else{
+			var usedCryochambers_reset = this.time.filterMetadata([this.time.getVSU("usedCryochambers")], ["name", "val", "on"]);
+			usedCryochambers_reset[0]["val"] = 0;
+			usedCryochambers_reset[0]["on"] = 0;
+		}
+		if(this.challenges.getChallenge("postApocalypse").pending){
+			if(newKittens.length > 0){
+				var catnip = this.resPool.get("catnip");
+				if (!catnip){
+					catnip = this.resPool.createResource("catnip");
+				}
+				catnip.value = newKittens.length * 1000 * (1 + this.resPool.get("karma").value/100);
+				newResources.push(catnip);
+			}
+			cathPollution = (this.challenges.getChallenge("postApocalypse").on + newKittens.length) * 1e+8 + 1e+11;
 		}
 
+/*
 		if (newKittens.length > 0) {
 			var usedCryochambers_reset = this.time.filterMetadata([this.time.getVSU("usedCryochambers")], ["name", "val", "on"]);
 			usedCryochambers_reset[0]["val"] = newKittens.length;
@@ -4682,7 +4754,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			usedCryochambers_reset[0]["val"] = 0;
 			usedCryochambers_reset[0]["on"] = 0;
 		}
-
+*/
 		// Set the challenge for after reset
 		for (var i = 0; i < this.challenges.challenges.length; i++){
 			var challenge = this.challenges.challenges[i];

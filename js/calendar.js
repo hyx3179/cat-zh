@@ -338,7 +338,11 @@ dojo.declare("com.nuclearunicorn.game.Calendar", null, {
 				}
 			}
 		}
-
+		if(building_name == "sattelite"){
+			this.game.upgrade({
+				buildings: ["pasture", "observatory"],
+			});
+		}
 		return effects;
 	},
 
@@ -774,8 +778,6 @@ dojo.declare("com.nuclearunicorn.game.Calendar", null, {
 		beacons.action(beacons, this.game);
 		this.game.updateCaches();
 		this.game.resPool.addResPerTick("relic", this.game.getEffect("relicPerDay") * daysOffset);
-		//------------------------- necrocorns pacts -------------------------
-		this.game.religion.pactsManager.necrocornConsumptionDays(daysOffset);
 
 		//not sure if it is a good idea
 		//calculate amount of void earned on average per day, then multiply by days and percentage of time in paradox
@@ -943,7 +945,9 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 */
 		// Apply cycleEffect for the newYears
 		this.game.upgrade({
-			spaceBuilding: this.game.space.spaceBuildingsMap
+			buildings: ["pasture", "observatory"],
+			spaceBuilding: this.game.space.spaceBuildingsMap,
+			policies: ["authocracy"]
 		});
 
 		var resPool = this.game.resPool;
@@ -966,7 +970,7 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 			}
 		}
 
-		this.game.upgrade({policies: ["authocracy"]});
+		// this.game.upgrade({policies: ["authocracy"]});
 
 		if (updateUI) {
 			this.game.ui.render();
@@ -1021,7 +1025,9 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 
 		// Apply cycleEffect for the newYear
 		this.game.upgrade({
-			spaceBuilding: this.game.space.spaceBuildingsMap
+			buildings: ["pasture", "observatory"],
+			spaceBuilding: this.game.space.spaceBuildingsMap,
+			policies: ["authocracy"]
 		});
 
 		var resPool = this.game.resPool;
@@ -1043,7 +1049,7 @@ if (++this.cycleYear >= this.yearsPerCycle) {
 			}
 		}
 
-		this.game.upgrade({policies: ["authocracy"]});
+		// this.game.upgrade({policies: ["authocracy"]});
 		
 		if (updateUI) {
 			this.game.ui.render();

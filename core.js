@@ -1470,8 +1470,13 @@ dojo.declare("com.nuclearunicorn.game.ui.ButtonModern", com.nuclearunicorn.game.
 			};
 			this.game.tooltipUpdateFunc();
 
-			var pos = $(container).position();
-			pos.left += 300;
+			var Container = $(container);
+			var pos = Container.position();
+			if (this.game.ui.fullWidth) {
+				pos.left = 300 + Container.offset().left;
+			} else {
+				pos.left += 300;
+			}
 
 			//prevent tooltip from leaving the window area
 			var maxTooltipTop = $(window).scrollTop() + $(window).height() - $(tooltip).height() - 50; //50px padding-bottom
@@ -1879,9 +1884,7 @@ dojo.declare("com.nuclearunicorn.game.ui.BuildingBtn", com.nuclearunicorn.game.u
 				if (building.lackResConvert) {
 					dojo.toggleClass(this.domNode, "bldlackResConvert", building.on > 0);
 				} else {
-                    var domNode = this.domNode;
 					dojo.toggleClass(this.domNode, "bldEnabled", building.on > 0);
-                    domNode = null;
 				}
 			}
 
@@ -2032,6 +2035,7 @@ dojo.declare("com.nuclearunicorn.game.ui.BuildingStackableBtnController", com.nu
 				liberty.calculateEffects(liberty, this.game);
 				var zebraOutpostMeta = this.game.bld.getBuildingExt("zebraOutpost").meta;
 				zebraOutpostMeta.calculateEffects(zebraOutpostMeta, this.game);
+				zebraOutpostMeta.jammed = false;
 				this.game.diplomacy.onLeavingIW();
 			}
 
