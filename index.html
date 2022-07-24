@@ -176,10 +176,7 @@
 					"js/math",
 					"game",
 
-					"js/toolbar",
-
-					// 加载进度条
-					"KGP",
+					"js/toolbar"
 				];
 				progressMax = modules.length + 3;
 				console.log("Loading...");
@@ -766,9 +763,9 @@
 				$("#ks-label").text("可爱的猫猫科学家为您服务");
 				$('#ks-options').show();
 			};
-			
-		   var ks = function() {
-				if (ksVision) {
+
+			var ks = function() {
+				if (ksVision && localStorage['zh.ks.enable'] === 'enable') {
 					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
 					document.body.appendChild(document.createElement('script')).src = srcScientists + ksVision;
 				} else {
@@ -779,7 +776,7 @@
 
 			if (localStorage['zh.ks.enable'] === 'enable') {
 				$("#set-ks-enable").attr("checked", true);
-				enableKS();
+				$("#ks-label").text("可爱的猫猫科学家为您服务");
 			}
 			$("#set-ks-enable").on('change', function() {
 				if (localStorage['zh.ks.enable'] === 'enable') {
@@ -794,14 +791,33 @@
 				enableKS();
 			});
 
-			if (localStorage['zh.kgp.enable'] === 'enable') {
-				$("#set-kgp-enable").attr("checked", true)
+			var timeKGP;
+			loadKGP = function () {
+				if (ksVision && localStorage['zh.kgp.enable'] !== 'disable' && game.timer) {
+					let srcKGP = "KGP.min.js?v=";
+					document.body.appendChild(document.createElement('script')).src = srcKGP + ksVision;
+				} else if (!timeKGP) {
+					timeKGP = setTimeout(() => loadKGP(), 500);
+				}
+			};
+
+			if (localStorage['zh.kgp.enable'] !== 'disable') {
+				$("#set-kgp-enable").attr("checked", true);
+				if (window.KGPInterval === undefined) {loadKGP();}
 			}
 			$("#set-kgp-enable").on('change', function() {
-				localStorage['zh.kgp.enable']
-					? localStorage.removeItem('zh.kgp.enable')
-					: localStorage.setItem('zh.kgp.enable', 'enable');
-				initKGP();
+				if (!localStorage['zh.kgp.enable'] || localStorage['zh.kgp.enable'] === 'disable') {
+					localStorage.setItem('zh.kgp.enable', 'enable');
+					$("#kgp-label").text("资源进度条已启动");
+				} else {
+					localStorage.setItem('zh.kgp.enable', 'disable');
+					$("#kgp-label").text("启用资源进度条");
+				}
+				if (window.initKGP) {
+					initKGP();
+				} else {
+					loadKGP();
+				}
 			});
 
 			var nummonLoad = function() {

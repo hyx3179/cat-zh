@@ -1,12 +1,17 @@
-var KGPInterval;
+let KGPInterval;
 
-$(function () {
+setTimeout(() => {
+	console.log(1)
 	initKGP();
-});
+}, Math.min(200, 200 - Date.now() + game.timer.timestampStart));
 
 function initKGP() {
-	if (localStorage['zh.kgp.enable'] === 'enable' && !KGPInterval) {
-		KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
+	if (localStorage['zh.kgp.enable'] !== 'disable' && !KGPInterval) {
+		if (game.resPool) {
+			KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
+		} else {
+			setTimeout(() => initKGP(), 500);
+		}
 	} else {
 		if (KGPInterval) {
 			clearInterval(KGPInterval);
@@ -17,74 +22,152 @@ function initKGP() {
 }
 
 function initKGPLeftColumn(enable = true) {
-	var $column = $('#leftColumnViewport');
-	var $rows = $column.find('.res-row');
-
+	let maxAmount, currentAmount;
+	// var $column = $("#leftColumnViewport");
+	// var $rows = $column.find('.res-row');
+	const $rows = $("#leftColumnViewport > div > div:nth-child(1) > div:nth-child(2) > div").find('.res-row');
+	const resMap = game.resPool.resourceMap;
 	$rows.each(function (index, item) {
-
 		if (!enable) {
-			item.removeAttribute('style');
-			return;
+			return item.removeAttribute('style');
 		}
 
-		var $row = $(item);
-
-		// #5
-		if (!$row.hasClass('resource_kittens')) {
-
-			var maxAmount = getAmountLeftColumn($row.find('.maxRes'));
-			var currentAmount = getAmountLeftColumn($row.find('.resAmount'));
-
-			if (maxAmount > 0 && currentAmount > 0) {
-				var percentage = (100 * currentAmount) / maxAmount;// #1
-
-				$row.css('background-repeat', 'no-repeat');
-				$row.css('background-position', 'bottom left');
-				$row.css('background-size', percentage + '% 1px');// #3
-
-				if (percentage > 95) {
-					$row.css('background-image', 'linear-gradient(0, red, red)');
-				} else if (percentage > 75) {
-					$row.css('background-image', 'linear-gradient(0, orange, orange)');
-				} else {
-					$row.css('background-image', 'linear-gradient(0, green, green)');
-				}
-			}
-		}
+		let name = item.className.split(' ')[1].substring(9);
+		if (name === 'kittens') {return;}
+		let $row = $(item);
+		let res = resMap[name];
+		maxAmount = res.maxValue;
+		currentAmount = res.value;
+		KGP.changeCSS(currentAmount, maxAmount, $row);
 	});
-}
+	let tool = $('#tooltip').find('.price-block');
+	if (game.tooltipUpdateFunc) {
+		tool.each((index, item) => {
+			maxAmount = currentAmount = 0;
+			const $row = $(item);
+			// let a = $('#tooltip').find('.price-block')[1].outerText;
+			let text = item.outerText;
+			text = text.replace('\n', ' ');
+			let replaceText = text.replace('/', '');
+			if (replaceText !== text) {
+				replaceText = replaceText.replace('*', ' ');
+				replaceText = replaceText.replace('+', ' ');
+				let array = replaceText.trim().split(' ');
+				maxAmount = KGP.getAmountFromFormatted(array[3]);
+				currentAmount = KGP.getAmountFromFormatted(array[1]);
+				let name = array[0];
+				if (array.length < 5) {
+					let noRes, antimatterProduction, relicPerDay;
+					switch (name) {
+						case '眼泪':
+							noRes = $row.find('.noRes');
+							noRes.text((index, oldVal) => {
+								let time = Math.ceil((maxAmount - currentAmount) / game.bld.getBuildingExt('ziggurat').meta.on) * 2500;
+								let unicornTick = resMap['unicorns'].perTickCached;
+								if (time - resMap['unicorns'].value > 0 && unicornTick) {
+									time = (time - resMap['unicorns'].value) / (game.getTicksPerSecondUI() * unicornTick);
+									return oldVal + ' (' + game.toDisplaySeconds(time) + ')';
+								}
+							});
+							break;
+						case '反物质':
+							antimatterProduction = game.getEffect('antimatterProduction');
+							if (maxAmount <= resMap['antimatter'].maxValue && antimatterProduction) {
+								noRes = $row.find('.noRes');
+								noRes.text((index, oldVal) => {
+									let time = Math.ceil((maxAmount - currentAmount) / antimatterProduction);
+									return oldVal + ' (' + time + '游戏年)';
+								});
+							}
+							break;
+						case '遗物':
+							relicPerDay = game.getEffect("relicPerDay");
+							if (relicPerDay) {
+								noRes = $row.find('.noRes');
+								noRes.text((index, oldVal) => {
+									let isAccelerated = game.time.isAccelerated ? 1.33 : 2;
+									let time = Math.ceil((maxAmount - currentAmount) / relicPerDay) * isAccelerated;
+									return oldVal + ' (' + game.toDisplaySeconds(time) + ')';
+								});
+							}
+							break;
+					}
+				}
 
-function getAmountLeftColumn($cell) {
-	if ($cell.length === 0)
-		return 0;
-
-	var cellContent = $cell.text().replace('/', '');
-
-	return getAmountFromFormatted(cellContent);
-}
-
-function getAmountFromFormatted(formatted) {
-	var unit = formatted.slice(-1);
-
-	var noUnit = !isNaN(Number(unit));// #4
-
-	var amount = noUnit ? Number(formatted) : Number(formatted.substring(0, formatted.length - 1));
-
-	if (noUnit)
-		return amount;
-
-	switch (unit) {
-		case 'K':
-			return amount * 1e3;
-		case 'M':
-			return amount * 1e6;
-		case 'G':
-			return amount * 1e9;
-		case 'T':
-			return amount * 1e12;
-		case 'P':
-			return amount * 1e15;
-		default:
-			return 0;
+				KGP.changeCSS(currentAmount, maxAmount, $row);
+			}
+		});
 	}
 }
+
+let KGP;
+KGP = {
+	resTitleMap : undefined,
+	resRow : undefined,
+	tool : undefined,
+	changeCSS : function (current, limit, $row) {
+		if (limit > 0 && current > 0) {
+			let percentage = (100 * current) / limit; // #1
+
+			$row.css('background-repeat', 'no-repeat');
+			$row.css('background-position', 'bottom left');
+			$row.css('background-size', percentage + '% 1px');// #3
+
+			if (percentage > 95) {
+				$row.css('background-image', 'linear-gradient(0, red, red)');
+			} else if (percentage > 75) {
+				$row.css('background-image', 'linear-gradient(0, orange, orange)');
+			} else {
+				$row.css('background-image', 'linear-gradient(0, green, green)');
+			}
+		}
+	},
+	// getAmountLeftColumn : function ($cell) {
+	// 	if ($cell.length === 0) {
+	// 		return 0;
+	// 	}
+	//
+	// 	const cellContent = $cell.text().replace('/', '')
+	//
+	// 	return this.getAmountFromFormatted(cellContent);
+	// },
+	getAmountFromFormatted : function (formatted) {
+		if (!formatted) {return 0;}
+		const unit = formatted.slice(-1);
+
+		const noUnit = !isNaN(Number(unit));// #4
+
+		const amount = noUnit ? Number(formatted) : Number(formatted.substring(0, formatted.length - 1));
+
+		if (noUnit) {
+			return amount;
+		}
+
+		switch (unit) {
+			case 'K':
+				return amount * 1e3;
+			case 'M':
+				return amount * 1e6;
+			case 'G':
+				return amount * 1e9;
+			case 'T':
+				return amount * 1e12;
+			case 'P':
+				return amount * 1e15;
+			default:
+				return 0;
+		}
+	},
+};
+
+// (() => {
+// 	KGP.resTitleMap = {};
+// 	let resources = game.resPool.resources;
+// 	for (let i = game.resPool.resources.length - 1; i >= 0; i--) {
+// 		let res = resources[i];
+// 		let title = res.title;
+// 		KGP.resTitleMap[title] = res;
+// 	}
+// })();
+// $('#tooltip').find('price-block')
+// $('#tooltip').find('.price-block')[1].outerText
