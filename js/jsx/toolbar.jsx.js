@@ -488,7 +488,7 @@ WCloudSaveRecord = React.createClass({
 
         var self = this;
 
-        return $r("div", {className:"save-record"}, [
+        return $r("div", {className:"save-record " + (save.archived ? "archived" : "")}, [
             $r("div", {className:"save-record-cell"},
                 this.state.isEditable ? 
                     $r("input", {
@@ -509,7 +509,11 @@ WCloudSaveRecord = React.createClass({
                                     {
                                         label: self.state.label
                                     }
-                                );
+                                ).then(function(){
+                                    //force sync-up of the game's server state with UI
+                                    //(pushMetadata should return a new save snapshot)
+                                    self.forceUpdate();
+                                });
                                 self.setState({
                                     isEditable: false
                                 });
@@ -576,8 +580,19 @@ WCloudSaveRecord = React.createClass({
                 }}, "更名"
             ),
             this.state.showActions &&
-                // $r("a", {}, "archive")
-                $r("a", {}, "待更新")
+                $r("a", { onClick: function(e){
+                    e.stopPropagation();
+                    game.server.pushSaveMetadata(
+                        save.guid,
+                        {
+                            archived: !save.archived
+                        }
+                    ).then(function(){
+                        //force sync-up of the game's server state with UI
+                        //(pushMetadata should return a new save snapshot)
+                        self.forceUpdate();
+                    });
+                }}, "归档")
         ]);
     }
 })
