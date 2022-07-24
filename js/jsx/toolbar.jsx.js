@@ -449,7 +449,10 @@ WLoginForm = React.createClass({
 		}).done(function(resp){
             if (resp.id){
                 self.props.game.server.setUserProfile(resp);
-            }
+            } else {
+            	self.setState({error: $I(resp.error)})
+           		// console.error("something went wrong, resp:", resp, status)
+			}
 		}).fail(function(resp, status){
             console.error("something went wrong, resp:", resp, status)
             self.setState({error: resp.responseText})

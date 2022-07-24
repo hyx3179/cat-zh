@@ -112,7 +112,7 @@ self.addEventListener('fetch', function(event) {
 						return responseFetch;
 					}
 					// 网络获得成功，再缓存
-					var responseFetchToCache = responseFetch.clone();
+					let responseFetchToCache = responseFetch.clone();
 					caches.open(CACHE_NAME).then(function(cache) {
 						return cache.delete(eventRequest, {
 							ignoreSearch: true,

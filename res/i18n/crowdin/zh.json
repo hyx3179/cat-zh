@@ -998,6 +998,8 @@
     "res.stack.boost": "增益",
     "res.stack.buildings": "建筑",
     "res.stack.corruptionPerDay": "腐化",
+    "res.stack.corruptionPerDayProduction": "腐化产出",
+    "res.stack.corruptionPerDaySiphoned": "腐化虹吸",
     "res.stack.policy": "政策",
     "res.stack.pollution": "污染",
     "res.stack.convCons": "转化消耗",
@@ -2230,9 +2232,9 @@
     "workshop.zebraUpgrade.whispers.label": "窃窃私语",
     "workshop.zebraUpgrade.whispers.desc": "解锁象牙寺庙的阿利科恩升天仪式。阿利科恩升天会产生T秘银，并增加矿物产量。",
     "workshop.zebraUpgradesPanel.label": "斑马的升级",
-    "Error: Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.": "错误! 账户已被锁，请稍后再试。",
-    "Error: There is no user record corresponding to this identifier. The user may have been deleted.": "错误！账户不存在",
-    "Error: The password is invalid or the user does not have a password.": "错误！密码错误",
-    "Error: The email address is badly formatted.": "错误! 邮箱格式不对",
-    "Error: The email address is already in use by another account.": "该邮箱地址已经被注册"
+    "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.": "错误! 账户已被锁，请稍后再试。",
+    "There is no user record corresponding to this identifier. The user may have been deleted.": "错误！账户不存在",
+    "The password is invalid or the user does not have a password.": "错误！密码错误",
+    "The email address is badly formatted.": "错误! 邮箱格式不对",
+    "The email address is already in use by another account.": "该邮箱地址已经被注册"
 }

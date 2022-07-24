@@ -176,7 +176,7 @@ dojo.declare("classes.game.Telemetry", [mixin.IDataStorageAware], {
 /**
  * Server is a mediator between client and KGNet
  * It supports fetching data about saves, syncing using info, etc
- * 
+ *
  * Please see toolbar.jsx.js#WLogin widget for rendering part
  */
 
@@ -247,7 +247,7 @@ dojo.declare("classes.game.Server", null, {
 		//var host = window.location.hostname;
 		//var isLocalhost = window.location.protocol == "file:" || host == "localhost" || host == "127.0.0.1";
 		//if (isLocalhost){
-			//if you are running chilar locally you should know what you are doing 
+			//if you are running chilar locally you should know what you are doing
 			return "https://kittensgame.com";
 		//}
 		//return "";
@@ -279,12 +279,12 @@ dojo.declare("classes.game.Server", null, {
 		if (!this.userProfile){
 			this.syncUserProfile();
 		}
-		
+
 	},
 
 	/**
 	 * Make an XHR request to KGNet server
-	 * 
+	 *
 	 * @param {A s} url - relative endpoint URL
 	 * @param {*} method - "GET" or "POST"
 	 * @param {*} data - post data
@@ -306,7 +306,7 @@ dojo.declare("classes.game.Server", null, {
 	},
 
 	/**
-	 * Fetch user profile from the chiral server, 
+	 * Fetch user profile from the chiral server,
 	 * User must be logged in and session cookie should be set beforehead
 	 */
 	syncUserProfile: function(){
@@ -349,11 +349,13 @@ dojo.declare("classes.game.Server", null, {
 		};
 		error.innerHTML = "发送请求中，请稍候";
 		$.post("https://kittensgame.com/user/register/", data).done(function(resp){
-			if (resp.startsWith("Error")) {
-				error.innerHTML = $I(resp);
+			if (resp["error"]) {
+				error.innerHTML = $I(resp["error"]);
 			} else {
 				error.innerHTML = "<span style='color:#14CD61;'>注册成功</span>";
 			}
+		}).fail(() => {
+			error.innerHTML = "网络可能出了问题";
 		});
 	},
 
@@ -364,7 +366,7 @@ dojo.declare("classes.game.Server", null, {
 		game.lastBackup = new Date().getTime();
 
 		var saveData = this.game.save();
-		this._xhr("/kgnet/save/upload/", "POST", 
+		this._xhr("/kgnet/save/upload/", "POST",
 		{
 			//pre-parsing guid to avoid checking it on the backend side
 			guid: this.game.telemetry.guid,
@@ -375,7 +377,7 @@ dojo.declare("classes.game.Server", null, {
 					day: game.calendar.day
 				}
 			}
-		}, 
+		},
 		function(resp){
 			console.log("save successful?");
 			self.saveData = resp;
@@ -384,20 +386,20 @@ dojo.declare("classes.game.Server", null, {
 	},
 
 	/**
-	 * 
-	 * @param {*} metadata 
+	 *
+	 * @param {*} metadata
 	 * {
 	 * 	archived?: boolean;
 	 *  label?: string
 	 * }
 	 */
 	pushSaveMetadata: function(guid, metadata){
-		this._xhr("/kgnet/save/update/", "POST", 
+		this._xhr("/kgnet/save/update/", "POST",
 		{
 			//pre-parsing guid to avoid checking it on the backend side
 			guid: guid,
 			metadata: metadata
-		}, 
+		},
 		function(resp){
 			self.saveData = resp;
 		});
@@ -2065,7 +2067,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.time.updateEffectCached();
 		this.village.updateEffectCached();
         this.science.updateEffectCached();
-		
+
 		this.bld.cacheCathPollutionPerTick();
 
 		this.updateResources();
@@ -2449,17 +2451,17 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		this.diplomacyTab.visible = (this.diplomacy.hasUnlockedRaces());
 		this.religionTab.visible = (
-			this.resPool.get("faith").value > 0 || 
-			this.challenges.isActive("atheism") && 
+			this.resPool.get("faith").value > 0 ||
+			this.challenges.isActive("atheism") &&
 			this.bld.get("ziggurat").val > 0);
 
 		this.spaceTab.visible = (this.science.get("rocketry").researched);
 		this.timeTab.visible = (
-			this.science.get("calendar").researched || 
+			this.science.get("calendar").researched ||
 			this.time.getVSU("usedCryochambers").val > 0);
-			
+
 		this.challengesTab.visible = (
-			this.prestige.getPerk("adjustmentBureau").researched || 
+			this.prestige.getPerk("adjustmentBureau").researched ||
 			this.prestige.getPerk("adjustmentBureau").reserve);
 
 		if (this.nummonTab) {
@@ -2660,10 +2662,10 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 	/**
 	 * Oh brave and noble soul, before adding a line to this method, please read this:
-	 * 
+	 *
 	 * My intention for KG was to have a game where you would never have a method called a 'migrate save'
 	 * I lost this battle long time ago and here we are.
-	 * 
+	 *
 	 * Save migration must be considered as a measure of a last resolve, when everything else fails
 	 * Whenever possible, we should resolve to the code being backward compatible. Every time we bump a save version,
 	 * god kills a kitten somewhere.
@@ -3050,12 +3052,12 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		// +VILLAGE JOB PRODUCTION
 		var resMapProduction = this.village.getResProduction();
 		var resProduction = resMapProduction[res.name] ? resMapProduction[res.name] : 0;
-		
+
 		// +HOLY GENOCIDE SCALING BONUS
 
 		//TODO: calculate prod scaling effect differently for HG
 		var hgScalingBonus = this.religion.getHGScalingBonus();
-		
+
 		//var hgScalingBonus = Math.pow(1.01, this.religion.getTU("holyGenocide").val * 2);
 		resProduction = resProduction * hgScalingBonus;
 
@@ -3132,7 +3134,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		// +*FAITH BONUS
 		perTick *= 1 + this.religion.getSolarRevolutionRatio() * (1 + ((res.name == "wood" || res.name == "catnip")? this.bld.pollutionEffects["solarRevolutionPollution"] : 0));
-		
+
 		//+COSMIC RADIATION
 		if (!this.opts.disableCMBR && res.name != "coal") {
 			perTick *= 1 + this.getCMBRBonus();
@@ -3438,7 +3440,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		//ParagonSpaceProductionRatio definition 4/4
 		paragonSpaceProductionRatio *= 1 + this.religion.getSolarRevolutionRatio();
-		
+
         //policy effects:
 		//necrocracy global effect
 		//TODO: consider moving it to calculateEffects
@@ -3469,7 +3471,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			type: "ratio",
 			value: this.getEffect(res.name + "PolicyRatio")
 		});
-		
+
 		// +AUTOMATED PRODUCTION BUILDING
 		stack.push({
 			name: $I("res.stack.convProd"),
@@ -3959,7 +3961,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			var nextKittenProgress = this.village.sim.nextKittenProgress;
 			var kittensPerTick = this.village.calculateKittensPerTick();
 			var resString =  " [" + ( nextKittenProgress * 100 ).toFixed()  + "%]";
-			resString += "<br>" + $I("res.toNextKitten") + " " + this.toDisplaySeconds((1 - nextKittenProgress)/kittensPerTick);
+			resString += "<br>" + $I("res.toNextKitten") + " " + this.toDisplaySeconds((1 - nextKittenProgress) * 0.2 /kittensPerTick);
 			return resString;
 		}
 		var resStack = this.getResourcePerTickStack(res.name),
@@ -4968,7 +4970,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 
 	unlock: function(list) {
-		var game = this; 
+		var game = this;
 		for (var type in list) {
 			if (list[type].length == 0) {
 				return;
@@ -4977,22 +4979,22 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				var unlockId = list[type][i];
 				var newUnlock = this.getUnlockByName(unlockId, type);
 
-				/** 
+				/**
 				 * Multi-unlock mechanism:
-				 * 
+				 *
 				 * Source provides _SIGNAL_ throught the .unlocks property
-				 * 
+				 *
 				 * e.g.:
-				 * 
+				 *
 				 * meta1 -> game.unlock() ->	target meta
 				 * meta2 -> game.unlock() /
-				 * 
+				 *
 				 * by default any unlock() signal from source should mark target meta as unlocked
-				 * 
+				 *
 				 * in case there are complex unlock conditions (say policies),
 				 * target meta should evaluate the signal through the evaluateLocks()
 				 * and return cancel if not all unlock conditions are satisfied
-				 * 
+				 *
 				*/
 				if (!newUnlock){
 					console.trace();
@@ -5089,7 +5091,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
     },
 
 	//-----------------------------------------------------------------
-	
+
 	redeemGift: function(){
 		if (this.resPool.get("elderBox").value == 0) {
 			return;
@@ -5221,7 +5223,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 					}
 					return resPrice * (Math.pow(priceRatio, num) - 1)/(priceRatio - 1);
 				};
-				var amt1 = Math.max(getSumOfPrices(unicornGraveyard, "necrocorn") + getSumOfPrices(unicornNecropolis, "necrocorn"), 
+				var amt1 = Math.max(getSumOfPrices(unicornGraveyard, "necrocorn") + getSumOfPrices(unicornNecropolis, "necrocorn"),
 				Math.max(this.resPool.get("necrocorn").value, 10));
 				var msg = $I("gift.resources", [this.getDisplayValueExt(amt), ucfirst($I("resources.compedium.title"))]);
 				msg += $I("gift.resources", [this.getDisplayValueExt(amt1), ucfirst($I("resources.necrocorn.title"))]);
@@ -5288,7 +5290,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 	},
 	createRandomName: function(lenConst, charPool) {
 		if(!charPool) {
-			charPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■◆◆åœ∑ß≈ç∂´®ƒ√∫©†¥˙˜µ∆¨ˆ˚µ≤¬øπ≥…π“æ÷æ«§¡™£¢∞§¶•ªº≠"; //◆ 
+			charPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■◆◆åœ∑ß≈ç∂´®ƒ√∫©†¥˙˜µ∆¨ˆ˚µ≤¬øπ≥…π“æ÷æ«§¡™£¢∞§¶•ªº≠"; //◆
 		}
 		var nameLength = Math.floor(Math.random() * 6 + 5);
 		if(lenConst) {
