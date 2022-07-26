@@ -69,7 +69,7 @@ KGP = {
 					let textLength = mixedText.length;
 					let currentAmount, name;
 					for (let i = 0; i < textLength; i++) {
-						if (parseFloat(mixedText[i])) {
+						if (parseFloat(mixedText[i]) + 1) {
 							name = mixedText.substring(0, i);
 							currentAmount = mixedText.substring(i, textLength);
 							break;
@@ -77,7 +77,7 @@ KGP = {
 					}
 					let maxAmount = KGP.getAmountFromFormatted(array[2]);
 					currentAmount = KGP.getAmountFromFormatted(currentAmount);
-					if (array.length < 5) {
+					if (array.length < 4) {
 						let noRes, antimatterProduction, relicPerDay;
 						switch (name) {
 							case '眼泪':
@@ -126,7 +126,7 @@ KGP = {
 
 			$row.css('background-repeat', 'no-repeat');
 			$row.css('background-position', 'bottom left');
-			$row.css('background-size', percentage + '% 1px');// #3
+			$row.css('background-size', Math.min(200, percentage) + '% 1px');// #3
 
 			if (percentage > 95) {
 				$row.css('background-image', 'linear-gradient(0, red, red)');

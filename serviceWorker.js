@@ -14,10 +14,10 @@ const cdnCache = [
 	strap + "themes/bootstrap-responsive.min.css",
 ];
 
-const urlsToCache = [
-	locationUrl,
-	locationUrl + 'index.html',
-];
+// const urlsToCache = [
+// 	locationUrl,
+// 	locationUrl + 'index.html',
+// ];
 
 // 白名单
 const CACHE_LIST = [
