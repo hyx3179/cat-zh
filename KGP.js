@@ -34,9 +34,11 @@ function initKGPLeftColumn(enable = true) {
 		if (name === 'kittens') {return;}
 		let $row = $(item);
 		let res = resMap[name];
-		let maxAmount = res.maxValue;
-		let currentAmount = res.value;
-		KGP.changeCSS(currentAmount, maxAmount, $row);
+		if (res) {
+			let maxAmount = res.maxValue;
+			let currentAmount = res.value;
+			KGP.changeCSS(currentAmount, maxAmount, $row);
+		}
 	});
 	KGP.updateTooltip();
 }
