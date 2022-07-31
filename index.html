@@ -767,7 +767,7 @@
 			var ks = function() {
 				if (ksVision && window.run === undefined) {
 					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
-					document.body.appendChild(document.createElement('script')).src = srcScientists + ksVision;
+					document.body.appendChild(document.createElement('script')).src = srcScientists + + new Date().getDate() + ksVision;
 					clearInterval(timeKS);
 					timeKS = null;
 				}

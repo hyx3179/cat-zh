@@ -1,20 +1,18 @@
-let KGPInterval;
-
 setTimeout(() => {
 	initKGP();
 }, 201 + Math.max(- Date.now() + game.timer.timestampStart, -200));
 
 function initKGP() {
-	if (localStorage['zh.kgp.enable'] !== 'disable' && !KGPInterval) {
+	if (localStorage['zh.kgp.enable'] !== 'disable' && !window.KGPInterval) {
 		if (game.resPool) {
-			KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
+			window.KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
 		} else {
 			setTimeout(() => initKGP(), 500);
 		}
 	} else {
 		if (KGPInterval) {
 			clearInterval(KGPInterval);
-			KGPInterval = undefined;
+			window.KGPInterval = undefined;
 			initKGPLeftColumn(false);
 		}
 	}
@@ -43,8 +41,7 @@ function initKGPLeftColumn(enable = true) {
 	KGP.updateTooltip();
 }
 
-let KGP;
-KGP = {
+window.KGP = {
 	resMap : game.resPool.resourceMap,
 	resRow : undefined,
 	tool : undefined,
