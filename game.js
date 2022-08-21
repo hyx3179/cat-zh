@@ -2498,7 +2498,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				});
 			}
 		});
-        game.nummonTab.visible = true;
+		if (game.nummonTab) {
+			game.nummonTab.visible = true;
+		}
 	},
 
     saveToFile: function(withFullName) {
