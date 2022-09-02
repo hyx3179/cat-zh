@@ -28,7 +28,6 @@ build() {
 
 	echo "Handling other files"
 	cp ./changelog.html ./public
-	cp ./hyxLog.html ./public
 	cp ./index.html ./public
 	cp ./server.json ./public
 	cp ./updateLog.html ./public

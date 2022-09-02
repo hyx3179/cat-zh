@@ -12,7 +12,7 @@
 	const host = location.host
 	const CDN = 'https://cdn.jsdelivr.net/gh/hyx3179/%%@%Revision%/'
 	const ADDRESS = [
-		//'http://localhost:8080/%%/',
+		//'http://localhost/%%/',
 		'https://hyx3179.github.io/%%/',
 		'https://cat-zh-hyx3179.netlify.app/%%/',
 	]
