@@ -1,6 +1,6 @@
-setTimeout(() => {
+$(function () {
 	initKGP();
-}, 201 + Math.max(- Date.now() + game.timer.timestampStart, -200));
+});
 
 function initKGP() {
 	if (localStorage['zh.kgp.enable'] !== 'disable' && !window.KGPInterval) {

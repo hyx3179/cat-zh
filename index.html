@@ -786,8 +786,7 @@
 				caches.delete('cat-' + swRevision);
 				window.location.reload();
 			});
-		</script>
-		<script type="text/javascript">
+
 			// 猫猫科学家 hyx3179 无限自用修改
 			var ksLabel = $("#ks-label")[0];
 			var ksVision = 0;
@@ -871,7 +870,17 @@
 				}
 			});
 
-			var loadKGP = function () {
+            if (localStorage['zh.kgp.enable'] === 'enable') {
+                $("#set-kgp-enable").attr("checked", true)
+            }
+            $("#set-kgp-enable").on('change', function () {
+                localStorage['zh.kgp.enable']
+                    ? localStorage.removeItem('zh.kgp.enable')
+                    : localStorage.setItem('zh.kgp.enable', 'enable');
+                initKGP();
+            });
+
+/*			var loadKGP = function () {
 				if (ksVision && game.timer) {
 					let srcKGP = "KGP.min.js?v=";
 					document.body.appendChild(document.createElement('script')).src = srcKGP + ksVision;
@@ -900,7 +909,7 @@
 				}
 			});
 
-/*			var nummonLoad = function() {
+			var nummonLoad = function() {
 				if (typeof gamePage !== "undefined") {
 					// NummonInit();
 					var srcNummon = location.origin + '/' + 'NummonCalc/NummonCalc.js?v=';
