@@ -22,7 +22,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 		<!--<script>
-			if (window.location.pathname && window.location.pathname.indexOf('//') == -1) {
+			if (window.location.pathname && window.location.pathname.indexOf('//') === -1) {
 				if (typeof navigator.serviceWorker !== 'undefined') {
 					navigator.serviceWorker.register('serviceWorker.js');
 				}
@@ -798,7 +798,7 @@
 					$("#ks-label").text("启用小猫珂学家");
 					return;
 				} else if (!localStorage['zh.ks.enable']) {
-					alert("第一次使用珂学家请点击说明书链接并参考\n\n太阳教团在附加项目里\n\n珂学家设置请根据自身实际情况调整，并不能做到满足所有人\n挂机推荐工艺项目默认设置能勾平衡尽量勾平衡\n文化、钛、科学爆仓属于正常现象\n还有问题或者建议，可以在猫国群找Cheney");
+					alert("第一次使用珂学家请点击说明书链接并参考\n下次打开游戏才会看到\n\n\n珂学家设置请根据自身实际情况调整，并不能做到满足所有人\n挂机推荐工艺项目默认设置能勾平衡尽量勾平衡\n文化、钛、科学爆仓属于正常现象\n还有问题或者建议，可以在猫国群找Cheney");
 				}
 				enableKS();
 			});
@@ -812,14 +812,32 @@
 			};
 			if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
 
-			if (localStorage['zh.kgp.enable'] === 'enable') {
-				$("#set-kgp-enable").attr("checked", true)
+			var loadKGP = function () {
+				if (ksVision && game.timer) {
+					let srcKGP = "KGP.min.js?v=";
+					document.body.appendChild(document.createElement('script')).src = srcKGP + ksVision;
+					clearInterval(window.timeKGP);
+					window.timeKGP = null;
+				}
+			};
+			if (localStorage['zh.kgp.enable'] !== 'disable') {
+				$("#set-kgp-enable").attr("checked", true);
+				var timeKGP = setInterval(loadKGP, 1000);
 			}
+
 			$("#set-kgp-enable").on('change', function() {
-				localStorage['zh.kgp.enable']
-					? localStorage.removeItem('zh.kgp.enable')
-					: localStorage.setItem('zh.kgp.enable', 'enable');
-				initKGP();
+				if (!localStorage['zh.kgp.enable'] || localStorage['zh.kgp.enable'] === 'disable') {
+					localStorage.setItem('zh.kgp.enable', 'enable');
+					$("#kgp-label").text("资源进度条已启动");
+				} else {
+					localStorage.setItem('zh.kgp.enable', 'disable');
+					$("#kgp-label").text("启用资源进度条");
+				}
+				if (window.initKGP) {
+					initKGP();
+				} else {
+					loadKGP();
+				}
 			});
 
 			var paragonWebsite = function() {
