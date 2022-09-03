@@ -776,8 +776,6 @@
 				caches.delete('cat-' + swRevision);
 				window.location.reload();
 			});
-		</script>
-		<script type="text/javascript">
 			//            科学家1.5.0
 			$.getJSON("../scientists/ks.version.json?=" + now)
 				.then(function (json) {
@@ -810,35 +808,18 @@
 					setTimeout(() => ks(), 500);
 				}
 			};
-			if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
+            if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
 
-			var loadKGP = function () {
-				if (ksVision && game.timer) {
-					let srcKGP = "KGP.min.js?v=";
-					document.body.appendChild(document.createElement('script')).src = srcKGP + ksVision;
-					clearInterval(window.timeKGP);
-					window.timeKGP = null;
-				}
-			};
-			if (localStorage['zh.kgp.enable'] !== 'disable') {
-				$("#set-kgp-enable").attr("checked", true);
-				var timeKGP = setInterval(loadKGP, 1000);
-			}
-
-			$("#set-kgp-enable").on('change', function() {
-				if (!localStorage['zh.kgp.enable'] || localStorage['zh.kgp.enable'] === 'disable') {
-					localStorage.setItem('zh.kgp.enable', 'enable');
-					$("#kgp-label").text("资源进度条已启动");
-				} else {
-					localStorage.setItem('zh.kgp.enable', 'disable');
-					$("#kgp-label").text("启用资源进度条");
-				}
-				if (window.initKGP) {
-					initKGP();
-				} else {
-					loadKGP();
-				}
-			});
+            if (localStorage['zh.kgp.enable'] === 'enable') {
+                $("#set-kgp-enable").attr("checked", true);
+                $('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
+            }
+            $("#set-kgp-enable").on('change', function () {
+                localStorage['zh.kgp.enable']
+                    ? localStorage.removeItem('zh.kgp.enable') & document.getElementById("KGPBorder").remove()
+                    : localStorage.setItem('zh.kgp.enable', 'enable') & $('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
+                initKGP();
+            });
 
 			var paragonWebsite = function() {
 				if (typeof gamePage !== "undefined") {
