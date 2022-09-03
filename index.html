@@ -814,7 +814,7 @@
 					setTimeout(() => ks(), 500);
 				}
 			};
-			if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
+            if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
 
 /*			var ks = function() {
 				if (ksVision && window.run === undefined && window.timeKS !== true) {
@@ -871,12 +871,13 @@
 			});
 
             if (localStorage['zh.kgp.enable'] === 'enable') {
-                $("#set-kgp-enable").attr("checked", true)
+                $("#set-kgp-enable").attr("checked", true);
+                $('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
             }
             $("#set-kgp-enable").on('change', function () {
                 localStorage['zh.kgp.enable']
-                    ? localStorage.removeItem('zh.kgp.enable')
-                    : localStorage.setItem('zh.kgp.enable', 'enable');
+                    ? localStorage.removeItem('zh.kgp.enable') & document.getElementById("KGPBorder").remove()
+                    : localStorage.setItem('zh.kgp.enable', 'enable') & $('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
                 initKGP();
             });
 

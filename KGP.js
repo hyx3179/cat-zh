@@ -1,10 +1,12 @@
 $(function () {
+	window.KGPInterval = undefined;
 	initKGP();
 });
 
 function initKGP() {
-	if (localStorage['zh.kgp.enable'] !== 'disable' && !window.KGPInterval) {
+	if (localStorage['zh.kgp.enable'] === 'enable' && !window.KGPInterval) {
 		if (game.resPool) {
+			KGP.resMap = game.resPool.resourceMap;
 			window.KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
 			$('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
 		} else {
@@ -44,7 +46,7 @@ function initKGPLeftColumn(enable = true) {
 }
 
 window.KGP = {
-	resMap : game.resPool.resourceMap,
+	resMap : undefined,
 	resRow : undefined,
 	tool : undefined,
 	updateTooltip: function () {
