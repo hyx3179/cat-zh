@@ -567,6 +567,9 @@
     "effectsMgr.statics.goldPolicyRatio.title": "黄金生产加成",
     "effectsMgr.statics.springCatnipRatio.title": "春季猫薄荷田加成",
     "effectsMgr.statics.summerSolarFarmRatio.title": "夏季太阳能发电站加成",
+
+    "effectsMgr.winterEnergy.warning.title": "冬季没有足够的能源生产",
+
     "general.copy.to.clipboard.prompt": "复制到剪贴板: Ctrl+C, Enter",
     "general.food.advisor.text": "食品顾问:你的猫薄荷储量过低!",
     "iron.will.break.confirmation.msg": "这会结束钢铁意志，你确定吗?",
