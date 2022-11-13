@@ -124,7 +124,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 				this.game.unlock(tu.unlocks);
 			}
 		}
-		//necrocorn deficit affecting 
+		//necrocorn deficit affecting
 		var pacts = this.pactsManager.pacts;
 		for(var i = 0; i < pacts.length; i++){
 			pacts[i].calculateEffects(pacts[i], this.game);
@@ -183,16 +183,9 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		}
 
 		if (this.corruption >= 1) {
-			if (alicorns.value > 1) {
-				this.corruption--;
-				alicorns.value--;
-				this.game.resPool.get("necrocorn").value++;
-				this.game.upgrade({
-					zigguratUpgrades: ["skyPalace", "unicornUtopia", "sunspire"]
-				});
+			var corrupted = this.corruptNecrocorns();
+			if (corrupted > 0) {
 				this.game.msg($I("religion.msg.corruption"), "important", "alicornCorruption");
-			} else {
-				this.corruption = 1;
 			}
 		}
 
@@ -227,6 +220,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		if (this.corruption >= 1) {
 			this.corruption = 1;
 		}
+		return alicornsToCorrupt;
 	},
 	necrocornsNaiveFastForward: function(daysOffset, times){
 		var alicorns = this.game.resPool.get("alicorn");
@@ -292,7 +286,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 			if(alicornsResult < 0){
 				this.pactsManager.deficit -= alicornsResult;
 				alicornsSpent += alicornsResult;
-				timePeriodWorking += alicornsResult/necrocornPerDay; 
+				timePeriodWorking += alicornsResult/necrocornPerDay;
 			}
 			var state = timePeriodWorking%(daysUntilCorrupted + daysUntilSpentOne);
 			this.pactsManager.necrocornDeficit += timePeriodWorking * daysUntilCorrupted/(daysUntilCorrupted + daysUntilSpentOne)* necrocornPerDay * (necrocornDeficitRepaymentModifier - 1);
@@ -317,7 +311,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		var siphenedNecrocorns = this.pactsManager.getSiphonedCorruption(days);
 		compensatedNecrocorns = Math.max(consumedAlicorns, -siphenedNecrocorns);
 		this.game.resPool.addResPerTick("alicorn", compensatedNecrocorns);
-	
+
 		//if siphening is not enough to pay for per day consumption ALSO consume necrocorns;
 		if((this.game.resPool.get("necrocorn").value + necrocornPerDay * days * necrocornDeficitRepaymentModifier - compensatedNecrocorns) < 0){
 			this.necrocornDeficit += Math.max(-necrocornPerDay * days - this.game.resPool.get("necrocorn").value + compensatedNecrocorns, 0);
@@ -1145,8 +1139,8 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		var game = this.game;
 		game.ui.confirm($I("religion.transcend.confirmation.title"), $I("religion.transcend.confirmation.msg"), function() {
 			//Transcend one Level at a time
-			var needNextLevel = 
-				religion._getTranscendTotalPrice(religion.transcendenceTier + 1) - 
+			var needNextLevel =
+				religion._getTranscendTotalPrice(religion.transcendenceTier + 1) -
 				religion._getTranscendTotalPrice(religion.transcendenceTier);
 
 			if (religion.faithRatio > needNextLevel) {
@@ -1214,9 +1208,9 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 			var resConverted = resPool.get(data.resTo);
 			/*
 				if you still have refined resources, roll them back
-				of course the correct way would be to call addResEvent(data.resTo, -data.valTo), 
+				of course the correct way would be to call addResEvent(data.resTo, -data.valTo),
 				find out actual remaining value
-				and refund it proportionally, but I am to lazy to code it in 
+				and refund it proportionally, but I am to lazy to code it in
 			*/
 			if (resConverted.value > data.valTo) {
 				this.game.resPool.addResEvent(data.resFrom, data.valFrom);
@@ -1676,7 +1670,7 @@ dojo.declare("classes.religion.pactsManager", null, {
 			name: "pactOfCleansing",
 			label: $I("religion.pact.pactOfCleansing.label"),
 			description: $I("religion.pact.pactOfCleansing.desc"),
-			prices: [				
+			prices: [
 				{ name : "relic", val: 100},
 			],
 			unlocks: {
@@ -1701,7 +1695,7 @@ dojo.declare("classes.religion.pactsManager", null, {
 			name: "pactOfDestruction",
 			label: $I("religion.pact.pactOfDestruction.label"),
 			description: $I("religion.pact.pactOfDestruction.desc"),
-			prices: [				
+			prices: [
 				{ name : "relic", val: 100},
 			],
 			priceRatio: 1,
@@ -1886,7 +1880,7 @@ dojo.declare("classes.religion.pactsManager", null, {
 	},
 	getPactsTextDeficit: function(){
 		if(this.game.religion.pactsManager.necrocornDeficit > 0){
-			return $I("msg.necrocornDeficit.info", [Math.round(this.game.religion.pactsManager.necrocornDeficit * 10000)/10000, 
+			return $I("msg.necrocornDeficit.info", [Math.round(this.game.religion.pactsManager.necrocornDeficit * 10000)/10000,
 				-Math.round(100*
 				((this.game.religion.pactsManager.necrocornDeficit/50))),
 				Math.round(10000*
@@ -1969,14 +1963,14 @@ dojo.declare("classes.religion.pactsManager", null, {
 			var kittensKarmaPerMinneliaRatio = this.game.getEffect("kittensKarmaPerMinneliaRatio");
 			this.game.karmaKittens += millenium * this.game._getKarmaKittens(kittens) *
 				this.game.getUnlimitedDR(
-					kittensKarmaPerMinneliaRatio * 
+					kittensKarmaPerMinneliaRatio *
 					Math.max(1 + 0.1 * (this.game.religion.transcendenceTier - 25), 1)*
 					(this.game.getEffect("pactsAvailable"))
 				, 100);
 			var karmaOld = this.game.resPool.get("karma").value;
 			this.game.updateKarma();
-			console.log("produced " + String(this.game.resPool.get("karma").value - karmaOld) + " karma");
-			console.log("produced " + String(this.game.karmaKittens - oldKarmaKittens) + " karmaKittens"); //for testing purposes - comment over before merging into ML
+			//console.log("produced " + String(this.game.resPool.get("karma").value - karmaOld) + " karma");
+			//console.log("produced " + String(this.game.karmaKittens - oldKarmaKittens) + " karmaKittens"); //for testing purposes - comment over before merging into ML
 			return this.game.resPool.get("karma").value - karmaOld;
 		}
 		return 0;
@@ -2249,7 +2243,7 @@ dojo.declare("com.nuclearunicorn.game.ui.tab.ReligionTab", com.nuclearunicorn.ga
 				this.faithCount.innerHTML += ( " (+" + this.game.getDisplayValueExt(100 * bonus) + "% " + $I("religion.faithCount.bonus") + ")" );
 			}
 
-			dojo.forEach(this.rUpgradeButtons,  function(e, i){ e.update(); });	
+			dojo.forEach(this.rUpgradeButtons,  function(e, i){ e.update(); });
 		}
 		var hasCT = this.game.science.get("cryptotheology").researched && this.game.religion.transcendenceTier > 0;
 		if (hasCT){
@@ -2265,10 +2259,10 @@ dojo.declare("com.nuclearunicorn.game.ui.tab.ReligionTab", com.nuclearunicorn.ga
 		//dojo.forEach(this.pactUpgradeButtons, function(e, i){ e.update(); });
 		/*if(this.necrocornDeficitMsgBox){
 			if(this.game.religion.necrocornDeficit > 0){
-				this.necrocornDeficitMsgBox.innerHTML = $I("msg.necrocornDeficit.info", [Math.round(this.game.religion.necrocornDeficit * 10000)/10000, 
+				this.necrocornDeficitMsgBox.innerHTML = $I("msg.necrocornDeficit.info", [Math.round(this.game.religion.necrocornDeficit * 10000)/10000,
 					-Math.round(100*
-					((1 - this.game.religion.necrocornDeficit/50) > 0 ? 
-					(this.game.religion.necrocornDeficit/50) * 100: 
+					((1 - this.game.religion.necrocornDeficit/50) > 0 ?
+					(this.game.religion.necrocornDeficit/50) * 100:
 					this.game.getLimitedDR(this.game.religion.necrocornDeficit*2, 500))
 				)/100|| 0, Math.round(10000*
 					(0.15 *(1 + this.game.getEffect("deficitRecoveryRatio")/2)))/100,

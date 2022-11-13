@@ -54,7 +54,7 @@ WQueue = React.createClass({
                         itemLabel: options[0].label
                     });
                 }
-                
+
             }
         }, options);
     },
@@ -65,6 +65,7 @@ WQueue = React.createClass({
 
         for (var i in options){
             var option = options[i];
+            console.log()
             //selectOpts.push($r("option", { value: option.name, "data-label": option.label}, option.label));
             selectOpts.push($r("option", { value: i, "data-label": option.label}, option.label));
         }
@@ -97,12 +98,12 @@ WQueue = React.createClass({
             if (item.value){
                 buttons = [
                     $r("a", {
-                        href: "#", 
+                        href: "#",
                         onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i, false),
                         //onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i),
                     }, "[-]"),
                     $r("a", {
-                        href: "#", 
+                        href: "#",
                         onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i, item.value),
                         //onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i),
                     }, "[x]")
@@ -110,7 +111,7 @@ WQueue = React.createClass({
             }else{
                 buttons = [
                     $r("a", {
-                        href: "#", 
+                        href: "#",
                         onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i, false),
                         //onClick: dojo.hitch(game.time.queue, game.time.queue.remove, item.type, item.name, i),
                     }, "[x]")
@@ -121,7 +122,7 @@ WQueue = React.createClass({
             ].concat(buttons)
             ));
         }
-        return $r("div", {}, 
+        return $r("div", {},
             items
         );
     },
@@ -158,7 +159,7 @@ WQueue = React.createClass({
                     //re-render component
                     self.forceUpdate();
                 }
-            }, "Add to queue"),
+            }, "加入队列"),
 
             this.getQueueItems()
         ]);
