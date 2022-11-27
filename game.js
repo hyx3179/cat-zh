@@ -2503,6 +2503,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		this.village.updateResourceProduction();
 		this.updateCaches();
 		this.resPool.update();
+		this.updateWinterCatnip();
 		this.loadingSave = false;
 
 		return success;
@@ -5307,7 +5308,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 	isEldermass: function(){
 		var boolean = false;
-		/*var date = new Date();
+		var date = new Date();
         if (date.getMonth() == 11 && date.getDate() >= 15 && date.getDate() <= 31) {
 			var LS = (localStorage["time"]) ? new Date(localStorage["time"]) : false;
             if (LS) {
@@ -5333,10 +5334,6 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 				});
 			}
 		}
-        date = null;
-        LS = null;
-        a = null;
-		*/
 		return boolean;
 	},
 	createRandomName: function(lenConst, charPool) {
