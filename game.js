@@ -2275,13 +2275,14 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			lastBackup: this.lastBackup
 		};
 
-		var saveDataString = this._prepareSaveData(saveData);
+		var preparedSaveData = this._prepareSaveData(saveData);
+		var saveDataString = this._saveDataToString(preparedSaveData);
 		LCstorage["com.nuclearunicorn.kittengame.savedata"] = saveDataString;
 		//console.log("Game saved");
 
 		this.ui.save();
 
-		return saveData;
+		return preparedSaveData;
 	},
 
 	_prepareSaveData: function(saveData) {
@@ -2290,7 +2291,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 		// This event is currently entirely for external consumers.
 		this._publish("game/beforesave", saveData);
 
-		return this._saveDataToString(saveData);
+		return saveData;
 	},
 
 	_saveDataToString: function(saveData) {
@@ -4893,7 +4894,8 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			saveData.science.techs.push(this.science.get("chronophysics"));
 		}
 
-		var saveDataString = this._prepareSaveData(saveData);
+		var preparedSaveData = this._prepareSaveData(saveData);
+		var saveDataString = this._saveDataToString(preparedSaveData);
 		LCstorage["com.nuclearunicorn.kittengame.savedata"] = saveDataString;
 
 		// Hack to prevent an autosave from occurring before the reload completes
