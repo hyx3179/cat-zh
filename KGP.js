@@ -7,6 +7,10 @@ function initKGP() {
 		if (game.resPool) {
 			window.KGPInterval = setInterval(() => initKGPLeftColumn(), 200);
 			$('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
+			const userAgent = navigator.userAgent;
+            if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+				window.KGP.isSafari = true;
+            }
 		} else {
 			setTimeout(() => initKGP(), 500);
 		}
@@ -47,6 +51,7 @@ window.KGP = {
 	resMap : game.resPool.resourceMap,
 	resRow : undefined,
 	tool : undefined,
+	isSafari : undefined,
 	updateTooltip: function () {
 		let resMap = this.resMap;
 		if (game.tooltipUpdateFunc) {
@@ -127,6 +132,9 @@ window.KGP = {
 
 			$row.css('background-repeat', 'no-repeat');
 			$row.css('background-position', 'bottom left');
+			if (this.isSafari) {
+				$row.css('display', 'flex');
+			}
 			$row.css('background-size', Math.min(200, percentage) + '% 1px');// #3
 
 			if (percentage > 95) {
