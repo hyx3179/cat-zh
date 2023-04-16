@@ -355,8 +355,8 @@
 					</span>
 
 					<span style="font-size: small;">
-						<a href="http://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>
-						<a href="http://kittensgame.com/web" title="国外英文官网版本" target="_blank"><strong>ML</strong></a>
+						<a href="https://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>
+						<a href="https://kittensgame.com/web" title="国外英文官网版本" target="_blank"><strong>ML</strong></a>
 						<a href="https://likexia.gitee.io/cat-zh/" title="国内阳光搬运" target="_blank"><strong>&Iota;</strong></a>
 					</span>
 				</div>
@@ -627,7 +627,7 @@
 				<label id="optionHighlightUnavailable" for="highlightUnavailable">Highlight buildings limited by storage space</label>
 				<br>
 				<input id="set-ks-enable" type="checkbox">
-				<label id="ks-label" for="set-ks-enable" style="color:red;">启用小猫珂学家</label><a href="https://petercheney.gitee.io/baike/?file=004-第三方工具/02-小猫科学家" onclick="if(!localStorage['zh.ks.enable']){localStorage['zh.ks.enable'] = 'enable';game.msg('下一步可以试试刷新哦');}" target="_blank">&nbsp;&nbsp;[使用说明书]</a>
+				<label id="ks-label" for="set-ks-enable" style="color:red;">启用小猫珂学家</label><a href="https://petercheney.gitee.io/baike/?file=004-第三方工具/02-小猫科学家" target="_blank">&nbsp;&nbsp;[使用说明书]</a>
 				<!-- [<a href="https://gitee.com/likexia/cbc-kitten-scientists" target="_blank" style="color:blue;text-decoration:none;" title="点击查看">教程</a>] -->
 				<br>
 				<input id="set-kgp-enable" type="checkbox">
@@ -764,7 +764,7 @@
 						<br>
 					</form>
 					<br>
-					<div class="btn modern" style="font-size:16px;" onclick="gamePage.server.register()">注册</div>
+					<div class="btn modern" style="font-size:16px;" onclick="gamePage.server.register();">注册</div>
 					<div style="color:#01A9DB;">
 						<ul style = "list-style:none">
 							<li>因为官方网站注册有几率会被墙。</li>
@@ -823,26 +823,27 @@
 				if (localStorage['zh.ks.enable'] === 'enable') {
 					if (timeKS) {
 						localStorage.setItem('zh.ks.enable', 'disable');
-						$('#toggle-engine').is(':checked') ? $('#toggle-engine').click() : false;
+						let engine = $('#toggle-engine');
+						engine.is(':checked') ? engine.click() : false;
 						$('#ks-options').hide();
 						$("#ks-label").text("启用小猫珂学家");
 					}
 				} else {
-					if (!localStorage['zh.ks.enable']) {
+					if (localStorage['zh.ks.enable']) {
+						enableKS();
+					} else {
 						var text = '大项目全勾或者需要啥勾啥~<br><br>珂学家默认小项目已经是设置好了，具体设置请根据自身实际情况调整，并不能做到满足所有人<br>还有问题或者建议，可以在猫国群找Cheney';
-						if (game.karmaKittens) {
+						if (game.stats.statGroups[0].group[4].val) {
 							enableKS();
-						    game.msg(text);
+							game.msg(text);
 						} else {
-							var ret = prompt('为了更好的游戏体验~萌新推荐自己渡过一周目<br>如果实在需要可在群里获得暗号', );
-							if(ret === 'CheneyMR') {
+							var ret = prompt('为了更好的游戏体验~推荐萌新手动体验一周目\n在发展到一定条件下就无需密码\n如果实在需要可在群里询问密码',);
+							if (ret === 'CheneyMR') {
 								enableKS();
 								game.msg(text);
 							}
-                        }
-					} else {
-						enableKS();
-                    }
+						}
+					}
 				}
 			});
 
@@ -924,7 +925,7 @@
 			}
 			function changelog() {
 				window.open(`changelog.html?v=` + buildRevision);
-			};
+			}
 		</script>
 	</body>
 
