@@ -1524,7 +1524,7 @@
     "trade.msg.elders.departed": "上古神离去了",
     "trade.msg.elders.displeased": "上古神感到不悦",
     "trade.msg.elders.feed": "献祭死灵兽",
-    "trade.msg.elders.feed.desc": "向上古神献上祭品",
+    "trade.msg.elders.feed.desc": "向上古神献上祭品<br>如果它们喜欢你的祭品，会增加古神的贸易数量和停留时间。",
     "trade.msg.elders.pleased": "上古神被取悦了",
     "trade.msg.emissary": "一个 {0}使者 来到你的村庄",
     "trade.msg.resources": "你获得了 {0} {1}",
