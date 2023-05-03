@@ -212,7 +212,7 @@ dojo.declare("classes.managers.Achievements", com.nuclearunicorn.core.TabManager
     }],
 
     badges: [
-        {   
+        {
             name: "lotus",
             title: "醉生梦死",
             description: "周目数大于50",
@@ -221,13 +221,13 @@ dojo.declare("classes.managers.Achievements", com.nuclearunicorn.core.TabManager
                 return this.game.stats.getStat("totalResets").val >= 50;
             }
         },
-        {   
+        {
             name: "ivoryTower",
             title: "白色巨塔",
             description: "钢铁无神论中重置",
             difficulty: "S+"
         },
-        {   
+        {
             name: "useless",
             title: "管理有方",
             description: "使用无特质的领袖",
@@ -237,7 +237,7 @@ dojo.declare("classes.managers.Achievements", com.nuclearunicorn.core.TabManager
                 return leader != null && leader.trait.name == "none";
             }
         },
-        { 
+        {
             name: "beta",
             title: "β测试猿",
             description: "参加过测试模式",
@@ -297,8 +297,8 @@ dojo.declare("classes.managers.Achievements", com.nuclearunicorn.core.TabManager
             difficulty: "C"
         },{
             name: "sequenceBreak",
-            title: "Sequence Break",
-            description: "Skip Moon in the space tab",
+            title: "序列断点",
+            description: "在空间标签跳过红月",
             difficulty: "D",
             condition: function(){
                 return (!this.game.space.getPlanet("moon").reached && this.game.space.getPlanet("dune").reached);
@@ -408,7 +408,7 @@ dojo.declare("classes.ui.AchievementsPanel", com.nuclearunicorn.game.ui.Panel, {
 
     render: function(container){
         var content = this.inherited(arguments);
-        
+
 		var div = dojo.create("div", {}, content);
 
 		div.innerHTML = "";
@@ -478,7 +478,7 @@ dojo.declare("classes.ui.BadgesPanel", com.nuclearunicorn.game.ui.Panel, {
 
     render: function(container){
         var content = this.inherited(arguments);
-        
+
 		var div = dojo.create("div", {}, content);
 		div.innerHTML = "";
         var divHeader = dojo.create("div", {className: "achievement-header"}, div);
@@ -486,7 +486,7 @@ dojo.declare("classes.ui.BadgesPanel", com.nuclearunicorn.game.ui.Panel, {
         var completedBadges = 0;
 		for (var i in this.game.achievements.badges){
 			var badge = this.game.achievements.badges[i];
-            
+
             totalBadges++;
 
             if (badge.unlocked) { completedBadges++; }
@@ -513,7 +513,7 @@ dojo.declare("com.nuclearunicorn.game.ui.tab.AchTab", com.nuclearunicorn.game.ui
         this.achievementsPanel = new classes.ui.AchievementsPanel($I("achievements.panel.label"), this.game.achievements);
 		this.achievementsPanel.game = this.game;
         this.achievementsPanel.render(container);
-        
+
         //basges typo intentional cause I keep mistyping it
         this.badgesPanel = new classes.ui.BadgesPanel($I("badges.panel.label"), this.game.achievements);
 		this.badgesPanel.game = this.game;
