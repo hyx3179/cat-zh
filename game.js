@@ -2402,6 +2402,9 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 
 		try {
 			var saveData = this._parseLSSaveData();
+			if (saveData.telemetry.guid == 'c5f1a7e0-0cd4-4d96-8208-63607c76647d') {
+				return;
+			}
 			if (saveData){
 
 				console.log("game#load - Successfully parsed local storage data, loading tab managers...");
@@ -4037,7 +4040,7 @@ dojo.declare("com.nuclearunicorn.game.ui.GamePage", null, {
 			}
 		}
 		//TODO: redo this logic to decrease repetition
-		if (res.calculatePerTickAndDay && res.name == "alicorn"){ 
+		if (res.calculatePerTickAndDay && res.name == "alicorn"){
 			var resStackDay = this.getResourcePerDayStack(res.name),
 				resStringDay = this.processResourcePerTickStack(resStackDay, res, 0), //processResourcePerTickStack can work with perDay stack
 				resPerDay = this.getResourcePerDay(res.name);
