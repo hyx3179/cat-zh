@@ -699,7 +699,7 @@ dojo.declare("classes.managers.DiplomacyManager", null, {
 		this.game.resPool.get("relic").value += amt;
 		this.game.resPool.get("blackcoin").value = 0;
 
-		this.game.msg($I("trade.bcoin.sell.msg", [this.game.getDisplayValueExt(amt)])), "", "blackcoin";
+		this.game.msg($I("trade.bcoin.sell.msg", [this.game.getDisplayValueExt(amt)]), "", "blackcoin");
 	},
 
 	unlockAll: function(){
