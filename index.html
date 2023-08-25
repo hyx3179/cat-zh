@@ -91,7 +91,7 @@
 
 		<script type="text/javascript">
 
-			var version = "1490";
+			var version = "1492";
 
 			var buildRevision = 0;
 			var swRevision = 0;
@@ -290,17 +290,10 @@
 					gamePage.start();
 
 					var config = new classes.KGConfig();
-					if (gamePage.isEldermass()) {
-						if (gamePage.resPool.get("elderBox").value == 0) {
-							gamePage.resPool.get("elderBox").value++;
-							gamePage.msg($I("gift.get"), "important");
-						}
-					} else {
-						if (gamePage.resPool.get("elderBox").value > 0 && gamePage.resPool.get("elderBox").value < 1) {
-							gamePage.resPool.get("elderBox").value = 1;
-							gamePage.msg($I("gift.repaired"), "important");
-						}
-					}
+
+					//update eldermass gifts on every game load pass
+					//TODO: toggle timer in the background?
+					gamePage.checkEldermass();
 					//---------------------------------
 
 
@@ -365,11 +358,10 @@
 					</span>
 
 					<span style="font-size: small;">
-						<!--<a href="http://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>-->
-						<!--<a href="http://kittensgame.com/web" title="国外英文官网版本" target="_blank"><strong>ML</strong></a>-->
+						<!--<a href="https://kittensgame.com/beta" title="测试版本" target="_blank">&beta;</a>-->
+						<!--<a href="https://kittensgame.com/web" title="国外英文官网版本" target="_blank"><strong>ML</strong></a>-->
 						<a href="https://cat-zh-hyx3179.netlify.app/" title="备用网站" target="_blank"><strong>H</strong></a>
-						<a href="https://petercheney.gitee.io/kitten-game-cn/" title="原版汉化网站" target="_blank">C</a>
-						<a href="https://lolitalibrary.com/maomao/" title="原版汉化网站" target="_blank">C</a>
+						<a href="https://likexia.gitee.io/cat-zh/" title="原版汉化网站" target="_blank">C</a>
 					</span>
 				</div>
 
@@ -486,6 +478,9 @@
 							<!-- Log goes there -->
 						</div>
 					</div>
+					<div class="right-tab" id="rightTabQueue" style="display:none;">
+						<div id="queueViewport"></div>
+					</div>
 					<div class="right-tab" id="rightTabChat" style="display:none;">
 						<div id="IRCChatInner">
 
@@ -493,28 +488,10 @@
 							<!--<iframe id="kiwiirc_iframe" style="border:0; width: 400px; height:800px;"></iframe>-->
 						</div>
 					</div>
-					<div class="right-tab" id="rightTabQueue" style="display:none;">
-
-						<div id="queueViewport"></div>
-
-						<!--<label for="queueTypeSelect">Choose a type:</label>
-
-						<select name="queueTypeSelect" id="queueTypeSelect" onchange='game.time.queue.updateBuySelect(event)'>
-						<option value="noneType">None</option>
-						<option value="a">a</option>
-						</select>
-
-						<label for="queueBuySelect">Choose:</label>
-
-						<select name="queueBuySelect" id="queueBuySelect" onchange= 'game.time.queue.buyFromSelect(event)'>
-						<option value="noneBuy">None</option>
-						</select>
-						<button type="queueAddButton" onclick="game.time.queue.buttonQueue(event)">Add to queue</button>
-						<p id = "queue_list_ui" onclick = "game.time.queue.listDrop(event)"></p>-->
-
-					</div>
 				</div>
-				<div id="toggleCenter" onclick="gamePage.ui.toggleCenter();" class="column" tooltip="Toggle centered view">
+				<div
+					id="toggleCenter" onClick="gamePage.ui.toggleCenter();" class="column" tooltip="Toggle centered view"
+				>
 					<span class="toggleCenter">&gt;</span>
 				</div>
 			</div>
@@ -640,7 +617,7 @@
 				<label id="optionHighlightUnavailable" for="highlightUnavailable">Highlight buildings limited by storage space</label>
 				<br>
 				<input id="set-ks-enable" type="checkbox">
-				<label id="ks-label" for="set-ks-enable" style="color:red;">启用小猫珂学家</label><a href="https://petercheney.gitee.io/baike/?file=004-第三方工具/02-小猫科学家" onclick="if(!localStorage['zh.ks.enable']){localStorage['zh.ks.enable'] = 'enable';game.msg('下一步可以试试刷新哦');}" target="_blank">&nbsp;&nbsp;[使用说明书]</a>
+				<label id="ks-label" for="set-ks-enable">小猫珂学家</label><a href="https://petercheney.gitee.io/baike/?file=004-第三方工具/02-小猫科学家" target="_blank">&nbsp;&nbsp;[使用说明书]</a>
 				<!-- [<a href="https://gitee.com/likexia/cbc-kitten-scientists" target="_blank" style="color:blue;text-decoration:none;" title="点击查看">教程</a>] -->
 				<br>
 				<input id="set-kgp-enable" type="checkbox">
@@ -777,7 +754,7 @@
 						<br>
 					</form>
 					<br>
-					<div class="btn modern" style="font-size:16px;" onclick="gamePage.server.register()">注册</div>
+					<div class="btn modern" style="font-size:16px;" onclick="gamePage.server.register();">注册</div>
 					<div style="color:#01A9DB;">
 						<ul style = "list-style:none">
 							<li>因为官方网站注册有几率会被墙。</li>
@@ -809,7 +786,11 @@
 				caches.delete('cat-' + swRevision);
 				window.location.reload();
 			});
-			//            科学家1.5.0
+
+			// 猫猫科学家 hyx3179 无限自用修改
+			var ksLabel = $("#ks-label")[0];
+			var ksVision = 0;
+
 			$.getJSON("../scientists/ks.version.json?=" + now)
 				.then(function (json) {
 					var srcScientists = '../scientists/kitten-scientists.user.js?v=';
@@ -818,29 +799,13 @@
 
 			var enableKS = function() {
 				localStorage['zh.ks.enable'] = 'enable';
-				$("#ks-label").text("可爱的猫猫科学家为您服务");
+				var ksLabel = $("#ks-label")[0];
+				ksLabel.innerText = "可爱的猫猫科学家为您服务";
+				ksLabel.style.color = 'red';
 				$('#ks-options').show();
+				//window.ks();
 			};
-			$("#set-ks-enable").on('change', function() {
-				if (localStorage['zh.ks.enable'] === 'enable') {
-					localStorage.setItem('zh.ks.enable', 'disable');
-					$('#toggle-engine').is(':checked') ? $('#toggle-engine').click() : false;
-					$('#ks-options').hide();
-					$("#ks-label").text("启用小猫珂学家");
-					return;
-				} else {
-					if (!localStorage['zh.ks.enable']) {
-						if (game.karmaKittens) {
-							enableKS();
-						    game.msg("第一次使用珂学家请点击说明书链接并参考\n下次打开游戏(刷新)才会看到\n\n\n珂学家默认小项目已经是挂机最效率，具体设置请根据自身实际情况调整，并不能做到满足所有人\n还有问题或者建议，可以在猫国群找Cheney");
-						} else {
-							game.msg('萌新建议看看珂学家说明书链接');
-                        }
-					} else {
-						enableKS();
-                    }
-				}
-			});
+
 			var ks = function () {
 				if ($("#ks-options").length > 0) {
 					$("#set-ks-enable").attr("checked", true);
@@ -850,6 +815,60 @@
 				}
 			};
             if (localStorage['zh.ks.enable'] === 'enable') { ks(); };
+
+/*			var ks = function() {
+				if (ksVision && window.run === undefined && window.timeKS !== true) {
+					let srcScientists = "https://petercheney.gitee.io/scientists/kitten-scientists.user.min.js?v=";
+					let a = document.createElement('script');
+					a.src = srcScientists + new Date().getDate() + ksVision;
+					clearTimeout(timeKS);
+					timeKS = true;
+   					a.onerror = function () {
+						game.msg('珂学家加载失败检查下网络');
+						timeKS = false;
+					};
+					document.body.appendChild(a);
+				}
+			};
+			var timeKS;
+			if (localStorage['zh.ks.enable'] === 'enable') {
+				timeKS = setTimeout('ks()', 1200);
+				$("#set-ks-enable").prop("checked", true);
+				ksLabel.innerText = "可爱的猫猫科学家为您服务";
+				ksLabel.style.color = 'red';
+			}*/
+			$("#set-ks-enable").on('change', function() {
+				if (localStorage['zh.ks.enable'] === 'enable') {
+					//if (timeKS) {
+						localStorage.setItem('zh.ks.enable', 'disable');
+						let engine = $('#toggle-engine');
+						engine.is(':checked') ? engine.click() : false;
+						$('#ks-options').hide();
+						ksLabel.innerText = "启用小猫珂学家";
+					//}
+				} else {
+					if (localStorage['zh.ks.enable']) {
+						enableKS();
+					} else {
+						var text = '大项目全勾或者需要啥勾啥~<br><br>珂学家默认小项目已经是设置好了，具体设置请根据自身实际情况调整，并不能做到满足所有人<br>还有问题或者建议，可以在猫国群找Cheney';
+						if (game.stats.statGroups[0].group[4].val > 59 || game.stats.statGroups[0].group[2].val > 2e3) {
+							enableKS();
+							game.msg(text);
+						} else {
+							var confirm = window.confirm('为了更好的游戏体验~推荐萌新不开启珂学家\n实在需要请确认');
+							if (confirm) {
+								var ret = window.prompt('为了游戏体验: 有60点领导力后开启就无需密码\n重置后会基于猫口数量 - 70 获得领导力(即130猫口)\n一定数量的猫口数量重置比不重置发展快10倍\n\n或者在右下角-百科-猫国萌新指导-猫国萌新指导中找密码\n如果找不到可以在猫国群(499256691)里私聊群主(Cheney)询问密码\n\n比如可以自动观察天文事件和打猎\n打开过珂学家后就不再需密码,设置密码仅仅为了萌新的体验');
+								if (ret === 'Mr.Cheney') {
+									enableKS();
+									game.msg(text);
+								} else {
+									game.msg('密错错误','notice');
+								}
+							}
+						}
+					}
+				}
+			});
 
             if (localStorage['zh.kgp.enable'] === 'enable') {
                 $("#set-kgp-enable").attr("checked", true);
@@ -861,6 +880,46 @@
                     : localStorage.setItem('zh.kgp.enable', 'enable') & $('<style type="text/css" id="KGPBorder">.res-table { border-spacing: 0px 3px; }</style>').appendTo('head');
                 initKGP();
             });
+
+/*			var loadKGP = function () {
+				if (ksVision && game.timer) {
+					let srcKGP = "KGP.min.js?v=";
+					document.body.appendChild(document.createElement('script')).src = srcKGP + ksVision;
+					$("#kgp-label").text("资源进度条已启动");
+					clearInterval(window.timeKGP);
+					window.timeKGP = null;
+				}
+			};
+			if (localStorage['zh.kgp.enable'] !== 'disable') {
+				$("#set-kgp-enable").prop("checked", true);
+				var timeKGP = setInterval(loadKGP, 1000);
+			}
+
+			$("#set-kgp-enable").on('change', function() {
+				if (!localStorage['zh.kgp.enable'] || localStorage['zh.kgp.enable'] === 'disable') {
+					localStorage.setItem('zh.kgp.enable', 'enable');
+					$("#kgp-label").text("资源进度条已启动");
+				} else {
+					localStorage.setItem('zh.kgp.enable', 'disable');
+					$("#kgp-label").text("启用资源进度条");
+				}
+				if (window.initKGP) {
+					initKGP();
+				} else {
+					loadKGP();
+				}
+			});
+
+			var nummonLoad = function() {
+				if (typeof gamePage !== "undefined") {
+					// NummonInit();
+					var srcNummon = location.origin + '/' + 'NummonCalc/NummonCalc.js?v=';
+					document.body.appendChild(document.createElement('script')).src = srcNummon + buildRevision;
+					clearInterval(numId);
+					numId = nummonLoad = srcNummon = null;
+				}
+			};
+			var numId = setInterval(nummonLoad, 2000);*/
 
 			var paragonWebsite = function() {
 				if (typeof gamePage !== "undefined") {
@@ -886,6 +945,13 @@
 			};
 			var id = setInterval(paragonWebsite, 10000);
 
+			function isWeixinMsg() {
+				var ua = navigator.userAgent.toLowerCase();
+				if(ua.indexOf('micromessenger') > -1) {
+					game.msg('请注意微信浏览器不能保存游戏存档<br>请注意微信浏览器不能保存游戏存档<br>请注意微信浏览器不能保存游戏存档<br>推荐使用Chrome或者Edge','alert');
+				}
+			}
+			isWeixinMsg();
 			function readText() {
 				var file = document.getElementById("importFile").files[0];
 				if (!file) {
@@ -901,7 +967,7 @@
 			}
 			function changelog() {
 				window.open(`changelog.html?v=` + buildRevision);
-			};
+			}
 		</script>
 	</body>
 
