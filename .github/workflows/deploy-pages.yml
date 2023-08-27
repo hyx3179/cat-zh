@@ -19,16 +19,12 @@ jobs:
           npm i -g google-closure-compiler
           bash ./deploy.sh build
 
-      - name: Deploy GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@main
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-
-      - name: Deploy Netlify
-        env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: |
-          npm install netlify-cli -g
-          netlify deploy --dir=public_Netlify --prod
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: "public/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}

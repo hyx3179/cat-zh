@@ -3,9 +3,11 @@
 
 	<head>
 		<script>
-			if (typeof navigator.serviceWorker !== 'undefined' &&
-				location.pathname.indexOf('//') == -1) {
-				navigator.serviceWorker.register('sw.js')
+			if (location.hostname !== 'localhost') {
+				if (typeof navigator.serviceWorker !== 'undefined' &&
+					location.pathname.indexOf('//') == -1) {
+					navigator.serviceWorker.register('sw.js')
+				}
 			}
 		</script>
 		<meta charset="utf-8">
