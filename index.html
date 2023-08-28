@@ -189,7 +189,7 @@
 					"js/toolbar",
 
 					// 加载 概览 和 进度条
-					"../NummonCalc/NummonCalc",
+					"NummonCalc",
 					"KGP",
 				];
 				progressMax = modules.length + 3;
@@ -791,17 +791,17 @@
 
 			// 猫猫科学家 hyx3179 无限自用修改
 			var ksLabel = $("#ks-label")[0];
-			var ksVision = 0;
+			//var ksVision = 0;
 
-			$.getJSON("../scientists/ks.version.json?=" + now)
+			$.getJSON("/scientists/ks.version.json?=" + now)
 				.then(function (json) {
-					var srcScientists = '../scientists/kitten-scientists.user.js?v=';
+					var srcScientists = '/scientists/kitten-scientists.user.js?v=';
 					document.body.appendChild(document.createElement('script')).src = srcScientists + json.ksVision;
 				});
 
 			var enableKS = function() {
 				localStorage['zh.ks.enable'] = 'enable';
-				var ksLabel = $("#ks-label")[0];
+				//var ksLabel = $("#ks-label")[0];
 				ksLabel.innerText = "可爱的猫猫科学家为您服务";
 				ksLabel.style.color = 'red';
 				$('#ks-options').show();

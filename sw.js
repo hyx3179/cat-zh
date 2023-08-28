@@ -41,7 +41,7 @@
 
 	// 安装：加载 index 到 cache
 	addEventListener('install', event => {
-		event.waitUntil(caches.open(cacheStorage).then(cache => cache.add('/cat-zh/')));
+		event.waitUntil(caches.open(cacheStorage).then(cache => cache.add('/')));
 		//skipWaiting()
 	});
 
