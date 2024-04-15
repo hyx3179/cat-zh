@@ -1751,7 +1751,7 @@ dojo.declare("classes.ui.village.BiomeBtnController", com.nuclearunicorn.game.ui
 
 			//mark current biome for visual identification
 			if (map.currentBiome == model.options.id){
-				name += " (current)";
+				name += " (当前)";
 			}
 		}
 
@@ -2606,7 +2606,7 @@ dojo.declare("com.nuclearunicorn.game.ui.JobButtonController", com.nuclearunicor
 		  {
 				id: "unassign",
 				title: "[&ndash;]",
-				alt: "minus",
+				alt: "减",
 				handler: function(){
 					self.unassignJobs(model, 1);
 				}
@@ -2634,7 +2634,7 @@ dojo.declare("com.nuclearunicorn.game.ui.JobButtonController", com.nuclearunicor
 			{
 				id: "assign",
 				title: "[+]",
-				alt: "plus",
+				alt: "加",
 				handler: function(){
 					self.assignJobs(model, 1);
 				}
@@ -2796,7 +2796,7 @@ dojo.declare("classes.ui.village.Census", null, {
 					style: {
 						float: "right"
 					},
-					title: "Make a leader"
+					title: "分配领袖"
 				}, linksDiv);
 			}
 
@@ -2874,7 +2874,7 @@ dojo.declare("classes.ui.village.Census", null, {
 				: leader.trait.title + " (" + $I("village.bonus.desc." + leader.trait.name) + ") [" + $I("village.census.rank") + " " + leader.rank + "]";
 			var nextRank = Math.floor(this.game.village.getRankExp(leader.rank));
 			leaderInfo = this.getStyledName(leader, true /*is leader panel*/) + ", " + title +
-				"<br /> exp: " + this.game.getDisplayValueExt(leader.exp);
+				"<br /> 经验: " + this.game.getDisplayValueExt(leader.exp);
 
 			if (nextRank > leader.exp) {
 				leaderInfo += " (" + Math.floor(100 * leader.exp / nextRank) + "%)";
