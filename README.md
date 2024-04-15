@@ -1,3 +1,17 @@
+# Kittens Game （猫国建设者）
+
+部分翻译来自 [likexia](https://likexia.gitee.io/cat-zh/)
+
+游戏地址: https://cat-zh.hyx3179.com/
+
+A fork from https://bitbucket.org/bloodrizer/kitten-game/
+
+<!-- kitten-scientists: ~~[github.com/Cirn09](https://github.com/Cirn09/cbc-kitten-scientists)~~ -->
+
+<!-- NummonCalc: https://github.com/Cirn09/NummonCalc -->
+
+---
+
 [![Crowdin](https://badges.crowdin.net/kittensgame/localized.svg)](https://crowdin.com/project/kittensgame)
 
 
