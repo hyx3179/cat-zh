@@ -665,6 +665,8 @@
 				<div id="importWarning">Warning! Importing data will overwrite your current game data.</div>
 				<h1 id="importFrom">Import Form:</h1>
 				<input id="importFromDropbox" type="button" onclick="gamePage.saveImportDropbox();" value="Dropbox (Beta)">
+				<input id="doFileImportButton" type="button" onclick="document.getElementById('importFile').click();" value="本地文件">
+				<input id="importFile" type="file" style="display:none" onchange ="readText();">
 				<br>
 				<h1 id="importFromText">Text Import:</h1>
 				<br>
@@ -705,6 +707,21 @@
 			</div>
 		</div>
 
+		<script type="text/javascript">
+			function readText() {
+				var obj = document.getElementById("importFile");
+				var file = obj.files[0];
+				if (!file) {
+					return;
+				}
+				var reader = new FileReader();
+				reader.readAsText(file);
+				reader.onload = function (data) {
+					$("#importData").val(this.result);
+				};
+				obj.outerHTML = obj.outerHTML;
+			}
+		</script>
 
 	  <!-- <script
 	  	async
