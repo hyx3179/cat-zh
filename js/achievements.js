@@ -451,7 +451,7 @@ dojo.declare("classes.ui.AchievementsPanel", com.nuclearunicorn.game.ui.Panel, {
 				title: ach.starUnlocked ? ach.starDescription : "???"
 			}, span);
 		}
-		divHeader.innerHTML = $I("badges.header", [completedAchievements, totalAchievements]);
+		divHeader.innerHTML = $I("achievements.header", [completedAchievements, totalAchievements]);
 		var stars = "";
 		for (var i = completedStars; i > 0; --i) {
 			stars += "&#9733;";
