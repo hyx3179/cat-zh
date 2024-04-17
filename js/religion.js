@@ -268,12 +268,12 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		var necrocornPerDay = this.game.getEffect("necrocornPerDay");
 		var necrocornVal = this.game.resPool.get("necrocorn").value;
 		var corruptionWithExisting = this.game.religion.getCorruptionPerTickProduction(true);
-		var worstPerTickDelta = corruptionWithExisting * days *this.game.calendar.ticksPerDay + corruptionWithExisting;
+		var worstPerTickDelta = corruptionWithExisting * this.game.calendar.ticksPerDay + necrocornPerDay;
 		//if(!this.game.science.getPolicy(["siphoning"]).researched){
 		if(
 			(worstPerTickDelta >= 0)
-			||(worstPerTickDelta < 0 && necrocornVal + worstPerTickDelta * days > 0)&&
-			(this.game.resPool.get("alicorns").value - 1 + necrocornPerDay * days >= 0)){ //naive solution here
+			||((worstPerTickDelta < 0 && necrocornVal + worstPerTickDelta * days > 0)&&
+			(this.game.resPool.get("alicorn").value - 1 + necrocornPerDay * days >= 0))){ //naive solution here
 			this.necrocornsNaiveFastForward(days, times);
 			return;
 		}
@@ -283,30 +283,38 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		if(corruptionWithExisting * this.game.calendar.ticksPerDay + necrocornPerDay < 0 &&
 		corruptionWithoutExisting * this.game.calendar.ticksPerDay + necrocornPerDay > 0
 		){
-			var alicornsResult = this.game.resPool.get("alicorns").value - 1 + necrocornPerDay * days;
+			var alicornsResult = this.game.resPool.get("alicorn").value - 1 + necrocornPerDay * days;
 			var alicornsSpent = necrocornPerDay * days;
 			if (corruptionWithoutExisting * days/this.game.calendar.ticksPerDay + necrocornPerDay * necrocornDeficitRepaymentModifier> 0
 				&& this.pactsManager.necrocornDeficit>0
 			){
 				corruptionWithoutExisting += necrocornPerDay * (necrocornDeficitRepaymentModifier - 1);
 			}
-			var daysUntilSpentOne = -(necrocornPerDay * days + corruptionWithExisting/this.game.calendar.ticksPerDay);
-			var daysUntilCorrupted = necrocornPerDay * days + corruptionWithoutExisting/this.game.calendar.ticksPerDay;
-			var timePeriodWorking = days - necrocornVal * daysUntilSpentOne;
+			var daysUntilSpentOne = - Math.ceil(1/(necrocornPerDay + corruptionWithExisting/this.game.calendar.ticksPerDay));
+			var daysUntilCorrupted = -Math.ceil(1/(necrocornPerDay + corruptionWithoutExisting/this.game.calendar.ticksPerDay));
+			var timePeriodWorking = Math.floor(days - necrocornVal * daysUntilSpentOne);
+
 
 			if(alicornsResult < 0){
 				this.pactsManager.deficit -= alicornsResult;
 				alicornsSpent += alicornsResult;
 				timePeriodWorking += alicornsResult/necrocornPerDay; 
 			}
-			var state = timePeriodWorking%(daysUntilCorrupted + daysUntilSpentOne);
-			this.pactsManager.necrocornDeficit += timePeriodWorking * daysUntilCorrupted/(daysUntilCorrupted + daysUntilSpentOne)* necrocornPerDay * (necrocornDeficitRepaymentModifier - 1);
-			if (this.pactsManager.necrocornDeficit < 0){
-				this.pactsManager.necrocornDeficit = 0;
+			if (daysUntilCorrupted + daysUntilSpentOne == 0){
+				return;
 			}
-			if(state/daysUntilCorrupted <= 1 - this.corruption){
-				this.corruption += state/daysUntilCorrupted;
+			var state = timePeriodWorking%(daysUntilCorrupted + daysUntilSpentOne);
+			
+			//this.pactsManager.necrocornDeficit += timePeriodWorking * daysUntilCorrupted/(daysUntilCorrupted + daysUntilSpentOne)* necrocornPerDay * (necrocornDeficitRepaymentModifier - 1);
+			//if (this.pactsManager.necrocornDeficit < 0){
+			//	this.pactsManager.necrocornDeficit = 0;
+			//}
+			//let's return to deficit delta later
+
+			this.pactsManager.necrocornDeficit = 0;
+			if (state < daysUntilCorrupted){
 				this.game.resPool.get("necrocorn").value = 0;
+				this.corruption += necrocornPerDay * state + corruptionWithoutExisting * this.game.calendar.ticksPerDay * state;
 			}else{
 				this.game.resPool.get("necrocorn").value = (state - daysUntilCorrupted)/daysUntilSpentOne;
 			}
@@ -315,10 +323,11 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		}
 		var compensatedNecrocorns = 0;
 		var consumedAlicorns = Math.min(this.game.resPool.get("alicorn").value - 1, necrocornPerDay * days);
-		/*if(this.game.religion.getCorruptionDeficitPerTick() == 0 && this.game.resPool.get("alicorn").value - necrocornPerDay * days >= 1){ //check if siphening is enough to pay for per day consumption
+		if(this.game.religion.getCorruptionDeficitPerTick() == 0 && this.game.resPool.get("alicorn").value - necrocornPerDay * days >= 1){ //check if siphening is enough to pay for per day consumption
 			this.game.resPool.addResPerTick("alicorn",consumedAlicorns);
-		}*/
+		}
 		//var consumedAlicorns = Math.min(this.game.resPool.get("alicorn").value - 1, necrocornPerDay * days);
+
 		var siphenedNecrocorns = this.pactsManager.getSiphonedCorruption(days);
 		compensatedNecrocorns = Math.max(consumedAlicorns, -siphenedNecrocorns);
 		this.game.resPool.addResPerTick("alicorn", compensatedNecrocorns);
@@ -525,7 +534,8 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		unlocked: false,
 		getEffectiveValue: function(game) {
 			return this.val * (1 + game.getEffect("corruptionBoostRatioChallenge")); //LDR specified in challenges.js
-		}
+		},
+		flavor: $I("religion.zu.marker.flavor")
 	},{
 		name: "unicornGraveyard",
 		label: $I("religion.zu.unicornGraveyard.label"),
@@ -608,7 +618,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 			}
 		},
 		cashPreDeficitEffects: function (game) {
-			var transcendenceTierModifier = Math.max(game.religion.transcendenceTier - 25, 1);
+			var transcendenceTierModifier = Math.max(game.religion.transcendenceTier - 24, 1);
 			var self = game.religion.getZU("blackPyramid");
 			for(var counter in self.simpleEffectNames){
 				self.effectsPreDeficit["pyramid" + self.simpleEffectNames[counter]] = game.getEffect("pact" + self.simpleEffectNames[counter]) * transcendenceTierModifier;
@@ -939,7 +949,10 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 			"rrRatio" : 0.02
 		},
 		upgrades: {
-			chronoforge: ["temporalImpedance"]
+			chronoforge: ["temporalImpedance", "temporalPress"]
+		},
+		unlocks: {
+			chronoforge: ["temporalPress"]
 		},
 		unlocked: false,
 		flavor: $I("religion.tu.blazar.flavor")
@@ -1110,6 +1123,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 	praise: function(){
 		var faith = this.game.resPool.get("faith");
 		this.faith += faith.value * (1 + this.getApocryphaBonus()); //starting up from 100% ratio will work surprisingly bad
+		this.faith = Math.min(this.faith, Number.MAX_VALUE);
 		this.game.msg($I("religion.praise.msg", [this.game.getDisplayValueExt(faith.value, false, false, 0)]), "", "faith");
 		faith.value = 0.0001;	//have a nice autoclicking
 
@@ -1138,6 +1152,7 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 	_resetFaithInternal: function(bonusRatio) {
 		var ttPlus1 = (this.game.religion.getRU("transcendence").on ? this.game.religion.transcendenceTier : 0) + 1;
 		this.faithRatio += this.faith / 1000000 * ttPlus1 * ttPlus1 * bonusRatio;
+		this.faithRatio = Math.min(this.faithRatio, Number.MAX_VALUE);
 		this.faith = 0.01;
 	},
 
@@ -1150,22 +1165,17 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 		var game = this.game;
 		game.ui.confirm($I("religion.transcend.confirmation.title"), $I("religion.transcend.confirmation.msg"), function() {
 			//Transcend one Level at a time
-			var needNextLevel = 
-				religion._getTranscendTotalPrice(religion.transcendenceTier + 1) - 
-				religion._getTranscendTotalPrice(religion.transcendenceTier);
+			var needNextLevel = religion._getTranscendNextPrice();
 
 			if (religion.faithRatio > needNextLevel) {
 				religion.faithRatio -= needNextLevel;
 				religion.tcratio += needNextLevel;
 				religion.transcendenceTier += 1;
 
-				var atheism = game.challenges.getChallenge("atheism");
-				atheism.calculateEffects(atheism, game);
-				var blackObelisk = religion.getTU("blackObelisk");
-				blackObelisk.calculateEffects(blackObelisk, game);
+				//In the future, we might add more things that care about Transcendence Tier.
+				game.calculateAllEffects();
 				if(game.getFeatureFlag("MAUSOLEUM_PACTS") && game.religion.getTU("mausoleum").val){
 					var blackPyramid = game.religion.getZU("blackPyramid");
-					blackPyramid.calculateEffects(blackPyramid, game);
 					blackPyramid.cashPreDeficitEffects(game);
 				}
 				game.msg($I("religion.transcend.msg.success", [religion.transcendenceTier]));
@@ -1179,6 +1189,10 @@ dojo.declare("classes.managers.ReligionManager", com.nuclearunicorn.core.TabMana
 
 	_getTranscendTotalPrice: function(tier) {
 		return this.game.getInverseUnlimitedDR(Math.exp(tier) / 10, 0.1);
+	},
+
+	_getTranscendNextPrice: function() {
+		return this._getTranscendTotalPrice(this.transcendenceTier + 1) - this._getTranscendTotalPrice(this.transcendenceTier);
 	},
 
 	unlockAll: function(){
@@ -1332,6 +1346,12 @@ dojo.declare("com.nuclearunicorn.game.ui.TranscendBtnController", com.nuclearuni
 		return model.options.name + (this.game.religion.transcendenceTier > 0 ? " [" + this.game.religion.transcendenceTier + "]" : "");
 	},
 
+	updateEnabled: function(model) {
+		model.enabled = this.game.religion._getTranscendNextPrice() < Infinity;
+		model.highlightUnavailable = this.game.opts.highlightUnavailable;
+		model.resourceIsLimited = model.highlightUnavailable && !model.enabled;
+	},
+
 	updateVisible: function (model) {
 		model.visible = this.game.religion.getRU("transcendence").on;
 	}
@@ -1371,12 +1391,26 @@ dojo.declare("classes.ui.religion.TransformBtnController", com.nuclearunicorn.ga
 	},
 
 	buyItem: function(model, event, callback) {
-		if (model.enabled && this.hasResources(model)) {
-			var batchSize = event.shiftKey ? 10000 :
-				event.ctrlKey || event.metaKey ? this.game.opts.batchSize : 1;
-			callback(this._transform(model, batchSize));
+		if (!this.hasResources(model)) {
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+			return;
 		}
-		callback(false);
+		if (!model.enabled) {
+			//As far as I can tell, this shouldn't ever happen because being
+			//unable to afford it is the only reason for it to be disabled.
+			callback(false /*itemBought*/, { reason: "not-enabled" });
+			return;
+		}
+		if (!event) { event = {}; /*event is an optional parameter*/ }
+		var batchSize = event.shiftKey ? 10000 :
+			event.ctrlKey || event.metaKey ? this.game.opts.batchSize : 1;
+		var didWeSucceed = this._transform(model, batchSize);
+		if (didWeSucceed) {
+			callback(true /*itemBought*/, { reason: "paid-for" });
+		} else {
+			//_transform(model, amt) returns false if we can't afford it
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+		}
 	},
 
 	_canAfford: function(model) {
@@ -1385,10 +1419,23 @@ dojo.declare("classes.ui.religion.TransformBtnController", com.nuclearunicorn.ga
 
 	transform: function(model, divider, event, callback) {
 		var amt = Math.floor(this._canAfford(model) / divider);
-		if (model.enabled && amt >= 1) {
-			callback(this._transform(model, amt));
+		if (amt < 1) {
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+			return;
 		}
-		callback(false);
+		if (!model.enabled) {
+			//As far as I can tell, this shouldn't ever happen because being
+			//unable to afford it is the only reason for it to be disabled.
+			callback(false /*itemBought*/, { reason: "not-enabled" });
+			return;
+		}
+		var didWeSucceed = this._transform(model, amt);
+		if (didWeSucceed) {
+			callback(true /*itemBought*/, { reason: "paid-for" });
+		} else {
+			//_transform(model, amt) returns false if we can't afford it
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+		}
 	},
 
 	_transform: function(model, amt) {
@@ -1460,7 +1507,7 @@ dojo.declare("classes.ui.religion.RefineTearsBtnController", com.nuclearunicorn.
 				&& self._canAfford(model, count) >= count,
 			title: "x" + count,
 			handler: function (event) {
-				self.buyItem(model, {}, this.update.bind(this), count);
+				self.buyItem(model, null, this.update.bind(this), count);
 			}
 		};
 	},
@@ -1470,25 +1517,32 @@ dojo.declare("classes.ui.religion.RefineTearsBtnController", com.nuclearunicorn.
 	},
 
 	buyItem: function(model, event, callback, count){
-		if (model.enabled && this.hasResources(model)) {
-			if (this.game.resPool.get("sorrow").value >= this.game.resPool.get("sorrow").maxValue){
-				this.game.msg($I("religion.refineTearsBtn.refine.msg.failure"));
-				callback(false);
-				return;
-			}
-
-			for (var batchSize = count || (event.ctrlKey ? this.game.opts.batchSize : 1);
-				 batchSize > 0
-				 && this.hasResources(model)
-				 && this.game.resPool.get("sorrow").value < this.game.resPool.get("sorrow").maxValue;
-				 batchSize--) {
-				this.payPrice(model);
-				this.refine();
-			}
-
-			callback(true);
+		if (!this.hasResources(model)) {
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+			return;
 		}
-		callback(false);
+		if (!model.enabled) {
+			//As far as I can tell, this shouldn't ever happen because being
+			//unable to afford it is the only reason for it to be disabled.
+			callback(false /*itemBought*/, { reason: "not-enabled" });
+			return;
+		}
+		if (this.game.resPool.get("sorrow").value >= this.game.resPool.get("sorrow").maxValue){
+			//We can't refine because we're at the limit.
+			this.game.msg($I("religion.refineTearsBtn.refine.msg.failure"));
+			callback(false /*itemBought*/, { reason: "already-bought" });
+			return;
+		}
+		if (!event) { event = {}; /*event is an optional parameter*/ }
+		for (var batchSize = count || (event.ctrlKey ? this.game.opts.batchSize : 1);
+			 batchSize > 0
+			 && this.hasResources(model)
+			 && this.game.resPool.get("sorrow").value < this.game.resPool.get("sorrow").maxValue;
+			 batchSize--) {
+			this.payPrice(model);
+			this.refine();
+		}
+		callback(true /*itemBought*/, { reason: "paid-for" });
 	},
 
 	refine: function(){
@@ -1585,15 +1639,16 @@ dojo.declare("classes.ui.PactsPanel", com.nuclearunicorn.game.ui.Panel, {
 	buyItem: function(model, event, callback) {
 		this.game.updateCaches();
 		this.updateEnabled(model);
-		if ((this.hasResources(model)) || this.game.devMode){
-			if(!this.shouldBeBough(model, this.game)){
-				callback(false);
-				return;
-			}
-			this._buyItem_step2(model, event, callback);
-		}else{
-			callback(false);
+
+		if (!this.hasResources(model) && !this.game.devMode) {
+			callback(false /*itemBought*/, { reason: "cannot-afford" });
+			return;
 		}
+		if(!this.shouldBeBough(model, this.game)){
+			callback(false /*itemBought*/, { reason: "already-bought" /*No more pacts available*/ });
+			return;
+		}
+		this._buyItem_step2(model, event, callback);
 	},
 
 	build: function(model, maxBld){
@@ -2257,16 +2312,13 @@ dojo.declare("com.nuclearunicorn.game.ui.tab.ReligionTab", com.nuclearunicorn.ga
 			dojo.forEach(this.rUpgradeButtons,  function(e, i){ e.update(); });	
 		}
 		var hasCT = this.game.science.get("cryptotheology").researched && this.game.religion.transcendenceTier > 0;
-		if (hasCT){
-			this.ctPanel.setVisible(true);
-		}
+		this.ctPanel.setVisible(hasCT);
 
 		dojo.forEach(this.zgUpgradeButtons, function(e, i){ e.update(); });
 		var canSeePacts = !this.game.religion.getPact("fractured").researched && this.game.religion.getZU("blackPyramid").val > 0 && (this.game.religion.getTU("mausoleum").val > 0 || this.game.science.getPolicy("radicalXenophobia").researched);
 		canSeePacts = canSeePacts && this.game.getFeatureFlag("MAUSOLEUM_PACTS");
-		if(canSeePacts){
-			this.ptPanel.setVisible(true);
-		}
+		this.ptPanel.setVisible(canSeePacts);
+		
 		//dojo.forEach(this.pactUpgradeButtons, function(e, i){ e.update(); });
 		/*if(this.necrocornDeficitMsgBox){
 			if(this.game.religion.necrocornDeficit > 0){
