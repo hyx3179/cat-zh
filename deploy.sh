@@ -23,10 +23,9 @@ build() {
 	done
 
 	echo "Handling other files"
-	cp ./changelog.html ./public
+	cp ./changelog.txt ./public
 	cp ./index.html ./public
 	cp ./server.json ./public
-	cp ./updateLog.html ./public
 
 	echo "Generate build version"
 	wget -q https://${DEPLOY_URL}/build.version.json -O ./public/build.version.json
