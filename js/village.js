@@ -2867,7 +2867,7 @@ dojo.declare("classes.ui.village.Census", null, {
 
 	getGovernmentInfo: function() {
 		//update leader stats
-		var leaderInfo = "%username%";
+		var leaderInfo = "无";
 		var leader = this.game.village.leader;
 		if (leader) {
 			var title = leader.trait.name == "none"
